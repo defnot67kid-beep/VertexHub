@@ -128,6 +128,59 @@
             resize: vertical;
         }
         
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .file-upload-label:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4bcffa;
+        }
+        
+        .file-upload-label i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            color: #4bcffa;
+        }
+        
+        .thumbnail-preview {
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+        }
+        
+        .thumbnail-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
         .step-container {
             background: rgba(0, 0, 0, 0.2);
             padding: 15px;
@@ -213,6 +266,12 @@
             justify-content: center;
             color: #4bcffa;
             font-size: 3rem;
+        }
+        
+        .script-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .script-info {
@@ -306,8 +365,25 @@
         .step-check {
             display: flex;
             align-items: center;
-            justify-content: center;
             margin: 20px 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .step-check.completed {
+            opacity: 0.85;
+        }
+        
+        .step-check.completed .check-circle {
+            border-color: #4bcffa;
+        }
+        
+        .step-check.completed .check-circle i {
+            opacity: 1;
+        }
+        
+        .step-check.in-progress .check-circle {
+            border-color: #4bcffa;
+            border-top-color: transparent;
         }
         
         .check-circle {
@@ -319,16 +395,28 @@
             align-items: center;
             justify-content: center;
             margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .check-circle.spinning {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .check-circle i {
             color: #4bcffa;
             font-size: 1.5rem;
             opacity: 0;
+            transition: opacity 0.3s ease;
         }
         
         .step-text {
             text-align: left;
+            flex: 1;
         }
         
         .step-name {
@@ -339,6 +427,28 @@
         .step-desc {
             font-size: 0.9rem;
             opacity: 0.8;
+            word-break: break-all;
+        }
+        
+        .step-link-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .step-link-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .step-link-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .unlock-btn {
@@ -355,6 +465,7 @@
             text-align: center;
             padding: 40px 20px;
             opacity: 0.7;
+            grid-column: 1 / -1;
         }
         
         .empty-state i {
@@ -370,6 +481,19 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 0.9rem;
             opacity: 0.7;
+        }
+        
+        .step-counter {
+            display: inline-block;
+            background: #4bcffa;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 0.8rem;
+            margin-right: 8px;
         }
     </style>
 </head>
@@ -394,8 +518,17 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="thumbnail">Thumbnail URL</label>
-                        <input type="text" id="thumbnail" placeholder="https://example.com/thumbnail.jpg" required>
+                        <label for="thumbnail">Script Thumbnail</label>
+                        <div class="file-upload">
+                            <label for="thumbnailInput" class="file-upload-label">
+                                <i class="fas fa-image"></i>
+                                <span id="fileLabelText">Click to upload thumbnail image</span>
+                            </label>
+                            <input type="file" id="thumbnailInput" accept="image/*" required>
+                        </div>
+                        <div class="thumbnail-preview" id="thumbnailPreview">
+                            <img id="previewImage" src="" alt="Thumbnail Preview">
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -411,18 +544,17 @@
                     <div class="form-group">
                         <label>Unlock Steps (Redirect links before unlocking)</label>
                         <div id="stepsContainer">
-                            <!-- Default VertexR_S subscription step -->
-                            <div class="step-container" data-step="1">
-                                <div class="step-header">
-                                    <div class="step-title">Step 1: Subscribe to VertexR_S</div>
-                                </div>
-                                <input type="text" class="step-url" placeholder="https://m.youtube.com/@VertexR_S" value="https://m.youtube.com/@VertexR_S" readonly>
-                            </div>
+                            <!-- Steps will be added here -->
                         </div>
                         
-                        <button type="button" id="addStepBtn" class="btn btn-secondary">
-                            <i class="fas fa-plus"></i> Add Another Step
-                        </button>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="button" id="addStepBtn" class="btn btn-secondary">
+                                <i class="fas fa-plus"></i> Add Step
+                            </button>
+                            <button type="button" id="addYoutubeStepBtn" class="btn btn-secondary">
+                                <i class="fab fa-youtube"></i> Add YouTube Step
+                            </button>
+                        </div>
                     </div>
                     
                     <button type="submit" class="btn">
@@ -438,10 +570,6 @@
                 
                 <div id="scriptsList" class="scripts-grid">
                     <!-- Scripts will be dynamically added here -->
-                    <div class="empty-state">
-                        <i class="fas fa-code"></i>
-                        <p>No scripts uploaded yet. Upload your first script!</p>
-                    </div>
                 </div>
             </section>
         </main>
@@ -449,8 +577,8 @@
         <!-- Unlock Modal -->
         <div id="unlockModal" class="modal">
             <div class="modal-content">
-                <h3>Unlock Script</h3>
-                <p>Complete the following steps to unlock the script</p>
+                <h3>Unlock Script: <span id="unlockScriptName"></span></h3>
+                <p>Complete all steps to unlock the script</p>
                 
                 <div id="stepChecks">
                     <!-- Step checks will be dynamically added here -->
@@ -478,44 +606,23 @@
     </div>
 
     <script>
-        // Sample data for initial scripts
-        let scripts = [
-            {
-                id: 1,
-                name: "Roblox Auto Farmer",
-                thumbnail: "https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                videoLink: "https://youtube.com/watch?v=abc123",
-                scriptLink: "https://vertexscripts.com/download/roblox-autofarmer",
-                steps: [
-                    { url: "https://m.youtube.com/@VertexR_S", name: "Subscribe to VertexR_S" },
-                    { url: "https://roblox.com", name: "Visit Roblox" },
-                    { url: "https://example.com/step3", name: "Complete Survey" }
-                ],
-                uploadDate: "2023-10-15"
-            },
-            {
-                id: 2,
-                name: "Game Cheat Engine",
-                thumbnail: "https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                videoLink: "",
-                scriptLink: "https://vertexscripts.com/download/game-cheat-engine",
-                steps: [
-                    { url: "https://m.youtube.com/@VertexR_S", name: "Subscribe to VertexR_S" },
-                    { url: "https://example.com/link2", name: "Join Discord" }
-                ],
-                uploadDate: "2023-10-10"
-            }
-        ];
-
-        let nextId = 3;
+        // Store scripts in localStorage
+        let scripts = [];
+        let nextId = 1;
         let currentUnlockScript = null;
         let currentStep = 0;
         let countdown = 20;
         let countdownInterval = null;
+        let completedSteps = new Set(); // Track completed steps per session
+        let stepTimers = {}; // Track timers for each step
 
-        // Initialize the page
+        // Load scripts from localStorage on page load
         document.addEventListener('DOMContentLoaded', function() {
+            loadScripts();
             renderScripts();
+            
+            // Initialize with one step
+            addStep(1, "Subscribe to VertexR_S", "https://m.youtube.com/@VertexR_S");
             
             // Form submission
             document.getElementById('uploadForm').addEventListener('submit', function(e) {
@@ -525,7 +632,29 @@
             
             // Add step button
             document.getElementById('addStepBtn').addEventListener('click', function() {
-                addStep();
+                const stepNumber = document.querySelectorAll('.step-container').length + 1;
+                addStep(stepNumber, "", "");
+            });
+            
+            // Add YouTube step button
+            document.getElementById('addYoutubeStepBtn').addEventListener('click', function() {
+                const stepNumber = document.querySelectorAll('.step-container').length + 1;
+                addStep(stepNumber, "Subscribe to YouTube Channel", "https://youtube.com");
+            });
+            
+            // Thumbnail preview
+            document.getElementById('thumbnailInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const preview = document.getElementById('previewImage');
+                        preview.src = event.target.result;
+                        document.getElementById('thumbnailPreview').style.display = 'block';
+                        document.getElementById('fileLabelText').textContent = file.name;
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
             
             // Cancel unlock button
@@ -541,6 +670,22 @@
                 }
             });
         });
+
+        // Load scripts from localStorage
+        function loadScripts() {
+            const savedScripts = localStorage.getItem('vertexScripts');
+            if (savedScripts) {
+                scripts = JSON.parse(savedScripts);
+                if (scripts.length > 0) {
+                    nextId = Math.max(...scripts.map(s => s.id)) + 1;
+                }
+            }
+        }
+
+        // Save scripts to localStorage
+        function saveScripts() {
+            localStorage.setItem('vertexScripts', JSON.stringify(scripts));
+        }
 
         // Render all scripts in the dashboard
         function renderScripts() {
@@ -563,7 +708,10 @@
                 scriptCard.className = 'script-card';
                 scriptCard.innerHTML = `
                     <div class="script-thumbnail">
-                        <i class="fas fa-code"></i>
+                        ${script.thumbnail ? 
+                            `<img src="${script.thumbnail}" alt="${script.name}">` : 
+                            `<i class="fas fa-code"></i>`
+                        }
                     </div>
                     <div class="script-info">
                         <div class="script-title">${script.name}</div>
@@ -578,15 +726,6 @@
                         </button>
                     </div>
                 `;
-                
-                // Set thumbnail if available
-                const thumbnailDiv = scriptCard.querySelector('.script-thumbnail');
-                if (script.thumbnail) {
-                    thumbnailDiv.innerHTML = '';
-                    thumbnailDiv.style.backgroundImage = `url('${script.thumbnail}')`;
-                    thumbnailDiv.style.backgroundSize = 'cover';
-                    thumbnailDiv.style.backgroundPosition = 'center';
-                }
                 
                 scriptsList.appendChild(scriptCard);
             });
@@ -603,98 +742,42 @@
             });
         }
 
-        // Upload a new script
-        function uploadScript() {
-            const scriptName = document.getElementById('scriptName').value;
-            const thumbnail = document.getElementById('thumbnail').value;
-            const videoLink = document.getElementById('videoLink').value;
-            const scriptLink = document.getElementById('scriptLink').value;
-            
-            // Get all steps
-            const stepContainers = document.querySelectorAll('.step-container');
-            const steps = [];
-            
-            stepContainers.forEach(container => {
-                const urlInput = container.querySelector('.step-url');
-                const titleElement = container.querySelector('.step-title');
-                const stepName = titleElement ? titleElement.textContent.replace('Step X: ', '') : `Step ${steps.length + 1}`;
-                
-                if (urlInput.value) {
-                    steps.push({
-                        url: urlInput.value,
-                        name: stepName
-                    });
-                }
-            });
-            
-            // Create new script object
-            const newScript = {
-                id: nextId++,
-                name: scriptName,
-                thumbnail: thumbnail,
-                videoLink: videoLink,
-                scriptLink: scriptLink,
-                steps: steps,
-                uploadDate: new Date().toISOString().split('T')[0]
-            };
-            
-            // Add to scripts array
-            scripts.push(newScript);
-            
-            // Reset form
-            document.getElementById('uploadForm').reset();
-            
-            // Reset steps to default (only VertexR_S step)
+        // Add a step to the upload form
+        function addStep(stepNumber, name, url) {
             const stepsContainer = document.getElementById('stepsContainer');
-            stepsContainer.innerHTML = `
-                <div class="step-container" data-step="1">
-                    <div class="step-header">
-                        <div class="step-title">Step 1: Subscribe to VertexR_S</div>
-                    </div>
-                    <input type="text" class="step-url" placeholder="https://m.youtube.com/@VertexR_S" value="https://m.youtube.com/@VertexR_S" readonly>
-                </div>
-            `;
-            
-            // Render updated scripts
-            renderScripts();
-            
-            // Show success message
-            alert(`Script "${scriptName}" uploaded successfully!`);
-        }
-
-        // Add a new step to the upload form
-        function addStep() {
-            const stepsContainer = document.getElementById('stepsContainer');
-            const stepCount = stepsContainer.children.length + 1;
             
             const stepContainer = document.createElement('div');
             stepContainer.className = 'step-container';
-            stepContainer.setAttribute('data-step', stepCount);
+            stepContainer.setAttribute('data-step', stepNumber);
             stepContainer.innerHTML = `
                 <div class="step-header">
-                    <div class="step-title">Step ${stepCount}: <input type="text" class="step-name-input" placeholder="Step name (e.g., Visit Website)" style="background: transparent; border: none; color: white; width: 200px;"></div>
-                    <button type="button" class="remove-step"><i class="fas fa-times"></i></button>
+                    <div class="step-title">
+                        <span class="step-counter">${stepNumber}</span>
+                        <input type="text" class="step-name-input" placeholder="Step name" value="${name}" style="background: transparent; border: none; color: white; width: 200px;">
+                    </div>
+                    ${stepNumber > 1 ? '<button type="button" class="remove-step"><i class="fas fa-times"></i></button>' : ''}
                 </div>
-                <input type="text" class="step-url" placeholder="https://example.com" required>
+                <input type="text" class="step-url" placeholder="https://example.com" value="${url}" required>
             `;
             
             stepsContainer.appendChild(stepContainer);
             
             // Add event listener to remove button
-            stepContainer.querySelector('.remove-step').addEventListener('click', function() {
-                stepContainer.remove();
-                updateStepNumbers();
-            });
+            if (stepNumber > 1) {
+                stepContainer.querySelector('.remove-step').addEventListener('click', function() {
+                    stepContainer.remove();
+                    updateStepNumbers();
+                });
+            }
             
             // Add event listener to step name input
             const nameInput = stepContainer.querySelector('.step-name-input');
             nameInput.addEventListener('input', function() {
-                const titleElement = stepContainer.querySelector('.step-title');
-                titleElement.innerHTML = `Step ${stepCount}: ${this.value || 'Unnamed Step'}`;
+                updateStepNumbers();
             });
         }
 
-        // Update step numbers after removal
+        // Update step numbers in the form
         function updateStepNumbers() {
             const stepsContainer = document.getElementById('stepsContainer');
             const stepContainers = stepsContainer.querySelectorAll('.step-container');
@@ -703,11 +786,100 @@
                 const stepNumber = index + 1;
                 container.setAttribute('data-step', stepNumber);
                 
-                const titleElement = container.querySelector('.step-title');
-                const currentText = titleElement.textContent;
-                const newText = currentText.replace(/Step \d+: /, `Step ${stepNumber}: `);
-                titleElement.textContent = newText;
+                const counter = container.querySelector('.step-counter');
+                counter.textContent = stepNumber;
+                
+                // Show/hide remove button
+                const removeBtn = container.querySelector('.remove-step');
+                if (stepNumber === 1 && removeBtn) {
+                    removeBtn.remove();
+                } else if (stepNumber > 1 && !removeBtn) {
+                    const titleDiv = container.querySelector('.step-title');
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-step';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    removeBtn.addEventListener('click', function() {
+                        container.remove();
+                        updateStepNumbers();
+                    });
+                    titleDiv.appendChild(removeBtn);
+                }
             });
+        }
+
+        // Upload a new script
+        function uploadScript() {
+            const scriptName = document.getElementById('scriptName').value;
+            const thumbnailInput = document.getElementById('thumbnailInput');
+            const videoLink = document.getElementById('videoLink').value;
+            const scriptLink = document.getElementById('scriptLink').value;
+            
+            // Validate thumbnail
+            if (!thumbnailInput.files || thumbnailInput.files.length === 0) {
+                alert('Please select a thumbnail image');
+                return;
+            }
+            
+            // Get thumbnail as data URL
+            const file = thumbnailInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const thumbnail = event.target.result;
+                
+                // Get all steps
+                const stepContainers = document.querySelectorAll('.step-container');
+                const steps = [];
+                
+                stepContainers.forEach(container => {
+                    const urlInput = container.querySelector('.step-url');
+                    const nameInput = container.querySelector('.step-name-input');
+                    const stepName = nameInput.value || `Step ${steps.length + 1}`;
+                    
+                    if (urlInput.value) {
+                        steps.push({
+                            url: urlInput.value,
+                            name: stepName
+                        });
+                    }
+                });
+                
+                // Create new script object
+                const newScript = {
+                    id: nextId++,
+                    name: scriptName,
+                    thumbnail: thumbnail,
+                    videoLink: videoLink,
+                    scriptLink: scriptLink,
+                    steps: steps,
+                    uploadDate: new Date().toISOString().split('T')[0]
+                };
+                
+                // Add to scripts array
+                scripts.push(newScript);
+                
+                // Save to localStorage
+                saveScripts();
+                
+                // Reset form
+                document.getElementById('uploadForm').reset();
+                document.getElementById('thumbnailPreview').style.display = 'none';
+                document.getElementById('fileLabelText').textContent = 'Click to upload thumbnail image';
+                
+                // Reset steps
+                const stepsContainer = document.getElementById('stepsContainer');
+                stepsContainer.innerHTML = '';
+                addStep(1, "Subscribe to VertexR_S", "https://m.youtube.com/@VertexR_S");
+                
+                // Render updated scripts
+                renderScripts();
+                
+                // Show success message
+                alert(`Script "${scriptName}" uploaded successfully!`);
+            };
+            
+            reader.readAsDataURL(file);
         }
 
         // Start the unlock process for a script
@@ -715,10 +887,14 @@
             currentUnlockScript = script;
             currentStep = 0;
             countdown = 20;
+            completedSteps.clear();
             
             // Show modal
             const modal = document.getElementById('unlockModal');
             modal.style.display = 'flex';
+            
+            // Set script name
+            document.getElementById('unlockScriptName').textContent = script.name;
             
             // Initialize step checks
             const stepChecks = document.getElementById('stepChecks');
@@ -727,6 +903,7 @@
             script.steps.forEach((step, index) => {
                 const stepCheck = document.createElement('div');
                 stepCheck.className = 'step-check';
+                stepCheck.id = `stepCheck${index}`;
                 stepCheck.innerHTML = `
                     <div class="check-circle" id="checkCircle${index}">
                         <i class="fas fa-check"></i>
@@ -734,9 +911,19 @@
                     <div class="step-text">
                         <div class="step-name">${step.name}</div>
                         <div class="step-desc">${step.url}</div>
+                        <button class="step-link-btn" id="stepLinkBtn${index}" data-url="${step.url}">
+                            <i class="fas fa-external-link-alt"></i> Open Link
+                        </button>
                     </div>
                 `;
                 stepChecks.appendChild(stepCheck);
+                
+                // Add event listener to step button
+                document.getElementById(`stepLinkBtn${index}`).addEventListener('click', function() {
+                    const stepIndex = parseInt(this.id.replace('stepLinkBtn', ''));
+                    const stepUrl = this.getAttribute('data-url');
+                    startStepTimer(stepIndex, stepUrl);
+                });
             });
             
             // Reset timer and progress
@@ -745,7 +932,7 @@
             document.getElementById('accessLinkBtn').disabled = true;
             document.getElementById('accessLinkBtn').innerHTML = '<i class="fas fa-lock"></i> Unlocking... Please wait';
             
-            // Start the unlock process
+            // Start with first step
             processNextStep();
         }
 
@@ -757,25 +944,86 @@
                 return;
             }
             
-            const step = currentUnlockScript.steps[currentStep];
-            
-            // Open the step URL in a new tab
-            window.open(step.url, '_blank');
-            
-            // Show checking animation
-            const checkCircle = document.getElementById(`checkCircle${currentStep}`);
-            checkCircle.style.borderColor = '#4bcffa';
-            
-            // Simulate checking for 3 seconds
-            setTimeout(() => {
-                // Show checkmark
-                const checkIcon = checkCircle.querySelector('i');
-                checkIcon.style.opacity = '1';
+            // Check if this step is already completed
+            if (completedSteps.has(currentStep)) {
+                // Mark as completed
+                const stepCheck = document.getElementById(`stepCheck${currentStep}`);
+                stepCheck.classList.add('completed');
                 
                 // Move to next step
                 currentStep++;
                 processNextStep();
-            }, 3000);
+                return;
+            }
+            
+            // Enable the button for this step
+            const stepBtn = document.getElementById(`stepLinkBtn${currentStep}`);
+            stepBtn.disabled = false;
+        }
+
+        // Start the timer for a step
+        function startStepTimer(stepIndex, stepUrl) {
+            // Disable the button
+            const stepBtn = document.getElementById(`stepLinkBtn${stepIndex}`);
+            stepBtn.disabled = true;
+            stepBtn.innerHTML = '<i class="fas fa-clock"></i> Waiting...';
+            
+            // Open the step URL in a new tab
+            window.open(stepUrl, '_blank');
+            
+            // Show spinning animation
+            const checkCircle = document.getElementById(`checkCircle${stepIndex}`);
+            checkCircle.classList.add('spinning');
+            
+            // Mark step as in progress
+            const stepCheck = document.getElementById(`stepCheck${stepIndex}`);
+            stepCheck.classList.add('in-progress');
+            
+            // Start 20-second timer
+            let timeLeft = 20;
+            stepTimers[stepIndex] = setInterval(() => {
+                timeLeft--;
+                stepBtn.innerHTML = `<i class="fas fa-clock"></i> ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    // Timer complete
+                    clearInterval(stepTimers[stepIndex]);
+                    delete stepTimers[stepIndex];
+                    
+                    // Mark step as completed
+                    completeStep(stepIndex);
+                }
+            }, 1000);
+        }
+
+        // Mark a step as completed
+        function completeStep(stepIndex) {
+            // Stop spinning animation
+            const checkCircle = document.getElementById(`checkCircle${stepIndex}`);
+            checkCircle.classList.remove('spinning');
+            
+            // Mark as completed
+            const stepCheck = document.getElementById(`stepCheck${stepIndex}`);
+            stepCheck.classList.remove('in-progress');
+            stepCheck.classList.add('completed');
+            
+            // Show checkmark
+            const checkIcon = checkCircle.querySelector('i');
+            checkIcon.style.opacity = '1';
+            
+            // Update button
+            const stepBtn = document.getElementById(`stepLinkBtn${stepIndex}`);
+            stepBtn.innerHTML = '<i class="fas fa-check"></i> Completed';
+            stepBtn.disabled = true;
+            
+            // Add to completed steps
+            completedSteps.add(stepIndex);
+            
+            // Move to next step
+            if (stepIndex === currentStep) {
+                currentStep++;
+                processNextStep();
+            }
         }
 
         // Start the final countdown
@@ -801,6 +1049,12 @@
 
         // Close the unlock modal
         function closeUnlockModal() {
+            // Clear all step timers
+            Object.keys(stepTimers).forEach(stepIndex => {
+                clearInterval(stepTimers[stepIndex]);
+            });
+            stepTimers = {};
+            
             clearInterval(countdownInterval);
             document.getElementById('unlockModal').style.display = 'none';
             currentUnlockScript = null;
