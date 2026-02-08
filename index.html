@@ -21,7 +21,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
@@ -54,6 +54,53 @@
             letter-spacing: 1px;
         }
         
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-input {
+            padding: 10px 15px 10px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            width: 250px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .upload-btn {
+            background: linear-gradient(to right, #4bcffa, #5d79ff);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(75, 207, 250, 0.3);
+        }
+        
         .credit {
             font-size: 0.9rem;
             opacity: 0.8;
@@ -64,15 +111,9 @@
         
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 30px;
             margin-bottom: 40px;
-        }
-        
-        @media (max-width: 900px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
         }
         
         .card {
@@ -95,6 +136,39 @@
         
         .card h2 i {
             color: #4bcffa;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .dashboard-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dashboard-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4bcffa;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
         
         .form-group {
@@ -186,6 +260,12 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .step-container.vertex-step {
+            background: rgba(75, 207, 250, 0.1);
+            border: 1px solid rgba(75, 207, 250, 0.3);
         }
         
         .step-header {
@@ -198,6 +278,17 @@
         .step-title {
             font-weight: 600;
             color: #4bcffa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .step-title i {
+            color: #ff6b6b;
+        }
+        
+        .vertex-step .step-title i {
+            color: #4bcffa;
         }
         
         .remove-step {
@@ -207,6 +298,21 @@
             border-radius: 4px;
             padding: 4px 10px;
             cursor: pointer;
+        }
+        
+        .vertex-step .remove-step {
+            display: none !important;
+        }
+        
+        .step-url {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        .vertex-step .step-url {
+            background: rgba(0, 0, 0, 0.2) !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+            cursor: not-allowed;
         }
         
         .btn {
@@ -236,10 +342,18 @@
             background: rgba(255, 255, 255, 0.2);
         }
         
+        .btn-danger {
+            background: #ff6b6b;
+        }
+        
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+        
         .scripts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
             margin-top: 20px;
         }
         
@@ -249,6 +363,7 @@
             overflow: hidden;
             transition: transform 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
         
         .script-card:hover {
@@ -256,10 +371,48 @@
             background: rgba(255, 255, 255, 0.08);
         }
         
+        .script-card-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .script-card:hover .script-card-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #ff6b6b;
+            transform: scale(1.1);
+        }
+        
+        .edit-btn:hover {
+            background: #4bcffa;
+            transform: scale(1.1);
+        }
+        
         .script-thumbnail {
-            height: 160px;
+            height: 180px;
             width: 100%;
-            object-fit: cover;
             background: linear-gradient(45deg, #0c2461, #1e3799);
             display: flex;
             align-items: center;
@@ -275,11 +428,11 @@
         }
         
         .script-info {
-            padding: 15px;
+            padding: 20px;
         }
         
         .script-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 8px;
             white-space: nowrap;
@@ -287,10 +440,21 @@
             text-overflow: ellipsis;
         }
         
+        .script-author {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
         .script-meta {
             font-size: 0.9rem;
             opacity: 0.8;
             margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
         }
         
         .steps-indicator {
@@ -463,15 +627,42 @@
         
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 60px 20px;
             opacity: 0.7;
             grid-column: 1 / -1;
         }
         
         .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 4rem;
+            margin-bottom: 20px;
             color: #4bcffa;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .upload-container {
+            display: none;
+        }
+        
+        .back-to-dashboard {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-dashboard:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         footer {
@@ -495,6 +686,12 @@
             font-size: 0.8rem;
             margin-right: 8px;
         }
+        
+        .user-id-display {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -504,12 +701,50 @@
                 <i class="fas fa-code"></i>
                 <h1>VertexScripts</h1>
             </div>
-            <div class="credit">Created by VertexScripts</div>
+            
+            <div class="header-controls">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search scripts...">
+                </div>
+                <button class="upload-btn" id="showUploadBtn">
+                    <i class="fas fa-upload"></i> Upload Script
+                </button>
+                <div class="credit">VertexScripts</div>
+            </div>
         </header>
         
         <main class="main-content">
-            <!-- Upload Script Section -->
-            <section class="card">
+            <!-- Dashboard Section -->
+            <section id="dashboardContainer" class="card">
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <h2><i class="fas fa-tachometer-alt"></i> Script Dashboard</h2>
+                    </div>
+                    <div class="dashboard-stats">
+                        <div class="stat">
+                            <div class="stat-number" id="totalScripts">0</div>
+                            <div class="stat-label">Total Scripts</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number" id="myScripts">0</div>
+                            <div class="stat-label">My Scripts</div>
+                        </div>
+                    </div>
+                </div>
+                <p>Browse and manage all available scripts</p>
+                
+                <div id="scriptsList" class="scripts-grid">
+                    <!-- Scripts will be dynamically added here -->
+                </div>
+            </section>
+            
+            <!-- Upload Script Section (Hidden by default) -->
+            <section id="uploadContainer" class="card upload-container">
+                <button class="back-to-dashboard" id="backToDashboardBtn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                
                 <h2><i class="fas fa-upload"></i> Upload New Script</h2>
                 <form id="uploadForm">
                     <div class="form-group">
@@ -542,9 +777,9 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Unlock Steps (Redirect links before unlocking)</label>
+                        <label>Unlock Steps (Users must complete these before accessing your script)</label>
                         <div id="stepsContainer">
-                            <!-- Steps will be added here -->
+                            <!-- Vertex step is added by default and cannot be removed -->
                         </div>
                         
                         <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -557,20 +792,12 @@
                         </div>
                     </div>
                     
+                    <div class="user-id-display">Your User ID: <span id="currentUserId"></span></div>
+                    
                     <button type="submit" class="btn">
                         <i class="fas fa-cloud-upload-alt"></i> Upload Script
                     </button>
                 </form>
-            </section>
-            
-            <!-- Dashboard Section -->
-            <section class="card">
-                <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
-                <p>View and manage all uploaded scripts</p>
-                
-                <div id="scriptsList" class="scripts-grid">
-                    <!-- Scripts will be dynamically added here -->
-                </div>
             </section>
         </main>
         
@@ -600,6 +827,23 @@
             </div>
         </div>
         
+        <!-- Delete Confirmation Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i> Confirm Delete</h3>
+                <p id="deleteMessage">Are you sure you want to delete this script? This action cannot be undone.</p>
+                
+                <div style="display: flex; gap: 15px; margin-top: 25px; justify-content: center;">
+                    <button id="confirmDeleteBtn" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button id="cancelDeleteBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <footer>
             <p>VertexScripts Dashboard &copy; 2023 | All scripts are property of their respective owners</p>
         </footer>
@@ -613,16 +857,34 @@
         let currentStep = 0;
         let countdown = 20;
         let countdownInterval = null;
-        let completedSteps = new Set(); // Track completed steps per session
-        let stepTimers = {}; // Track timers for each step
+        let completedSteps = new Set();
+        let stepTimers = {};
+        let currentUserId = generateUserId();
+        let scriptToDelete = null;
+
+        // Generate a unique user ID for this browser
+        function generateUserId() {
+            // Check if we already have a user ID in localStorage
+            let userId = localStorage.getItem('vertexUserId');
+            if (!userId) {
+                // Generate a new user ID
+                userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('vertexUserId', userId);
+            }
+            return userId;
+        }
 
         // Load scripts from localStorage on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadScripts();
             renderScripts();
+            updateStats();
             
-            // Initialize with one step
-            addStep(1, "Subscribe to VertexR_S", "https://m.youtube.com/@VertexR_S");
+            // Display current user ID
+            document.getElementById('currentUserId').textContent = currentUserId;
+            
+            // Add the mandatory Vertex step
+            addVertexStep();
             
             // Form submission
             document.getElementById('uploadForm').addEventListener('submit', function(e) {
@@ -632,13 +894,13 @@
             
             // Add step button
             document.getElementById('addStepBtn').addEventListener('click', function() {
-                const stepNumber = document.querySelectorAll('.step-container').length + 1;
+                const stepNumber = document.querySelectorAll('.step-container').length;
                 addStep(stepNumber, "", "");
             });
             
             // Add YouTube step button
             document.getElementById('addYoutubeStepBtn').addEventListener('click', function() {
-                const stepNumber = document.querySelectorAll('.step-container').length + 1;
+                const stepNumber = document.querySelectorAll('.step-container').length;
                 addStep(stepNumber, "Subscribe to YouTube Channel", "https://youtube.com");
             });
             
@@ -669,6 +931,35 @@
                     closeUnlockModal();
                 }
             });
+            
+            // Show upload form
+            document.getElementById('showUploadBtn').addEventListener('click', function() {
+                showUploadForm();
+            });
+            
+            // Back to dashboard
+            document.getElementById('backToDashboardBtn').addEventListener('click', function() {
+                showDashboard();
+            });
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                filterScripts(e.target.value);
+            });
+            
+            // Delete modal buttons
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                if (scriptToDelete) {
+                    deleteScript(scriptToDelete);
+                    scriptToDelete = null;
+                }
+                document.getElementById('deleteModal').style.display = 'none';
+            });
+            
+            document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+                scriptToDelete = null;
+                document.getElementById('deleteModal').style.display = 'none';
+            });
         });
 
         // Load scripts from localStorage
@@ -687,62 +978,52 @@
             localStorage.setItem('vertexScripts', JSON.stringify(scripts));
         }
 
-        // Render all scripts in the dashboard
-        function renderScripts() {
-            const scriptsList = document.getElementById('scriptsList');
-            
-            if (scripts.length === 0) {
-                scriptsList.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-code"></i>
-                        <p>No scripts uploaded yet. Upload your first script!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            scriptsList.innerHTML = '';
-            
-            scripts.forEach(script => {
-                const scriptCard = document.createElement('div');
-                scriptCard.className = 'script-card';
-                scriptCard.innerHTML = `
-                    <div class="script-thumbnail">
-                        ${script.thumbnail ? 
-                            `<img src="${script.thumbnail}" alt="${script.name}">` : 
-                            `<i class="fas fa-code"></i>`
-                        }
-                    </div>
-                    <div class="script-info">
-                        <div class="script-title">${script.name}</div>
-                        <div class="script-meta">Uploaded: ${script.uploadDate}</div>
-                        <div class="steps-indicator">
-                            ${script.steps.map((step, index) => 
-                                `<div class="step-dot ${index === 0 ? 'active' : ''}"></div>`
-                            ).join('')}
-                        </div>
-                        <button class="btn unlock-script-btn" data-id="${script.id}">
-                            <i class="fas fa-unlock-alt"></i> Unlock Script
-                        </button>
-                    </div>
-                `;
-                
-                scriptsList.appendChild(scriptCard);
-            });
-            
-            // Add event listeners to unlock buttons
-            document.querySelectorAll('.unlock-script-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const scriptId = parseInt(this.getAttribute('data-id'));
-                    const script = scripts.find(s => s.id === scriptId);
-                    if (script) {
-                        startUnlockProcess(script);
-                    }
-                });
-            });
+        // Show dashboard and hide upload form
+        function showDashboard() {
+            document.getElementById('dashboardContainer').style.display = 'block';
+            document.getElementById('uploadContainer').style.display = 'none';
+            renderScripts();
+            updateStats();
         }
 
-        // Add a step to the upload form
+        // Show upload form and hide dashboard
+        function showUploadForm() {
+            document.getElementById('dashboardContainer').style.display = 'none';
+            document.getElementById('uploadContainer').style.display = 'block';
+            
+            // Reset form
+            document.getElementById('uploadForm').reset();
+            document.getElementById('thumbnailPreview').style.display = 'none';
+            document.getElementById('fileLabelText').textContent = 'Click to upload thumbnail image';
+            
+            // Reset steps (keeping only the Vertex step)
+            const stepsContainer = document.getElementById('stepsContainer');
+            stepsContainer.innerHTML = '';
+            addVertexStep();
+        }
+
+        // Add the mandatory Vertex subscription step
+        function addVertexStep() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            
+            const stepContainer = document.createElement('div');
+            stepContainer.className = 'step-container vertex-step';
+            stepContainer.setAttribute('data-step', 1);
+            stepContainer.innerHTML = `
+                <div class="step-header">
+                    <div class="step-title">
+                        <span class="step-counter">1</span>
+                        <i class="fab fa-youtube"></i> Subscribe to VertexR_S (Required)
+                    </div>
+                    <button type="button" class="remove-step"><i class="fas fa-times"></i></button>
+                </div>
+                <input type="text" class="step-url" value="https://m.youtube.com/@VertexR_S" readonly>
+            `;
+            
+            stepsContainer.appendChild(stepContainer);
+        }
+
+        // Add a regular step to the upload form
         function addStep(stepNumber, name, url) {
             const stepsContainer = document.getElementById('stepsContainer');
             
@@ -755,7 +1036,7 @@
                         <span class="step-counter">${stepNumber}</span>
                         <input type="text" class="step-name-input" placeholder="Step name" value="${name}" style="background: transparent; border: none; color: white; width: 200px;">
                     </div>
-                    ${stepNumber > 1 ? '<button type="button" class="remove-step"><i class="fas fa-times"></i></button>' : ''}
+                    <button type="button" class="remove-step"><i class="fas fa-times"></i></button>
                 </div>
                 <input type="text" class="step-url" placeholder="https://example.com" value="${url}" required>
             `;
@@ -763,12 +1044,10 @@
             stepsContainer.appendChild(stepContainer);
             
             // Add event listener to remove button
-            if (stepNumber > 1) {
-                stepContainer.querySelector('.remove-step').addEventListener('click', function() {
-                    stepContainer.remove();
-                    updateStepNumbers();
-                });
-            }
+            stepContainer.querySelector('.remove-step').addEventListener('click', function() {
+                stepContainer.remove();
+                updateStepNumbers();
+            });
             
             // Add event listener to step name input
             const nameInput = stepContainer.querySelector('.step-name-input');
@@ -788,24 +1067,159 @@
                 
                 const counter = container.querySelector('.step-counter');
                 counter.textContent = stepNumber;
+            });
+        }
+
+        // Update dashboard statistics
+        function updateStats() {
+            const totalScripts = scripts.length;
+            const myScripts = scripts.filter(script => script.userId === currentUserId).length;
+            
+            document.getElementById('totalScripts').textContent = totalScripts;
+            document.getElementById('myScripts').textContent = myScripts;
+        }
+
+        // Filter scripts based on search query
+        function filterScripts(query) {
+            const scriptsList = document.getElementById('scriptsList');
+            
+            if (!query.trim()) {
+                renderScripts();
+                return;
+            }
+            
+            const filteredScripts = scripts.filter(script => 
+                script.name.toLowerCase().includes(query.toLowerCase()) ||
+                (script.description && script.description.toLowerCase().includes(query.toLowerCase()))
+            );
+            
+            if (filteredScripts.length === 0) {
+                scriptsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No scripts found</h3>
+                        <p>No scripts match your search query: "${query}"</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            scriptsList.innerHTML = '';
+            
+            filteredScripts.forEach(script => {
+                const scriptCard = createScriptCard(script);
+                scriptsList.appendChild(scriptCard);
+            });
+        }
+
+        // Render all scripts in the dashboard
+        function renderScripts() {
+            const scriptsList = document.getElementById('scriptsList');
+            
+            if (scripts.length === 0) {
+                scriptsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-code"></i>
+                        <h3>No scripts uploaded yet</h3>
+                        <p>Upload your first script to get started!</p>
+                        <button class="btn" style="margin-top: 20px;" id="emptyUploadBtn">
+                            <i class="fas fa-upload"></i> Upload First Script
+                        </button>
+                    </div>
+                `;
                 
-                // Show/hide remove button
-                const removeBtn = container.querySelector('.remove-step');
-                if (stepNumber === 1 && removeBtn) {
-                    removeBtn.remove();
-                } else if (stepNumber > 1 && !removeBtn) {
-                    const titleDiv = container.querySelector('.step-title');
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'remove-step';
-                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                    removeBtn.addEventListener('click', function() {
-                        container.remove();
-                        updateStepNumbers();
-                    });
-                    titleDiv.appendChild(removeBtn);
+                document.getElementById('emptyUploadBtn').addEventListener('click', function() {
+                    showUploadForm();
+                });
+                return;
+            }
+            
+            scriptsList.innerHTML = '';
+            
+            scripts.forEach(script => {
+                const scriptCard = createScriptCard(script);
+                scriptsList.appendChild(scriptCard);
+            });
+        }
+
+        // Create a script card element
+        function createScriptCard(script) {
+            const scriptCard = document.createElement('div');
+            scriptCard.className = 'script-card';
+            scriptCard.innerHTML = `
+                <div class="script-card-actions">
+                    ${script.userId === currentUserId ? `
+                        <button class="action-btn delete-btn" data-id="${script.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </div>
+                <div class="script-thumbnail">
+                    ${script.thumbnail ? 
+                        `<img src="${script.thumbnail}" alt="${script.name}">` : 
+                        `<i class="fas fa-code"></i>`
+                    }
+                </div>
+                <div class="script-info">
+                    <div class="script-title">${script.name}</div>
+                    <div class="script-author">
+                        <i class="fas fa-user"></i>
+                        ${script.userId === currentUserId ? 'You' : 'Other User'}
+                    </div>
+                    <div class="script-meta">
+                        <span>${script.steps.length} steps</span>
+                        <span>${script.uploadDate}</span>
+                    </div>
+                    <div class="steps-indicator">
+                        ${script.steps.map((step, index) => 
+                            `<div class="step-dot ${index === 0 ? 'active' : ''}"></div>`
+                        ).join('')}
+                    </div>
+                    <button class="btn unlock-script-btn" data-id="${script.id}">
+                        <i class="fas fa-unlock-alt"></i> Unlock Script
+                    </button>
+                </div>
+            `;
+            
+            // Add event listener to unlock button
+            scriptCard.querySelector('.unlock-script-btn').addEventListener('click', function() {
+                const scriptId = parseInt(this.getAttribute('data-id'));
+                const script = scripts.find(s => s.id === scriptId);
+                if (script) {
+                    startUnlockProcess(script);
                 }
             });
+            
+            // Add event listener to delete button (only if it's the user's script)
+            if (script.userId === currentUserId) {
+                scriptCard.querySelector('.delete-btn').addEventListener('click', function() {
+                    const scriptId = parseInt(this.getAttribute('data-id'));
+                    confirmDelete(scriptId);
+                });
+            }
+            
+            return scriptCard;
+        }
+
+        // Confirm script deletion
+        function confirmDelete(scriptId) {
+            const script = scripts.find(s => s.id === scriptId);
+            if (script && script.userId === currentUserId) {
+                scriptToDelete = scriptId;
+                document.getElementById('deleteMessage').textContent = `Are you sure you want to delete "${script.name}"? This action cannot be undone.`;
+                document.getElementById('deleteModal').style.display = 'flex';
+            }
+        }
+
+        // Delete a script
+        function deleteScript(scriptId) {
+            const scriptIndex = scripts.findIndex(s => s.id === scriptId);
+            if (scriptIndex !== -1 && scripts[scriptIndex].userId === currentUserId) {
+                scripts.splice(scriptIndex, 1);
+                saveScripts();
+                renderScripts();
+                updateStats();
+            }
         }
 
         // Upload a new script
@@ -828,14 +1242,23 @@
             reader.onload = function(event) {
                 const thumbnail = event.target.result;
                 
-                // Get all steps
+                // Get all steps (including the mandatory Vertex step)
                 const stepContainers = document.querySelectorAll('.step-container');
                 const steps = [];
                 
                 stepContainers.forEach(container => {
                     const urlInput = container.querySelector('.step-url');
                     const nameInput = container.querySelector('.step-name-input');
-                    const stepName = nameInput.value || `Step ${steps.length + 1}`;
+                    const stepTitle = container.querySelector('.step-title');
+                    
+                    let stepName = '';
+                    if (container.classList.contains('vertex-step')) {
+                        stepName = 'Subscribe to VertexR_S';
+                    } else if (nameInput) {
+                        stepName = nameInput.value || `Step ${steps.length + 1}`;
+                    } else if (stepTitle) {
+                        stepName = stepTitle.textContent.replace('Subscribe to VertexR_S (Required)', 'Subscribe to VertexR_S').trim();
+                    }
                     
                     if (urlInput.value) {
                         steps.push({
@@ -853,6 +1276,7 @@
                     videoLink: videoLink,
                     scriptLink: scriptLink,
                     steps: steps,
+                    userId: currentUserId,
                     uploadDate: new Date().toISOString().split('T')[0]
                 };
                 
@@ -862,18 +1286,8 @@
                 // Save to localStorage
                 saveScripts();
                 
-                // Reset form
-                document.getElementById('uploadForm').reset();
-                document.getElementById('thumbnailPreview').style.display = 'none';
-                document.getElementById('fileLabelText').textContent = 'Click to upload thumbnail image';
-                
-                // Reset steps
-                const stepsContainer = document.getElementById('stepsContainer');
-                stepsContainer.innerHTML = '';
-                addStep(1, "Subscribe to VertexR_S", "https://m.youtube.com/@VertexR_S");
-                
-                // Render updated scripts
-                renderScripts();
+                // Reset form and show dashboard
+                showDashboard();
                 
                 // Show success message
                 alert(`Script "${scriptName}" uploaded successfully!`);
