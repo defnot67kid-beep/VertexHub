@@ -207,6 +207,7 @@
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 20px;
+            position: relative;
         }
         
         .script-view-thumbnail img {
@@ -215,12 +216,39 @@
             object-fit: cover;
         }
         
+        .youtube-thumbnail {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .youtube-thumbnail:hover .play-button {
+            transform: scale(1.1);
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 0, 0, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            transition: all 0.3s ease;
+        }
+        
         .script-view-stats {
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
             padding-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
         }
         
         .stat-item {
@@ -275,6 +303,49 @@
         .subscribe-btn.subscribed {
             background: #4bcffa;
             color: #0c2461;
+        }
+        
+        /* Channel View Styles */
+        .channel-container {
+            display: none;
+        }
+        
+        .channel-header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .channel-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .channel-stat {
+            text-align: center;
+        }
+        
+        .channel-stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4bcffa;
+        }
+        
+        .channel-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .channel-scripts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
         
         /* Subscriptions Container */
@@ -355,14 +426,17 @@
             
             .mobile-dropdown-content {
                 display: none;
-                position: absolute;
-                top: 100%;
+                position: fixed;
+                top: 80px;
                 left: 0;
                 right: 0;
                 background: rgba(30, 30, 46, 0.98);
                 z-index: 1000;
                 padding: 10px;
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                max-height: calc(100vh - 80px);
+                overflow-y: auto;
             }
             
             .mobile-dropdown-content.active {
@@ -373,10 +447,11 @@
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                padding: 12px 15px;
+                padding: 15px;
                 color: white;
                 text-decoration: none;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                font-size: 1rem;
             }
             
             .header-controls {
@@ -387,6 +462,11 @@
             
             .search-container {
                 flex: 1;
+            }
+            
+            /* Auto-show dropdown when clicking upload on mobile */
+            .mobile-dropdown-content.show-upload {
+                display: block;
             }
         }
         
@@ -430,6 +510,56 @@
             gap: 10px;
             font-size: 0.9rem;
             opacity: 0.9;
+        }
+        
+        /* Upload Options */
+        .upload-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .upload-option-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-option-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .upload-option-btn.active {
+            background: rgba(75, 207, 250, 0.2);
+            border-color: #4bcffa;
+        }
+        
+        .upload-option-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .youtube-preview {
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+        }
+        
+        .youtube-preview iframe {
+            width: 100%;
+            max-width: 560px;
+            height: 315px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
         
         /* Original Styles Continue Below */
@@ -1576,6 +1706,9 @@
                                 <i class="fas fa-caret-down"></i>
                             </button>
                             <div class="dropdown-content">
+                                <a href="#" id="viewChannelBtn">
+                                    <i class="fas fa-user"></i> My Channel
+                                </a>
                                 <a href="#" id="subscriptionsBtn">
                                     <i class="fas fa-bell"></i> Subscriptions
                                 </a>
@@ -1588,6 +1721,9 @@
                 </div>
                 
                 <div class="mobile-dropdown-content" id="mobileDropdown">
+                    <a href="#" id="mobileViewChannelBtn">
+                        <i class="fas fa-user"></i> My Channel
+                    </a>
                     <a href="#" id="mobileSubscriptionsBtn">
                         <i class="fas fa-bell"></i> Subscriptions
                     </a>
@@ -1609,6 +1745,43 @@
             </header>
             
             <main class="main-content">
+                <!-- Channel View Section -->
+                <section id="channelContainer" class="card channel-container">
+                    <button class="back-to-dashboard" id="backToDashboardFromChannel">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                    
+                    <div class="channel-header">
+                        <h2><i class="fas fa-user"></i> My Channel</h2>
+                        <p>Welcome to your channel, <span id="channelUsername"></span>!</p>
+                        
+                        <div class="channel-stats">
+                            <div class="channel-stat">
+                                <div class="channel-stat-number" id="channelSubscribers">0</div>
+                                <div class="channel-stat-label">Subscribers</div>
+                            </div>
+                            <div class="channel-stat">
+                                <div class="channel-stat-number" id="channelTotalLikes">0</div>
+                                <div class="channel-stat-label">Total Likes</div>
+                            </div>
+                            <div class="channel-stat">
+                                <div class="channel-stat-number" id="channelTotalViews">0</div>
+                                <div class="channel-stat-label">Total Views</div>
+                            </div>
+                            <div class="channel-stat">
+                                <div class="channel-stat-number" id="channelScriptsCount">0</div>
+                                <div class="channel-stat-label">Scripts</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3><i class="fas fa-code"></i> My Scripts</h3>
+                    
+                    <div id="channelScriptsList" class="channel-scripts-grid">
+                        <!-- User's scripts will be dynamically added here -->
+                    </div>
+                </section>
+                
                 <!-- Subscriptions Section -->
                 <section id="subscriptionsContainer" class="card subscriptions-container">
                     <button class="back-to-dashboard" id="backToDashboardFromSubs">
@@ -1661,22 +1834,39 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="thumbnail">Script Thumbnail</label>
-                            <div class="file-upload">
-                                <label for="thumbnailInput" class="file-upload-label">
+                            <label>Script Thumbnail</label>
+                            <div class="upload-options">
+                                <button type="button" class="upload-option-btn active" id="thumbnailOptionBtn">
                                     <i class="fas fa-image"></i>
-                                    <span id="fileLabelText">Click to upload thumbnail image</span>
-                                </label>
-                                <input type="file" id="thumbnailInput" accept="image/*" required>
+                                    <span>Upload Image</span>
+                                </button>
+                                <button type="button" class="upload-option-btn" id="youtubeOptionBtn">
+                                    <i class="fab fa-youtube"></i>
+                                    <span>YouTube Video</span>
+                                </button>
                             </div>
-                            <div class="thumbnail-preview" id="thumbnailPreview">
-                                <img id="previewImage" src="" alt="Thumbnail Preview">
+                            
+                            <!-- Image Upload Option -->
+                            <div id="thumbnailUploadSection" class="thumbnail-section">
+                                <div class="file-upload">
+                                    <label for="thumbnailInput" class="file-upload-label">
+                                        <i class="fas fa-image"></i>
+                                        <span id="fileLabelText">Click to upload thumbnail image</span>
+                                    </label>
+                                    <input type="file" id="thumbnailInput" accept="image/*">
+                                </div>
+                                <div class="thumbnail-preview" id="thumbnailPreview">
+                                    <img id="previewImage" src="" alt="Thumbnail Preview">
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="videoLink">Video URL (Optional)</label>
-                            <input type="text" id="videoLink" placeholder="https://youtube.com/watch?v=...">
+                            
+                            <!-- YouTube Option -->
+                            <div id="youtubeUploadSection" class="youtube-section" style="display: none;">
+                                <input type="text" id="youtubeLink" placeholder="Enter YouTube video URL (e.g., https://youtube.com/watch?v=...)">
+                                <div class="youtube-preview" id="youtubePreview">
+                                    <!-- YouTube preview will be shown here -->
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="form-group">
@@ -1744,8 +1934,8 @@
                     </div>
                     
                     <div class="script-view-body">
-                        <div class="script-view-thumbnail">
-                            <img id="viewScriptThumbnail" src="" alt="Script Thumbnail">
+                        <div class="script-view-thumbnail" id="viewThumbnailContainer">
+                            <!-- Thumbnail or YouTube video will be shown here -->
                         </div>
                         
                         <div class="script-details">
@@ -1869,12 +2059,10 @@
                     return { success: false, error: 'Password cannot be the same as username' };
                 }
                 
-                // Simple password validation (minimum 6 chars)
                 if (password.length < 6) {
                     return { success: false, error: 'Password must be at least 6 characters' };
                 }
                 
-                // Hash password (simple example - in production use proper hashing)
                 const hashedPassword = this.hashPassword(password);
                 
                 users[username] = {
@@ -1904,8 +2092,6 @@
             }
             
             hashPassword(password) {
-                // Simple hash for demo purposes
-                // In production, use a proper hashing library
                 let hash = 0;
                 for (let i = 0; i < password.length; i++) {
                     const char = password.charCodeAt(i);
@@ -1953,12 +2139,15 @@
                 
                 // Remove as subscriber from other users
                 Object.keys(subscriptions).forEach(user => {
-                    const index = subscriptions[user].indexOf(username);
-                    if (index > -1) {
-                        subscriptions[user].splice(index, 1);
+                    if (subscriptions[user] && subscriptions[user].includes(username)) {
+                        const index = subscriptions[user].indexOf(username);
+                        if (index > -1) {
+                            subscriptions[user].splice(index, 1);
+                        }
                     }
                 });
                 
+                localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
                 this.logoutUser();
             }
             
@@ -1973,10 +2162,24 @@
                 return JSON.parse(localStorage.getItem('vertex_scripts'));
             }
             
+            getScriptsByUser(username) {
+                const scripts = this.getScripts();
+                return scripts.filter(script => script.uploader === username);
+            }
+            
             deleteScript(scriptId) {
                 let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
                 scripts = scripts.filter(script => script.id !== scriptId);
                 localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
+            }
+            
+            updateScript(updatedScript) {
+                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
+                const index = scripts.findIndex(script => script.id === updatedScript.id);
+                if (index !== -1) {
+                    scripts[index] = updatedScript;
+                    localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
+                }
             }
             
             // Interaction tracking
@@ -1991,8 +2194,23 @@
                     interactions[username][scriptId] = {};
                 }
                 
-                interactions[username][scriptId][type] = true;
+                // Toggle interaction - if already exists, remove it
+                if (interactions[username][scriptId][type]) {
+                    delete interactions[username][scriptId][type];
+                } else {
+                    // Remove opposite interaction if it exists
+                    const oppositeType = type === 'like' ? 'dislike' : 'like';
+                    if (interactions[username][scriptId][oppositeType]) {
+                        delete interactions[username][scriptId][oppositeType];
+                    }
+                    
+                    interactions[username][scriptId][type] = true;
+                }
+                
                 localStorage.setItem('vertex_interactions', JSON.stringify(interactions));
+                
+                // Return whether the interaction was added or removed
+                return interactions[username][scriptId][type] || false;
             }
             
             hasInteracted(username, scriptId, type) {
@@ -2012,28 +2230,17 @@
                     subscriptions[subscriber] = [];
                 }
                 
-                if (!subscriptions[subscriber].includes(creator)) {
+                // Toggle subscription
+                if (subscriptions[subscriber].includes(creator)) {
+                    const index = subscriptions[subscriber].indexOf(creator);
+                    subscriptions[subscriber].splice(index, 1);
+                    localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
+                    return false; // Unsubscribed
+                } else {
                     subscriptions[subscriber].push(creator);
                     localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
-                    return true;
+                    return true; // Subscribed
                 }
-                
-                return false;
-            }
-            
-            unsubscribe(subscriber, creator) {
-                let subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
-                
-                if (subscriptions[subscriber]) {
-                    const index = subscriptions[subscriber].indexOf(creator);
-                    if (index > -1) {
-                        subscriptions[subscriber].splice(index, 1);
-                        localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
-                        return true;
-                    }
-                }
-                
-                return false;
             }
             
             isSubscribed(subscriber, creator) {
@@ -2051,12 +2258,37 @@
                 const subscribers = [];
                 
                 Object.keys(subscriptions).forEach(subscriber => {
-                    if (subscriptions[subscriber].includes(username)) {
+                    if (subscriptions[subscriber] && subscriptions[subscriber].includes(username)) {
                         subscribers.push(subscriber);
                     }
                 });
                 
                 return subscribers;
+            }
+            
+            // Channel stats
+            getUserChannelStats(username) {
+                const scripts = this.getScriptsByUser(username);
+                let totalLikes = 0;
+                let totalDislikes = 0;
+                let totalViews = 0;
+                
+                scripts.forEach(script => {
+                    totalLikes += script.likes || 0;
+                    totalDislikes += script.dislikes || 0;
+                    totalViews += script.views || 0;
+                });
+                
+                const subscribers = this.getSubscribers(username);
+                
+                return {
+                    scriptsCount: scripts.length,
+                    totalLikes,
+                    totalDislikes,
+                    totalViews,
+                    subscribers: subscribers.length,
+                    subscriberList: subscribers
+                };
             }
         }
 
@@ -2073,10 +2305,10 @@
         let stepTimers = {};
         let scriptToDelete = null;
         let currentViewScript = null;
+        let uploadType = 'thumbnail'; // 'thumbnail' or 'youtube'
 
         // Initialize application
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is already logged in
             currentUser = storage.getCurrentUser();
             
             if (currentUser) {
@@ -2099,6 +2331,13 @@
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('registerForm').addEventListener('submit', handleRegister);
             
+            // Upload type selection
+            document.getElementById('thumbnailOptionBtn').addEventListener('click', () => switchUploadType('thumbnail'));
+            document.getElementById('youtubeOptionBtn').addEventListener('click', () => switchUploadType('youtube'));
+            
+            // YouTube link preview
+            document.getElementById('youtubeLink').addEventListener('input', handleYoutubeLink);
+            
             // Main app buttons
             document.getElementById('uploadForm').addEventListener('submit', uploadScript);
             document.getElementById('addStepBtn').addEventListener('click', addStep);
@@ -2113,9 +2352,12 @@
             document.getElementById('cancelDeleteBtn').addEventListener('click', cancelDelete);
             document.getElementById('confirmAccountDeleteBtn').addEventListener('click', confirmAccountDelete);
             document.getElementById('cancelAccountDeleteBtn').addEventListener('click', cancelAccountDelete);
+            document.getElementById('viewChannelBtn').addEventListener('click', showChannel);
+            document.getElementById('mobileViewChannelBtn').addEventListener('click', showChannel);
             document.getElementById('subscriptionsBtn').addEventListener('click', showSubscriptions);
             document.getElementById('mobileSubscriptionsBtn').addEventListener('click', showSubscriptions);
             document.getElementById('backToDashboardFromSubs').addEventListener('click', showDashboard);
+            document.getElementById('backToDashboardFromChannel').addEventListener('click', showDashboard);
             document.getElementById('deleteAccountBtn').addEventListener('click', showDeleteAccountModal);
             document.getElementById('mobileDeleteAccountBtn').addEventListener('click', showDeleteAccountModal);
             document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
@@ -2128,6 +2370,7 @@
             // Window events
             window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
             window.addEventListener('resize', debounce(handleResize, 250));
+            window.addEventListener('click', closeMobileMenuOnClickOutside);
             
             // Initialize
             addVertexStep();
@@ -2145,6 +2388,55 @@
                 document.getElementById('registerTab').classList.add('active');
                 document.getElementById('registerForm').classList.add('active');
             }
+        }
+
+        function switchUploadType(type) {
+            uploadType = type;
+            
+            // Update button states
+            document.getElementById('thumbnailOptionBtn').classList.toggle('active', type === 'thumbnail');
+            document.getElementById('youtubeOptionBtn').classList.toggle('active', type === 'youtube');
+            
+            // Show/hide sections
+            document.getElementById('thumbnailUploadSection').style.display = type === 'thumbnail' ? 'block' : 'none';
+            document.getElementById('youtubeUploadSection').style.display = type === 'youtube' ? 'block' : 'none';
+            
+            // Update required attribute
+            document.getElementById('thumbnailInput').required = type === 'thumbnail';
+            document.getElementById('youtubeLink').required = type === 'youtube';
+        }
+
+        function handleYoutubeLink(e) {
+            const youtubeLink = e.target.value;
+            const youtubePreview = document.getElementById('youtubePreview');
+            
+            if (!youtubeLink) {
+                youtubePreview.style.display = 'none';
+                return;
+            }
+            
+            // Extract video ID from YouTube URL
+            const videoId = extractYoutubeVideoId(youtubeLink);
+            
+            if (videoId) {
+                youtubePreview.innerHTML = `
+                    <iframe 
+                        src="https://www.youtube.com/embed/${videoId}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                `;
+                youtubePreview.style.display = 'block';
+            } else {
+                youtubePreview.style.display = 'none';
+            }
+        }
+
+        function extractYoutubeVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
         }
 
         function handleLogin(e) {
@@ -2200,25 +2492,6 @@
             document.getElementById('usernameDisplay').textContent = currentUser.username;
             document.getElementById('currentUserDisplay').textContent = `Welcome, ${currentUser.username}`;
             
-            // Show admin features for plstealme2
-            if (currentUser.username === 'plstealme2') {
-                // Admin can delete any script
-                document.querySelectorAll('.script-card-actions').forEach(actions => {
-                    if (!actions.querySelector('.admin-delete-btn')) {
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'action-btn delete-btn admin-delete-btn';
-                        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                        deleteBtn.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            const scriptCard = this.closest('.script-card');
-                            const scriptId = parseInt(scriptCard.dataset.id);
-                            confirmDelete(scriptId);
-                        });
-                        actions.appendChild(deleteBtn);
-                    }
-                });
-            }
-            
             showDashboard();
             loadScripts();
             updateStats();
@@ -2227,6 +2500,7 @@
         function showDeleteAccountModal() {
             document.getElementById('deleteAccountModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            toggleMobileMenu(); // Close mobile menu
         }
 
         function confirmAccountDelete() {
@@ -2242,6 +2516,7 @@
             
             document.getElementById('deleteAccountModal').style.display = 'none';
             document.body.style.overflow = 'auto';
+            document.getElementById('confirmUsername').value = '';
             
             showAuth();
             showToast('Account deleted successfully');
@@ -2256,11 +2531,84 @@
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileDropdown');
             menu.classList.toggle('active');
+            
+            // Auto-show upload on mobile
+            if (window.innerWidth < 768) {
+                const uploadBtn = document.getElementById('showUploadBtn');
+                uploadBtn.addEventListener('click', function() {
+                    menu.classList.add('show-upload');
+                });
+            }
+        }
+
+        function closeMobileMenuOnClickOutside(e) {
+            const menu = document.getElementById('mobileDropdown');
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            
+            if (menu.classList.contains('active') && 
+                !menu.contains(e.target) && 
+                !menuBtn.contains(e.target)) {
+                menu.classList.remove('active');
+                menu.classList.remove('show-upload');
+            }
+        }
+
+        function showChannel() {
+            document.getElementById('dashboardContainer').style.display = 'none';
+            document.getElementById('uploadContainer').style.display = 'none';
+            document.getElementById('subscriptionsContainer').style.display = 'none';
+            document.getElementById('channelContainer').style.display = 'block';
+            
+            loadChannelData();
+            toggleMobileMenu(); // Close mobile menu
+        }
+
+        function loadChannelData() {
+            if (!currentUser) return;
+            
+            const stats = storage.getUserChannelStats(currentUser.username);
+            const userScripts = storage.getScriptsByUser(currentUser.username);
+            
+            // Update channel info
+            document.getElementById('channelUsername').textContent = currentUser.username;
+            document.getElementById('channelSubscribers').textContent = stats.subscribers;
+            document.getElementById('channelTotalLikes').textContent = stats.totalLikes;
+            document.getElementById('channelTotalViews').textContent = stats.totalViews;
+            document.getElementById('channelScriptsCount').textContent = stats.scriptsCount;
+            
+            // Load user's scripts
+            const container = document.getElementById('channelScriptsList');
+            
+            if (userScripts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-code"></i>
+                        <h3>No scripts uploaded yet</h3>
+                        <p>Upload your first script to get started!</p>
+                        <button class="btn" style="margin-top: 20px;" id="channelUploadBtn">
+                            <i class="fas fa-upload"></i> Upload First Script
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('channelUploadBtn').addEventListener('click', showUploadForm);
+                return;
+            }
+            
+            // Sort by date (newest first)
+            userScripts.sort((a, b) => new Date(b.uploadDateTime) - new Date(a.uploadDateTime));
+            
+            container.innerHTML = '';
+            userScripts.forEach(script => {
+                const scriptCard = createScriptCard(script);
+                container.appendChild(scriptCard);
+            });
         }
 
         function showSubscriptions() {
             document.getElementById('dashboardContainer').style.display = 'none';
             document.getElementById('uploadContainer').style.display = 'none';
+            document.getElementById('channelContainer').style.display = 'none';
             document.getElementById('subscriptionsContainer').style.display = 'block';
             
             loadSubscriptions();
@@ -2277,7 +2625,7 @@
             );
             
             // Sort by date (newest first)
-            subscriptionScripts.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+            subscriptionScripts.sort((a, b) => new Date(b.uploadDateTime) - new Date(a.uploadDateTime));
             
             const container = document.getElementById('subscriptionsList');
             
@@ -2309,16 +2657,21 @@
                 return;
             }
             
-            if (storage.isSubscribed(currentUser.username, creator)) {
-                storage.unsubscribe(currentUser.username, creator);
-                document.getElementById('subscribeText').textContent = 'Subscribe';
-                document.getElementById('viewSubscribeBtn').classList.remove('subscribed');
-                showToast(`Unsubscribed from ${creator}`);
-            } else {
-                storage.subscribe(currentUser.username, creator);
+            const subscribed = storage.subscribe(currentUser.username, creator);
+            
+            if (subscribed) {
                 document.getElementById('subscribeText').textContent = 'Subscribed';
                 document.getElementById('viewSubscribeBtn').classList.add('subscribed');
                 showToast(`Subscribed to ${creator}`);
+            } else {
+                document.getElementById('subscribeText').textContent = 'Subscribe';
+                document.getElementById('viewSubscribeBtn').classList.remove('subscribed');
+                showToast(`Unsubscribed from ${creator}`);
+            }
+            
+            // Update channel stats if viewing own channel
+            if (document.getElementById('channelContainer').style.display === 'block') {
+                loadChannelData();
             }
         }
 
@@ -2326,75 +2679,84 @@
             if (!currentUser || !currentViewScript) return;
             
             const scriptId = currentViewScript.id;
+            const liked = storage.recordInteraction(currentUser.username, scriptId, 'like');
             
-            // Check if already liked
-            if (storage.hasInteracted(currentUser.username, scriptId, 'like')) {
-                showToast('You have already liked this script');
-                return;
+            // Update script counts
+            if (liked) {
+                // Adding like
+                if (storage.hasInteracted(currentUser.username, scriptId, 'dislike')) {
+                    // Remove existing dislike
+                    currentViewScript.dislikes = Math.max(0, currentViewScript.dislikes - 1);
+                }
+                currentViewScript.likes = (currentViewScript.likes || 0) + 1;
+            } else {
+                // Removing like
+                currentViewScript.likes = Math.max(0, currentViewScript.likes - 1);
             }
-            
-            // Remove dislike if exists
-            if (storage.hasInteracted(currentUser.username, scriptId, 'dislike')) {
-                currentViewScript.dislikes = Math.max(0, currentViewScript.dislikes - 1);
-            }
-            
-            // Add like
-            storage.recordInteraction(currentUser.username, scriptId, 'like');
-            currentViewScript.likes = (currentViewScript.likes || 0) + 1;
             
             // Save updated script
-            updateScriptInStorage(currentViewScript);
+            storage.updateScript(currentViewScript);
             
             // Update UI
-            document.getElementById('viewLikeCount').textContent = currentViewScript.likes;
+            document.getElementById('viewLikeCount').textContent = currentViewScript.likes || 0;
             document.getElementById('viewDislikeCount').textContent = currentViewScript.dislikes || 0;
-            document.getElementById('viewLikeBtn').classList.add('liked');
-            document.getElementById('viewDislikeBtn').classList.remove('disliked');
+            document.getElementById('viewLikeBtn').classList.toggle('liked', liked);
             
-            showToast('Liked script');
+            // Ensure dislike button is in correct state
+            const hasDisliked = storage.hasInteracted(currentUser.username, scriptId, 'dislike');
+            document.getElementById('viewDislikeBtn').classList.toggle('disliked', hasDisliked);
+            
+            showToast(liked ? 'Liked script' : 'Removed like');
             renderScripts(); // Update main view
+            
+            // Update channel stats if viewing own channel
+            if (document.getElementById('channelContainer').style.display === 'block') {
+                loadChannelData();
+            }
         }
 
         function handleDislike() {
             if (!currentUser || !currentViewScript) return;
             
             const scriptId = currentViewScript.id;
+            const disliked = storage.recordInteraction(currentUser.username, scriptId, 'dislike');
             
-            // Check if already disliked
-            if (storage.hasInteracted(currentUser.username, scriptId, 'dislike')) {
-                showToast('You have already disliked this script');
-                return;
+            // Update script counts
+            if (disliked) {
+                // Adding dislike
+                if (storage.hasInteracted(currentUser.username, scriptId, 'like')) {
+                    // Remove existing like
+                    currentViewScript.likes = Math.max(0, currentViewScript.likes - 1);
+                }
+                currentViewScript.dislikes = (currentViewScript.dislikes || 0) + 1;
+            } else {
+                // Removing dislike
+                currentViewScript.dislikes = Math.max(0, currentViewScript.dislikes - 1);
             }
-            
-            // Remove like if exists
-            if (storage.hasInteracted(currentUser.username, scriptId, 'like')) {
-                currentViewScript.likes = Math.max(0, currentViewScript.likes - 1);
-            }
-            
-            // Add dislike
-            storage.recordInteraction(currentUser.username, scriptId, 'dislike');
-            currentViewScript.dislikes = (currentViewScript.dislikes || 0) + 1;
             
             // Save updated script
-            updateScriptInStorage(currentViewScript);
+            storage.updateScript(currentViewScript);
             
             // Update UI
-            document.getElementById('viewDislikeCount').textContent = currentViewScript.dislikes;
+            document.getElementById('viewDislikeCount').textContent = currentViewScript.dislikes || 0;
             document.getElementById('viewLikeCount').textContent = currentViewScript.likes || 0;
-            document.getElementById('viewDislikeBtn').classList.add('disliked');
-            document.getElementById('viewLikeBtn').classList.remove('liked');
+            document.getElementById('viewDislikeBtn').classList.toggle('disliked', disliked);
             
-            showToast('Disliked script');
+            // Ensure like button is in correct state
+            const hasLiked = storage.hasInteracted(currentUser.username, scriptId, 'like');
+            document.getElementById('viewLikeBtn').classList.toggle('liked', hasLiked);
+            
+            showToast(disliked ? 'Disliked script' : 'Removed dislike');
             renderScripts(); // Update main view
+            
+            // Update channel stats if viewing own channel
+            if (document.getElementById('channelContainer').style.display === 'block') {
+                loadChannelData();
+            }
         }
 
         function updateScriptInStorage(script) {
-            let scripts = storage.getScripts();
-            const index = scripts.findIndex(s => s.id === script.id);
-            if (index !== -1) {
-                scripts[index] = script;
-                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
-            }
+            storage.updateScript(script);
         }
 
         function showScriptView(script) {
@@ -2411,10 +2773,36 @@
             document.getElementById('viewScriptName').textContent = script.name;
             document.getElementById('viewScriptAuthor').textContent = `Uploaded by ${script.uploader}`;
             document.getElementById('viewScriptDate').textContent = ` on ${script.uploadDate}`;
-            document.getElementById('viewScriptThumbnail').src = script.thumbnail;
             document.getElementById('viewLikeCount').textContent = script.likes || 0;
             document.getElementById('viewDislikeCount').textContent = script.dislikes || 0;
             document.getElementById('viewViewCount').textContent = script.views || 0;
+            
+            // Update thumbnail/video
+            const thumbnailContainer = document.getElementById('viewThumbnailContainer');
+            if (script.youtubeVideo) {
+                // Show YouTube video
+                const videoId = extractYoutubeVideoId(script.youtubeVideo);
+                thumbnailContainer.innerHTML = `
+                    <div class="youtube-thumbnail" onclick="window.open('${script.youtubeVideo}', '_blank')">
+                        <img src="https://img.youtube.com/vi/${videoId}/maxresdefault.jpg" alt="YouTube Video">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                `;
+            } else if (script.thumbnail) {
+                // Show image thumbnail
+                thumbnailContainer.innerHTML = `
+                    <img src="${script.thumbnail}" alt="${script.name}">
+                `;
+            } else {
+                // Show default
+                thumbnailContainer.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: linear-gradient(45deg, #0c2461, #1e3799);">
+                        <i class="fas fa-code" style="font-size: 3rem; color: #4bcffa;"></i>
+                    </div>
+                `;
+            }
             
             // Check if user is subscribed
             const isSubscribed = storage.isSubscribed(currentUser.username, script.uploader);
@@ -2427,7 +2815,7 @@
             document.getElementById('viewLikeBtn').classList.toggle('liked', hasLiked);
             document.getElementById('viewDislikeBtn').classList.toggle('disliked', hasDisliked);
             
-            // Disable buttons if user is the uploader
+            // Disable subscribe button if user is the uploader
             if (script.uploader === currentUser.username) {
                 document.getElementById('viewSubscribeBtn').style.display = 'none';
             } else {
@@ -2457,34 +2845,46 @@
             }
         }
 
-        function saveScripts() {
-            // Already handled by storage system
-        }
-
         function showDashboard() {
             document.getElementById('dashboardContainer').style.display = 'block';
             document.getElementById('uploadContainer').style.display = 'none';
             document.getElementById('subscriptionsContainer').style.display = 'none';
+            document.getElementById('channelContainer').style.display = 'none';
             renderScripts();
             updateStats();
             window.scrollTo(0, 0);
+            closeMobileMenu(); // Close mobile menu
         }
 
         function showUploadForm() {
             document.getElementById('dashboardContainer').style.display = 'none';
             document.getElementById('uploadContainer').style.display = 'block';
             document.getElementById('subscriptionsContainer').style.display = 'none';
+            document.getElementById('channelContainer').style.display = 'none';
             
+            // Reset form
             document.getElementById('uploadForm').reset();
             document.getElementById('thumbnailPreview').style.display = 'none';
+            document.getElementById('youtubePreview').style.display = 'none';
             document.getElementById('fileLabelText').textContent = 'Click to upload thumbnail image';
+            document.getElementById('youtubeLink').value = '';
             
+            // Reset to default upload type
+            switchUploadType('thumbnail');
+            
+            // Reset steps
             const stepsContainer = document.getElementById('stepsContainer');
             stepsContainer.innerHTML = '';
             addVertexStep();
             
             window.scrollTo(0, 0);
-            toggleMobileMenu(); // Close mobile menu
+            closeMobileMenu(); // Close mobile menu
+        }
+
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobileDropdown');
+            menu.classList.remove('active');
+            menu.classList.remove('show-upload');
         }
 
         function addVertexStep() {
@@ -2508,16 +2908,12 @@
         }
 
         function addStep() {
-            const stepsContainer = document.getElementById('stepsContainer');
             const stepNumber = document.querySelectorAll('.step-container').length;
-            
             addCustomStep(stepNumber, "", "");
         }
 
         function addYouTubeStep() {
-            const stepsContainer = document.getElementById('stepsContainer');
             const stepNumber = document.querySelectorAll('.step-container').length;
-            
             addCustomStep(stepNumber, "Subscribe to YouTube Channel", "https://youtube.com");
         }
 
@@ -2588,7 +2984,7 @@
             
             const filteredScripts = scripts.filter(script => 
                 script.name.toLowerCase().includes(query.toLowerCase()) ||
-                (script.description && script.description.toLowerCase().includes(query.toLowerCase()))
+                script.uploader.toLowerCase().includes(query.toLowerCase())
             );
             
             if (filteredScripts.length === 0) {
@@ -2610,8 +3006,6 @@
         }
 
         function calculateScriptScore(script) {
-            // Algorithm: likes increase score, dislikes decrease, views add small bonus
-            // Pinned scripts get massive boost
             let score = 0;
             
             // Base score from interactions
@@ -2692,18 +3086,39 @@
                 </button>
             ` : '';
             
+            // Determine thumbnail to show
+            let thumbnailHtml = '';
+            if (script.youtubeVideo) {
+                const videoId = extractYoutubeVideoId(script.youtubeVideo);
+                thumbnailHtml = `
+                    <div class="script-thumbnail youtube-thumbnail" onclick="event.stopPropagation(); window.open('${script.youtubeVideo}', '_blank')">
+                        <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="${script.name}">
+                        <div class="play-button" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                `;
+            } else if (script.thumbnail) {
+                thumbnailHtml = `
+                    <div class="script-thumbnail">
+                        <img src="${script.thumbnail}" alt="${script.name}" loading="lazy">
+                    </div>
+                `;
+            } else {
+                thumbnailHtml = `
+                    <div class="script-thumbnail">
+                        <i class="fas fa-code"></i>
+                    </div>
+                `;
+            }
+            
             scriptCard.innerHTML = `
                 ${pinIcon}
                 <div class="script-card-actions">
                     ${pinBtn}
                     ${deleteBtn}
                 </div>
-                <div class="script-thumbnail">
-                    ${script.thumbnail ? 
-                        `<img src="${script.thumbnail}" alt="${script.name}" loading="lazy">` : 
-                        `<i class="fas fa-code"></i>`
-                    }
-                </div>
+                ${thumbnailHtml}
                 <div class="script-info">
                     <div class="script-title">${script.name}</div>
                     <div class="script-details">
@@ -2730,7 +3145,7 @@
             
             // Make entire card clickable to view details
             scriptCard.addEventListener('click', function(e) {
-                if (!e.target.closest('button')) {
+                if (!e.target.closest('button') && !e.target.closest('.youtube-thumbnail')) {
                     showScriptView(script);
                 }
             });
@@ -2789,6 +3204,11 @@
                 renderScripts();
                 updateStats();
                 showToast('Script deleted successfully');
+                
+                // Update channel if viewing it
+                if (document.getElementById('channelContainer').style.display === 'block') {
+                    loadChannelData();
+                }
             }
             document.getElementById('deleteModal').style.display = 'none';
             document.body.style.overflow = 'auto';
@@ -2804,75 +3224,100 @@
             e.preventDefault();
             
             const scriptName = document.getElementById('scriptName').value;
-            const thumbnailInput = document.getElementById('thumbnailInput');
-            const videoLink = document.getElementById('videoLink').value;
             const scriptLink = document.getElementById('scriptLink').value;
-            
-            if (!thumbnailInput.files || thumbnailInput.files.length === 0) {
-                showToast('Please select a thumbnail image');
-                return;
-            }
             
             if (!scriptLink) {
                 showToast('Please enter a script download link');
                 return;
             }
             
-            const file = thumbnailInput.files[0];
-            const reader = new FileReader();
+            // Handle thumbnail or YouTube video
+            let thumbnail = '';
+            let youtubeVideo = '';
             
-            reader.onload = function(event) {
-                const thumbnail = event.target.result;
+            if (uploadType === 'thumbnail') {
+                const thumbnailInput = document.getElementById('thumbnailInput');
+                if (!thumbnailInput.files || thumbnailInput.files.length === 0) {
+                    showToast('Please select a thumbnail image');
+                    return;
+                }
                 
-                // Get all steps
-                const stepContainers = document.querySelectorAll('.step-container');
-                const steps = [];
+                const file = thumbnailInput.files[0];
+                const reader = new FileReader();
                 
-                stepContainers.forEach(container => {
-                    const urlInput = container.querySelector('.step-url');
-                    const nameInput = container.querySelector('.step-name-input');
-                    const stepTitle = container.querySelector('.step-title');
-                    
-                    let stepName = '';
-                    if (container.classList.contains('vertex-step')) {
-                        stepName = 'Subscribe to VertexR_S';
-                    } else if (nameInput) {
-                        stepName = nameInput.value || `Step ${steps.length + 1}`;
-                    } else if (stepTitle) {
-                        stepName = stepTitle.textContent.replace('Subscribe to VertexR_S (Required)', 'Subscribe to VertexR_S').trim();
-                    }
-                    
-                    if (urlInput.value) {
-                        steps.push({
-                            url: urlInput.value,
-                            name: stepName
-                        });
-                    }
-                });
-                
-                // Create new script object
-                const newScript = {
-                    id: nextId++,
-                    name: scriptName,
-                    thumbnail: thumbnail,
-                    videoLink: videoLink,
-                    scriptLink: scriptLink,
-                    steps: steps,
-                    uploader: currentUser.username,
-                    uploadDate: new Date().toISOString().split('T')[0],
-                    uploadDateTime: new Date().toISOString(),
-                    likes: 0,
-                    dislikes: 0,
-                    views: 0,
-                    pinned: false
+                reader.onload = function(event) {
+                    thumbnail = event.target.result;
+                    finishUpload(scriptName, scriptLink, thumbnail, youtubeVideo);
                 };
                 
-                storage.saveScript(newScript);
-                showDashboard();
-                showToast(`Script "${scriptName}" uploaded successfully!`);
+                reader.readAsDataURL(file);
+            } else {
+                // YouTube video
+                youtubeVideo = document.getElementById('youtubeLink').value;
+                if (!youtubeVideo) {
+                    showToast('Please enter a YouTube video URL');
+                    return;
+                }
+                
+                const videoId = extractYoutubeVideoId(youtubeVideo);
+                if (!videoId) {
+                    showToast('Please enter a valid YouTube video URL');
+                    return;
+                }
+                
+                // Use YouTube thumbnail as preview
+                thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                finishUpload(scriptName, scriptLink, thumbnail, youtubeVideo);
+            }
+        }
+
+        function finishUpload(scriptName, scriptLink, thumbnail, youtubeVideo) {
+            // Get all steps
+            const stepContainers = document.querySelectorAll('.step-container');
+            const steps = [];
+            
+            stepContainers.forEach(container => {
+                const urlInput = container.querySelector('.step-url');
+                const nameInput = container.querySelector('.step-name-input');
+                const stepTitle = container.querySelector('.step-title');
+                
+                let stepName = '';
+                if (container.classList.contains('vertex-step')) {
+                    stepName = 'Subscribe to VertexR_S';
+                } else if (nameInput) {
+                    stepName = nameInput.value || `Step ${steps.length + 1}`;
+                } else if (stepTitle) {
+                    stepName = stepTitle.textContent.replace('Subscribe to VertexR_S (Required)', 'Subscribe to VertexR_S').trim();
+                }
+                
+                if (urlInput.value) {
+                    steps.push({
+                        url: urlInput.value,
+                        name: stepName
+                    });
+                }
+            });
+            
+            // Create new script object
+            const newScript = {
+                id: nextId++,
+                name: scriptName,
+                thumbnail: thumbnail,
+                youtubeVideo: youtubeVideo,
+                scriptLink: scriptLink,
+                steps: steps,
+                uploader: currentUser.username,
+                uploadDate: new Date().toLocaleDateString(),
+                uploadDateTime: new Date().toISOString(),
+                likes: 0,
+                dislikes: 0,
+                views: 0,
+                pinned: false
             };
             
-            reader.readAsDataURL(file);
+            storage.saveScript(newScript);
+            showDashboard();
+            showToast(`Script "${scriptName}" uploaded successfully!`);
         }
 
         function startUnlockProcess(script) {
@@ -3083,4 +3528,4 @@
         }
     </script>
 </body>
-    </html>
+        </html>
