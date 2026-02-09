@@ -467,6 +467,10 @@
             margin-top: 5px;
         }
         
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+        
         .dropdown-content a {
             color: white;
             padding: 12px 16px;
@@ -479,10 +483,6 @@
         
         .dropdown-content a:hover {
             background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .dropdown.active .dropdown-content {
-            display: block;
         }
         
         /* Script View Modal */
@@ -1331,7 +1331,7 @@
             background: #ff6b6b;
         }
         
-        .btn-danger:hover, .btn-danger:active {
+        .btn-danger:hover, .btn-secondary:active {
             background: #ff5252;
         }
         
@@ -2507,489 +2507,633 @@
         </div>
     </div>
 
-    <script>
-        // ============ ENHANCED STORAGE SYSTEM ============
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4aVpNW6SKbj26fExI65voT84D2k_MvwQ",
+            authDomain: "vertexscripts-4f108.firebaseapp.com",
+            projectId: "vertexscripts-4f108",
+            storageBucket: "vertexscripts-4f108.firebasestorage.app",
+            messagingSenderId: "315039481759",
+            appId: "1:315039481759:web:c52b2887332bc5a41307aa"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ============ FIREBASE STORAGE SYSTEM ============
         class VertexStorage {
             constructor() {
-                this.initStorage();
-            }
-            
-            initStorage() {
-                // Initialize all storage keys
-                if (!localStorage.getItem('vertex_users')) {
-                    localStorage.setItem('vertex_users', JSON.stringify({}));
-                }
-                if (!localStorage.getItem('vertex_scripts')) {
-                    localStorage.setItem('vertex_scripts', JSON.stringify([]));
-                }
-                if (!localStorage.getItem('vertex_interactions')) {
-                    localStorage.setItem('vertex_interactions', JSON.stringify({}));
-                }
-                if (!localStorage.getItem('vertex_subscriptions')) {
-                    localStorage.setItem('vertex_subscriptions', JSON.stringify({}));
-                }
-                if (!localStorage.getItem('vertex_current_user')) {
-                    localStorage.setItem('vertex_current_user', JSON.stringify(null));
-                }
-                if (!localStorage.getItem('vertex_ratelimits')) {
-                    localStorage.setItem('vertex_ratelimits', JSON.stringify({}));
-                }
-                if (!localStorage.getItem('vertex_hashtags')) {
-                    localStorage.setItem('vertex_hashtags', JSON.stringify({}));
-                }
-                if (!localStorage.getItem('vertex_hashtag_views')) {
-                    localStorage.setItem('vertex_hashtag_views', JSON.stringify({}));
-                }
-                if (!localStorage.getItem('vertex_script_views')) {
-                    localStorage.setItem('vertex_script_views', JSON.stringify({}));
-                }
-            }
-            
-            // User management
-            registerUser(username, password) {
-                const users = JSON.parse(localStorage.getItem('vertex_users'));
+                this.auth = auth;
+                this.db = db;
+                this.currentUser = null;
                 
-                // Check if username contains spaces
-                if (username.includes(' ')) {
-                    return { success: false, error: 'Username cannot contain spaces' };
-                }
-                
-                // Check if username already exists (case insensitive)
-                const existingUser = Object.keys(users).find(u => u.toLowerCase() === username.toLowerCase());
-                if (existingUser) {
-                    return { success: false, error: 'Username already taken' };
-                }
-                
-                if (password === username) {
-                    return { success: false, error: 'Password cannot be the same as username' };
-                }
-                
-                if (password.length < 6) {
-                    return { success: false, error: 'Password must be at least 6 characters' };
-                }
-                
-                const hashedPassword = this.hashPassword(password);
-                
-                users[username] = {
-                    username: username,
-                    password: hashedPassword,
-                    createdAt: new Date().toISOString(),
-                    isAdmin: username === 'plstealme2'
-                };
-                
-                localStorage.setItem('vertex_users', JSON.stringify(users));
-                return { success: true };
-            }
-            
-            loginUser(username, password) {
-                const users = JSON.parse(localStorage.getItem('vertex_users'));
-                
-                // Find user (case insensitive)
-                const userKey = Object.keys(users).find(u => u.toLowerCase() === username.toLowerCase());
-                if (!userKey) {
-                    return { success: false, error: 'Invalid username or password' };
-                }
-                
-                const hashedPassword = this.hashPassword(password);
-                if (users[userKey].password !== hashedPassword) {
-                    return { success: false, error: 'Invalid username or password' };
-                }
-                
-                return { success: true, user: users[userKey] };
-            }
-            
-            hashPassword(password) {
-                let hash = 0;
-                for (let i = 0; i < password.length; i++) {
-                    const char = password.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
-                }
-                return hash.toString();
-            }
-            
-            setCurrentUser(username) {
-                localStorage.setItem('vertex_current_user', JSON.stringify(username));
-            }
-            
-            getCurrentUser() {
-                const username = JSON.parse(localStorage.getItem('vertex_current_user'));
-                if (!username) return null;
-                
-                const users = JSON.parse(localStorage.getItem('vertex_users'));
-                return users[username] || null;
-            }
-            
-            logoutUser() {
-                localStorage.setItem('vertex_current_user', JSON.stringify(null));
-            }
-            
-            deleteUser(username) {
-                const users = JSON.parse(localStorage.getItem('vertex_users'));
-                delete users[username];
-                localStorage.setItem('vertex_users', JSON.stringify(users));
-                
-                // Delete user's scripts
-                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
-                scripts = scripts.filter(script => script.uploader !== username);
-                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
-                
-                // Delete user's subscriptions
-                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
-                delete subscriptions[username];
-                localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
-                
-                // Delete user's interactions
-                const interactions = JSON.parse(localStorage.getItem('vertex_interactions'));
-                delete interactions[username];
-                localStorage.setItem('vertex_interactions', JSON.stringify(interactions));
-                
-                // Delete user's rate limits
-                const rateLimits = JSON.parse(localStorage.getItem('vertex_ratelimits'));
-                delete rateLimits[username];
-                localStorage.setItem('vertex_ratelimits', JSON.stringify(rateLimits));
-                
-                // Remove as subscriber from other users
-                Object.keys(subscriptions).forEach(user => {
-                    if (subscriptions[user] && subscriptions[user].includes(username)) {
-                        const index = subscriptions[user].indexOf(username);
-                        if (index > -1) {
-                            subscriptions[user].splice(index, 1);
+                // Listen for auth state changes
+                onAuthStateChanged(this.auth, async (user) => {
+                    if (user) {
+                        this.currentUser = user;
+                        // Get username from email
+                        const username = user.email.split('@')[0];
+                        this.currentUser.username = username;
+                        
+                        // Get user data from Firestore
+                        try {
+                            const userDoc = await getDoc(doc(this.db, "users", username));
+                            if (userDoc.exists()) {
+                                this.currentUser.isAdmin = userDoc.data().isAdmin || false;
+                            } else {
+                                this.currentUser.isAdmin = false;
+                            }
+                        } catch (error) {
+                            console.error("Error getting user data:", error);
+                            this.currentUser.isAdmin = false;
+                        }
+                        
+                        if (window.appInitialized) {
+                            showApp();
+                        }
+                    } else {
+                        this.currentUser = null;
+                        if (window.appInitialized) {
+                            showAuth();
                         }
                     }
                 });
-                
-                localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
-                this.logoutUser();
             }
             
-            // Script management
-            saveScript(script) {
-                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
-                scripts.push(script);
-                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
-                this.updateHashtags(script);
-            }
-            
-            getScripts() {
-                return JSON.parse(localStorage.getItem('vertex_scripts'));
-            }
-            
-            getScriptsByUser(username) {
-                const scripts = this.getScripts();
-                return scripts.filter(script => script.uploader === username);
-            }
-            
-            deleteScript(scriptId) {
-                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
-                const scriptToDelete = scripts.find(script => script.id === scriptId);
-                
-                if (scriptToDelete) {
-                    // Remove script from hashtag counts
-                    this.removeScriptFromHashtags(scriptToDelete);
-                }
-                
-                scripts = scripts.filter(script => script.id !== scriptId);
-                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
-            }
-            
-            updateScript(updatedScript) {
-                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
-                const index = scripts.findIndex(script => script.id === updatedScript.id);
-                if (index !== -1) {
-                    // Update hashtags if they changed
-                    const oldScript = scripts[index];
-                    if (oldScript.hashtags !== updatedScript.hashtags) {
-                        this.removeScriptFromHashtags(oldScript);
-                        this.updateHashtags(updatedScript);
+            // User management with Firebase
+            async registerUser(username, password) {
+                try {
+                    // Check if username contains spaces
+                    if (username.includes(' ')) {
+                        return { success: false, error: 'Username cannot contain spaces' };
                     }
                     
-                    scripts[index] = updatedScript;
-                    localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
+                    if (password === username) {
+                        return { success: false, error: 'Password cannot be the same as username' };
+                    }
+                    
+                    if (password.length < 6) {
+                        return { success: false, error: 'Password must be at least 6 characters' };
+                    }
+                    
+                    // Check if username already exists
+                    const userDoc = await getDoc(doc(this.db, "users", username));
+                    if (userDoc.exists()) {
+                        return { success: false, error: 'Username already taken' };
+                    }
+                    
+                    // Create user with email (using username@vertexscripts.com as email)
+                    const email = `${username}@vertexscripts.com`;
+                    const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+                    
+                    // Save user data to Firestore
+                    await setDoc(doc(this.db, "users", username), {
+                        username: username,
+                        email: email,
+                        createdAt: serverTimestamp(),
+                        isAdmin: username === 'plstealme2',
+                        subscribers: 0
+                    });
+                    
+                    return { success: true, user: { username: username, isAdmin: username === 'plstealme2' } };
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            }
+            
+            async loginUser(username, password) {
+                try {
+                    const email = `${username}@vertexscripts.com`;
+                    await signInWithEmailAndPassword(this.auth, email, password);
+                    
+                    // Get user data from Firestore
+                    const userDoc = await getDoc(doc(this.db, "users", username));
+                    if (userDoc.exists()) {
+                        return { 
+                            success: true, 
+                            user: { 
+                                username: username,
+                                isAdmin: userDoc.data().isAdmin || false
+                            } 
+                        };
+                    }
+                    return { success: true, user: { username: username, isAdmin: false } };
+                } catch (error) {
+                    return { success: false, error: 'Invalid username or password' };
+                }
+            }
+            
+            async getCurrentUser() {
+                if (!this.currentUser) return null;
+                return {
+                    username: this.currentUser.username,
+                    isAdmin: this.currentUser.isAdmin || false
+                };
+            }
+            
+            async logoutUser() {
+                await signOut(this.auth);
+            }
+            
+            async deleteUser(username) {
+                try {
+                    // Delete user data from Firestore
+                    await deleteDoc(doc(this.db, "users", username));
+                    
+                    // Delete user's scripts
+                    const scriptsQuery = query(collection(this.db, "scripts"), where("uploader", "==", username));
+                    const scriptsSnapshot = await getDocs(scriptsQuery);
+                    
+                    const deletePromises = [];
+                    scriptsSnapshot.forEach((scriptDoc) => {
+                        deletePromises.push(deleteDoc(doc(this.db, "scripts", scriptDoc.id)));
+                    });
+                    await Promise.all(deletePromises);
+                    
+                    // Delete user's interactions
+                    await deleteDoc(doc(this.db, "interactions", username));
+                    
+                    // Delete user's subscriptions
+                    await deleteDoc(doc(this.db, "subscriptions", username));
+                    
+                    // Get current user and delete account
+                    const user = this.auth.currentUser;
+                    if (user) {
+                        await deleteUser(user);
+                    }
+                    
+                    return { success: true };
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            }
+            
+            // Script management with Firestore
+            async saveScript(script) {
+                try {
+                    // Add timestamp and initialize counts
+                    script.createdAt = serverTimestamp();
+                    script.updatedAt = serverTimestamp();
+                    script.likes = script.likes || 0;
+                    script.dislikes = script.dislikes || 0;
+                    script.views = script.views || 0;
+                    
+                    // Save script
+                    const docRef = await addDoc(collection(this.db, "scripts"), script);
+                    script.id = docRef.id;
+                    
+                    // Update script with ID
+                    await updateDoc(docRef, { id: docRef.id });
+                    
+                    // Update hashtags
+                    await this.updateHashtags(script);
+                    
+                    return { success: true, script: script };
+                } catch (error) {
+                    console.error("Error saving script:", error);
+                    return { success: false, error: error.message };
+                }
+            }
+            
+            async getScripts() {
+                try {
+                    const q = query(collection(this.db, "scripts"), orderBy("createdAt", "desc"));
+                    const snapshot = await getDocs(q);
+                    
+                    const scripts = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Convert Firestore timestamp to Date
+                        if (data.createdAt && data.createdAt.toDate) {
+                            data.createdAt = data.createdAt.toDate();
+                        }
+                        if (data.uploadDateTime) {
+                            data.uploadDate = new Date(data.uploadDateTime).toLocaleDateString();
+                        } else if (data.createdAt) {
+                            data.uploadDate = new Date(data.createdAt).toLocaleDateString();
+                        } else {
+                            data.uploadDate = "Unknown date";
+                        }
+                        scripts.push({
+                            id: doc.id,
+                            ...data
+                        });
+                    });
+                    
+                    return scripts;
+                } catch (error) {
+                    console.error('Error getting scripts:', error);
+                    return [];
+                }
+            }
+            
+            async getScriptsByUser(username) {
+                try {
+                    const q = query(collection(this.db, "scripts"), 
+                                  where("uploader", "==", username),
+                                  orderBy("createdAt", "desc"));
+                    const snapshot = await getDocs(q);
+                    
+                    const scripts = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt && data.createdAt.toDate) {
+                            data.createdAt = data.createdAt.toDate();
+                        }
+                        if (data.uploadDateTime) {
+                            data.uploadDate = new Date(data.uploadDateTime).toLocaleDateString();
+                        } else if (data.createdAt) {
+                            data.uploadDate = new Date(data.createdAt).toLocaleDateString();
+                        }
+                        scripts.push({
+                            id: doc.id,
+                            ...data
+                        });
+                    });
+                    
+                    return scripts;
+                } catch (error) {
+                    console.error('Error getting user scripts:', error);
+                    return [];
+                }
+            }
+            
+            async deleteScript(scriptId) {
+                try {
+                    // Get script first to update hashtags
+                    const scriptDoc = await getDoc(doc(this.db, "scripts", scriptId));
+                    if (scriptDoc.exists()) {
+                        const script = scriptDoc.data();
+                        await this.removeScriptFromHashtags({ id: scriptId, ...script });
+                    }
+                    
+                    await deleteDoc(doc(this.db, "scripts", scriptId));
+                    return { success: true };
+                } catch (error) {
+                    console.error("Error deleting script:", error);
+                    return { success: false, error: error.message };
+                }
+            }
+            
+            async updateScript(updatedScript) {
+                try {
+                    updatedScript.updatedAt = serverTimestamp();
+                    
+                    const { id, ...scriptData } = updatedScript;
+                    await updateDoc(doc(this.db, "scripts", id), scriptData);
+                    return { success: true };
+                } catch (error) {
+                    console.error("Error updating script:", error);
+                    return { success: false, error: error.message };
                 }
             }
             
             // Hashtag management
-            updateHashtags(script) {
-                const hashtags = JSON.parse(localStorage.getItem('vertex_hashtags'));
+            async updateHashtags(script) {
+                if (!script.hashtags || !script.hashtags.length) return;
                 
-                script.hashtags.forEach(tag => {
-                    if (!hashtags[tag]) {
-                        hashtags[tag] = {
-                            count: 0,
-                            scripts: []
-                        };
-                    }
+                for (const tag of script.hashtags) {
+                    const hashtagRef = doc(this.db, "hashtags", tag);
+                    const hashtagDoc = await getDoc(hashtagRef);
                     
-                    if (!hashtags[tag].scripts.includes(script.id)) {
-                        hashtags[tag].count++;
-                        hashtags[tag].scripts.push(script.id);
+                    if (!hashtagDoc.exists()) {
+                        await setDoc(hashtagRef, {
+                            count: 1,
+                            scripts: [script.id],
+                            createdAt: serverTimestamp()
+                        });
+                    } else {
+                        const data = hashtagDoc.data();
+                        const scripts = data.scripts || [];
+                        if (!scripts.includes(script.id)) {
+                            scripts.push(script.id);
+                            await updateDoc(hashtagRef, {
+                                count: scripts.length,
+                                scripts: scripts,
+                                updatedAt: serverTimestamp()
+                            });
+                        }
                     }
-                });
-                
-                localStorage.setItem('vertex_hashtags', JSON.stringify(hashtags));
+                }
             }
             
-            removeScriptFromHashtags(script) {
-                const hashtags = JSON.parse(localStorage.getItem('vertex_hashtags'));
+            async removeScriptFromHashtags(script) {
+                if (!script.hashtags || !script.hashtags.length) return;
                 
-                script.hashtags.forEach(tag => {
-                    if (hashtags[tag]) {
-                        const index = hashtags[tag].scripts.indexOf(script.id);
+                for (const tag of script.hashtags) {
+                    const hashtagRef = doc(this.db, "hashtags", tag);
+                    const hashtagDoc = await getDoc(hashtagRef);
+                    
+                    if (hashtagDoc.exists()) {
+                        const data = hashtagDoc.data();
+                        const scripts = data.scripts || [];
+                        const index = scripts.indexOf(script.id);
+                        
                         if (index > -1) {
-                            hashtags[tag].scripts.splice(index, 1);
-                            hashtags[tag].count--;
+                            scripts.splice(index, 1);
                             
-                            if (hashtags[tag].count === 0) {
-                                delete hashtags[tag];
+                            if (scripts.length === 0) {
+                                await deleteDoc(hashtagRef);
+                            } else {
+                                await updateDoc(hashtagRef, {
+                                    count: scripts.length,
+                                    scripts: scripts,
+                                    updatedAt: serverTimestamp()
+                                });
                             }
                         }
                     }
-                });
-                
-                localStorage.setItem('vertex_hashtags', JSON.stringify(hashtags));
+                }
             }
             
-            getHashtags() {
-                return JSON.parse(localStorage.getItem('vertex_hashtags'));
-            }
-            
-            getScriptsByHashtag(hashtag) {
-                const scripts = this.getScripts();
-                return scripts.filter(script => 
-                    script.hashtags && 
-                    script.hashtags.includes(hashtag.toLowerCase())
-                );
-            }
-            
-            recordHashtagView(username, scriptId, hashtag) {
-                const tagViews = JSON.parse(localStorage.getItem('vertex_hashtag_views'));
-                const key = `${username}_${scriptId}_${hashtag}`;
-                
-                if (!tagViews[key]) {
-                    tagViews[key] = true;
-                    localStorage.setItem('vertex_hashtag_views', JSON.stringify(tagViews));
+            async getHashtags() {
+                try {
+                    const snapshot = await getDocs(collection(this.db, "hashtags"));
+                    const hashtags = {};
                     
-                    // Increment view for the script
-                    let scripts = this.getScripts();
-                    const script = scripts.find(s => s.id === scriptId);
-                    if (script) {
-                        script.views = (script.views || 0) + 1;
-                        this.updateScript(script);
-                        return true;
-                    }
+                    snapshot.forEach(doc => {
+                        hashtags[doc.id] = doc.data();
+                    });
+                    
+                    return hashtags;
+                } catch (error) {
+                    console.error('Error getting hashtags:', error);
+                    return {};
                 }
-                return false;
             }
             
-            // Advanced interaction tracking with rate limiting
-            recordInteraction(username, scriptId, type) {
-                // Check rate limit
-                if (!this.checkRateLimit(username, scriptId, type)) {
-                    return { success: false, error: 'Please wait before interacting again' };
-                }
-                
-                let interactions = JSON.parse(localStorage.getItem('vertex_interactions'));
-                
-                if (!interactions[username]) {
-                    interactions[username] = {};
-                }
-                
-                if (!interactions[username][scriptId]) {
-                    interactions[username][scriptId] = {};
-                }
-                
-                // Get current interaction state
-                const currentLike = interactions[username][scriptId]['like'] || false;
-                const currentDislike = interactions[username][scriptId]['dislike'] || false;
-                
-                // Determine the action
-                const isLiking = type === 'like';
-                const isCurrentlyLiked = currentLike;
-                const isCurrentlyDisliked = currentDislike;
-                
-                // Update interaction
-                if (isLiking) {
-                    // If already liked, remove like
-                    if (isCurrentlyLiked) {
-                        delete interactions[username][scriptId]['like'];
-                    } else {
-                        // Add like and remove dislike if it exists
-                        interactions[username][scriptId]['like'] = true;
-                        if (isCurrentlyDisliked) {
-                            delete interactions[username][scriptId]['dislike'];
+            async getScriptsByHashtag(hashtag) {
+                try {
+                    const hashtagDoc = await getDoc(doc(this.db, "hashtags", hashtag));
+                    
+                    if (!hashtagDoc.exists()) return [];
+                    
+                    const data = hashtagDoc.data();
+                    const scriptIds = data.scripts || [];
+                    
+                    if (scriptIds.length === 0) return [];
+                    
+                    // Get scripts by their IDs
+                    const scripts = [];
+                    for (const scriptId of scriptIds) {
+                        const scriptDoc = await getDoc(doc(this.db, "scripts", scriptId));
+                        if (scriptDoc.exists()) {
+                            const scriptData = scriptDoc.data();
+                            if (scriptData.createdAt && scriptData.createdAt.toDate) {
+                                scriptData.createdAt = scriptData.createdAt.toDate();
+                            }
+                            scripts.push({ id: scriptDoc.id, ...scriptData });
                         }
                     }
-                } else {
-                    // If already disliked, remove dislike
-                    if (isCurrentlyDisliked) {
-                        delete interactions[username][scriptId]['dislike'];
+                    
+                    return scripts;
+                } catch (error) {
+                    console.error('Error getting scripts by hashtag:', error);
+                    return [];
+                }
+            }
+            
+            // Interaction tracking
+            async recordInteraction(username, scriptId, type) {
+                try {
+                    const interactionRef = doc(this.db, "interactions", `${username}_${scriptId}`);
+                    const interactionDoc = await getDoc(interactionRef);
+                    
+                    let currentState = { liked: false, disliked: false };
+                    let scriptUpdate = {};
+                    
+                    if (interactionDoc.exists()) {
+                        currentState = interactionDoc.data();
+                        
+                        if (type === 'like') {
+                            if (currentState.liked) {
+                                // Remove like
+                                await updateDoc(interactionRef, { liked: false });
+                                scriptUpdate.likes = increment(-1);
+                            } else {
+                                // Add like, remove dislike if exists
+                                await updateDoc(interactionRef, { 
+                                    liked: true, 
+                                    disliked: false 
+                                });
+                                scriptUpdate.likes = increment(1);
+                                if (currentState.disliked) {
+                                    scriptUpdate.dislikes = increment(-1);
+                                }
+                            }
+                        } else if (type === 'dislike') {
+                            if (currentState.disliked) {
+                                // Remove dislike
+                                await updateDoc(interactionRef, { disliked: false });
+                                scriptUpdate.dislikes = increment(-1);
+                            } else {
+                                // Add dislike, remove like if exists
+                                await updateDoc(interactionRef, { 
+                                    disliked: true, 
+                                    liked: false 
+                                });
+                                scriptUpdate.dislikes = increment(1);
+                                if (currentState.liked) {
+                                    scriptUpdate.likes = increment(-1);
+                                }
+                            }
+                        }
                     } else {
-                        // Add dislike and remove like if it exists
-                        interactions[username][scriptId]['dislike'] = true;
-                        if (isCurrentlyLiked) {
-                            delete interactions[username][scriptId]['like'];
+                        // First interaction
+                        if (type === 'like') {
+                            await setDoc(interactionRef, { liked: true, disliked: false });
+                            scriptUpdate.likes = increment(1);
+                        } else if (type === 'dislike') {
+                            await setDoc(interactionRef, { liked: false, disliked: true });
+                            scriptUpdate.dislikes = increment(1);
                         }
                     }
+                    
+                    // Update script stats
+                    if (Object.keys(scriptUpdate).length > 0) {
+                        await updateDoc(doc(this.db, "scripts", scriptId), scriptUpdate);
+                    }
+                    
+                    // Get updated interaction state
+                    const updatedDoc = await getDoc(interactionRef);
+                    const updatedData = updatedDoc.exists() ? updatedDoc.data() : { liked: false, disliked: false };
+                    
+                    return { 
+                        success: true, 
+                        liked: updatedData.liked || false, 
+                        disliked: updatedData.disliked || false 
+                    };
+                } catch (error) {
+                    console.error('Error recording interaction:', error);
+                    return { success: false, error: error.message };
                 }
-                
-                localStorage.setItem('vertex_interactions', JSON.stringify(interactions));
-                
-                // Update rate limit
-                this.updateRateLimit(username, scriptId, type);
-                
-                // Return current state
-                const newLikeState = interactions[username][scriptId]['like'] || false;
-                const newDislikeState = interactions[username][scriptId]['dislike'] || false;
-                
-                return { 
-                    success: true, 
-                    liked: newLikeState, 
-                    disliked: newDislikeState,
-                    wasLiked: currentLike,
-                    wasDisliked: currentDislike
-                };
             }
             
-            // Rate limiting to prevent spam
-            checkRateLimit(username, scriptId, type) {
-                const rateLimits = JSON.parse(localStorage.getItem('vertex_ratelimits'));
-                const key = `${username}_${scriptId}_${type}`;
-                const now = Date.now();
-                
-                if (!rateLimits[key]) return true;
-                
-                const lastInteraction = rateLimits[key];
-                const timeSinceLast = now - lastInteraction;
-                
-                // 1 second cooldown between interactions
-                return timeSinceLast > 1000;
-            }
-            
-            updateRateLimit(username, scriptId, type) {
-                const rateLimits = JSON.parse(localStorage.getItem('vertex_ratelimits'));
-                const key = `${username}_${scriptId}_${type}`;
-                rateLimits[key] = Date.now();
-                localStorage.setItem('vertex_ratelimits', JSON.stringify(rateLimits));
-            }
-            
-            hasInteracted(username, scriptId, type) {
-                const interactions = JSON.parse(localStorage.getItem('vertex_interactions'));
-                return interactions[username] && 
-                       interactions[username][scriptId] && 
-                       interactions[username][scriptId][type];
-            }
-            
-            getInteractionState(username, scriptId) {
-                const interactions = JSON.parse(localStorage.getItem('vertex_interactions'));
-                if (!interactions[username] || !interactions[username][scriptId]) {
+            async getInteractionState(username, scriptId) {
+                try {
+                    const interactionDoc = await getDoc(doc(this.db, "interactions", `${username}_${scriptId}`));
+                    
+                    if (interactionDoc.exists()) {
+                        const data = interactionDoc.data();
+                        return {
+                            liked: data.liked || false,
+                            disliked: data.disliked || false
+                        };
+                    }
+                    return { liked: false, disliked: false };
+                } catch (error) {
+                    console.error('Error getting interaction state:', error);
                     return { liked: false, disliked: false };
                 }
-                return {
-                    liked: interactions[username][scriptId]['like'] || false,
-                    disliked: interactions[username][scriptId]['dislike'] || false
-                };
             }
             
-            // View tracking (FIXED: Prevent duplicate views)
-            recordScriptView(username, scriptId) {
-                const scriptViews = JSON.parse(localStorage.getItem('vertex_script_views'));
-                const key = `${username}_${scriptId}`;
-                
-                // Check if user has already viewed this script
-                if (!scriptViews || !scriptViews[key]) {
-                    // Initialize if not exists
-                    const views = scriptViews || {};
-                    views[key] = true;
-                    localStorage.setItem('vertex_script_views', JSON.stringify(views));
+            // View tracking
+            async recordScriptView(username, scriptId) {
+                try {
+                    const viewRef = doc(this.db, "views", `${scriptId}_${username}`);
+                    const viewDoc = await getDoc(viewRef);
                     
-                    // Increment view count
-                    let scripts = this.getScripts();
-                    const script = scripts.find(s => s.id === scriptId);
-                    if (script) {
-                        script.views = (script.views || 0) + 1;
-                        this.updateScript(script);
+                    if (!viewDoc.exists()) {
+                        // First view from this user
+                        await setDoc(viewRef, {
+                            username: username,
+                            scriptId: scriptId,
+                            viewedAt: serverTimestamp()
+                        });
+                        
+                        // Increment view count
+                        await updateDoc(doc(this.db, "scripts", scriptId), {
+                            views: increment(1)
+                        });
+                        
                         return true;
                     }
+                    return false;
+                } catch (error) {
+                    console.error('Error recording view:', error);
+                    return false;
                 }
-                return false;
-            }
-            
-            hasViewedScript(username, scriptId) {
-                const scriptViews = JSON.parse(localStorage.getItem('vertex_script_views'));
-                const key = `${username}_${scriptId}`;
-                return scriptViews && scriptViews[key];
             }
             
             // Subscription management
-            subscribe(subscriber, creator) {
+            async subscribe(subscriber, creator) {
                 if (subscriber === creator) return false;
                 
-                let subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
-                
-                if (!subscriptions[subscriber]) {
-                    subscriptions[subscriber] = [];
-                }
-                
-                // Toggle subscription
-                if (subscriptions[subscriber].includes(creator)) {
-                    const index = subscriptions[subscriber].indexOf(creator);
-                    subscriptions[subscriber].splice(index, 1);
-                    localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
-                    return false; // Unsubscribed
-                } else {
-                    subscriptions[subscriber].push(creator);
-                    localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
-                    return true; // Subscribed
-                }
-            }
-            
-            isSubscribed(subscriber, creator) {
-                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
-                return subscriptions[subscriber] && subscriptions[subscriber].includes(creator);
-            }
-            
-            getSubscriptions(username) {
-                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
-                return subscriptions[username] || [];
-            }
-            
-            getSubscribers(username) {
-                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
-                const subscribers = [];
-                
-                Object.keys(subscriptions).forEach(subscriber => {
-                    if (subscriptions[subscriber] && subscriptions[subscriber].includes(username)) {
-                        subscribers.push(subscriber);
+                try {
+                    const subscriptionRef = doc(this.db, "subscriptions", `${subscriber}_${creator}`);
+                    const subscriptionDoc = await getDoc(subscriptionRef);
+                    
+                    if (subscriptionDoc.exists()) {
+                        // Unsubscribe
+                        await deleteDoc(subscriptionRef);
+                        // Update creator's subscriber count
+                        await updateDoc(doc(this.db, "users", creator), {
+                            subscribers: increment(-1)
+                        });
+                        return false;
+                    } else {
+                        // Subscribe
+                        await setDoc(subscriptionRef, {
+                            subscriber: subscriber,
+                            creator: creator,
+                            subscribedAt: serverTimestamp()
+                        });
+                        // Update creator's subscriber count
+                        await updateDoc(doc(this.db, "users", creator), {
+                            subscribers: increment(1)
+                        });
+                        return true;
                     }
-                });
-                
-                return subscribers;
+                } catch (error) {
+                    console.error('Error toggling subscription:', error);
+                    return false;
+                }
+            }
+            
+            async isSubscribed(subscriber, creator) {
+                try {
+                    const subscriptionDoc = await getDoc(doc(this.db, "subscriptions", `${subscriber}_${creator}`));
+                    return subscriptionDoc.exists();
+                } catch (error) {
+                    console.error('Error checking subscription:', error);
+                    return false;
+                }
+            }
+            
+            async getSubscriptions(username) {
+                try {
+                    const q = query(collection(this.db, "subscriptions"), 
+                                  where("subscriber", "==", username));
+                    const snapshot = await getDocs(q);
+                    
+                    const subscriptions = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        subscriptions.push(data.creator);
+                    });
+                    
+                    return subscriptions;
+                } catch (error) {
+                    console.error('Error getting subscriptions:', error);
+                    return [];
+                }
+            }
+            
+            async getSubscribers(username) {
+                try {
+                    const q = query(collection(this.db, "subscriptions"), 
+                                  where("creator", "==", username));
+                    const snapshot = await getDocs(q);
+                    
+                    return snapshot.size;
+                } catch (error) {
+                    console.error('Error getting subscribers:', error);
+                    return 0;
+                }
             }
             
             // Channel stats
-            getUserChannelStats(username) {
-                const scripts = this.getScriptsByUser(username);
-                let totalLikes = 0;
-                let totalDislikes = 0;
-                let totalViews = 0;
-                
-                scripts.forEach(script => {
-                    totalLikes += script.likes || 0;
-                    totalDislikes += script.dislikes || 0;
-                    totalViews += script.views || 0;
-                });
-                
-                const subscribers = this.getSubscribers(username);
-                
-                return {
-                    scriptsCount: scripts.length,
-                    totalLikes,
-                    totalDislikes,
-                    totalViews,
-                    subscribers: subscribers.length,
-                    subscriberList: subscribers
-                };
+            async getUserChannelStats(username) {
+                try {
+                    const scripts = await this.getScriptsByUser(username);
+                    let totalLikes = 0;
+                    let totalDislikes = 0;
+                    let totalViews = 0;
+                    
+                    scripts.forEach(script => {
+                        totalLikes += script.likes || 0;
+                        totalDislikes += script.dislikes || 0;
+                        totalViews += script.views || 0;
+                    });
+                    
+                    // Get subscriber count
+                    const subscribers = await this.getSubscribers(username);
+                    
+                    return {
+                        scriptsCount: scripts.length,
+                        totalLikes,
+                        totalDislikes,
+                        totalViews,
+                        subscribers
+                    };
+                } catch (error) {
+                    console.error('Error getting channel stats:', error);
+                    return {
+                        scriptsCount: 0,
+                        totalLikes: 0,
+                        totalDislikes: 0,
+                        totalViews: 0,
+                        subscribers: 0
+                    };
+                }
             }
         }
 
@@ -3006,24 +3150,31 @@
         let stepTimers = {};
         let scriptToDelete = null;
         let currentViewScript = null;
-        let uploadType = 'thumbnail'; // 'thumbnail' or 'youtube'
-        let currentWatchOption = 'watch-here'; // 'watch-here' or 'watch-youtube'
+        let uploadType = 'thumbnail';
+        let currentWatchOption = 'watch-here';
         let activeHashtag = null;
         let dropdownTimeout = null;
 
         // Initialize application
         document.addEventListener('DOMContentLoaded', function() {
-            currentUser = storage.getCurrentUser();
+            window.appInitialized = true;
             
-            if (currentUser) {
-                showApp();
-            } else {
-                showAuth();
-            }
-            
+            // Setup event listeners
             setupEventListeners();
-            loadScripts();
-            updateStats();
+            
+            // Check if user is already logged in
+            setTimeout(async () => {
+                currentUser = await storage.getCurrentUser();
+                
+                if (currentUser) {
+                    showApp();
+                } else {
+                    showAuth();
+                }
+                
+                await loadScripts();
+                updateStats();
+            }, 1000);
         });
 
         function setupEventListeners() {
@@ -3110,6 +3261,25 @@
             window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
             window.addEventListener('resize', debounce(handleResize, 250));
             window.addEventListener('click', closeAllDropdowns);
+            
+            // Dropdown toggle
+            document.querySelectorAll('.dropdown-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const dropdown = this.closest('.dropdown');
+                    const content = dropdown.querySelector('.dropdown-content');
+                    
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown-content').forEach(d => {
+                        if (d !== content) {
+                            d.parentElement.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    dropdown.classList.toggle('active');
+                });
+            });
             
             // Initialize
             addVertexStep();
@@ -3338,15 +3508,14 @@
             return (match && match[2].length === 11) ? match[2] : null;
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
             
-            const result = storage.loginUser(username, password);
+            const result = await storage.loginUser(username, password);
             
             if (result.success) {
-                storage.setCurrentUser(result.user.username);
                 currentUser = result.user;
                 showApp();
                 showToast('Logged in successfully!');
@@ -3355,7 +3524,7 @@
             }
         }
 
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
             const username = document.getElementById('registerUsername').value;
             const password = document.getElementById('registerPassword').value;
@@ -3366,11 +3535,10 @@
                 return;
             }
             
-            const result = storage.registerUser(username, password);
+            const result = await storage.registerUser(username, password);
             
             if (result.success) {
-                storage.setCurrentUser(username);
-                currentUser = storage.getCurrentUser();
+                currentUser = result.user;
                 showApp();
                 showToast('Account created successfully!');
             } else {
@@ -3378,8 +3546,8 @@
             }
         }
 
-        function logout() {
-            storage.logoutUser();
+        async function logout() {
+            await storage.logoutUser();
             currentUser = null;
             showAuth();
             showToast('Logged out successfully');
@@ -3390,18 +3558,20 @@
             document.getElementById('appContainer').style.display = 'none';
         }
 
-        function showApp() {
+        async function showApp() {
             document.getElementById('authContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             
             // Update user display
-            const displayName = currentUser.username;
-            document.getElementById('usernameDisplay').textContent = displayName;
-            document.getElementById('pcUsernameDisplay').textContent = displayName;
-            document.getElementById('currentUserDisplay').textContent = `Welcome, ${displayName}`;
+            if (currentUser) {
+                const displayName = currentUser.username;
+                document.getElementById('usernameDisplay').textContent = displayName;
+                document.getElementById('pcUsernameDisplay').textContent = displayName;
+                document.getElementById('currentUserDisplay').textContent = `Welcome, ${displayName}`;
+            }
             
-            showDashboard();
-            loadScripts();
+            await showDashboard();
+            await loadScripts();
             updateStats();
             updatePCNavActive('dashboard');
         }
@@ -3428,11 +3598,11 @@
         function showDeleteAccountModal() {
             document.getElementById('deleteAccountModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            toggleMobileMenu(); // Close mobile menu
-            closeAllDropdowns(); // Close dropdowns
+            toggleMobileMenu();
+            closeAllDropdowns();
         }
 
-        function confirmAccountDelete() {
+        async function confirmAccountDelete() {
             const confirmUsername = document.getElementById('confirmUsername').value;
             
             if (confirmUsername !== currentUser.username) {
@@ -3440,15 +3610,19 @@
                 return;
             }
             
-            storage.deleteUser(currentUser.username);
-            currentUser = null;
+            const result = await storage.deleteUser(currentUser.username);
             
-            document.getElementById('deleteAccountModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            document.getElementById('confirmUsername').value = '';
-            
-            showAuth();
-            showToast('Account deleted successfully');
+            if (result.success) {
+                currentUser = null;
+                document.getElementById('deleteAccountModal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+                document.getElementById('confirmUsername').value = '';
+                
+                showAuth();
+                showToast('Account deleted successfully');
+            } else {
+                showToast(result.error);
+            }
         }
 
         function cancelAccountDelete() {
@@ -3461,7 +3635,6 @@
             const menu = document.getElementById('mobileDropdown');
             menu.classList.toggle('active');
             
-            // Clear any existing timeouts
             if (dropdownTimeout) {
                 clearTimeout(dropdownTimeout);
                 dropdownTimeout = null;
@@ -3488,7 +3661,7 @@
             }
         }
 
-        function showHashtagExplorer() {
+        async function showHashtagExplorer() {
             document.getElementById('dashboardContainer').style.display = 'none';
             document.getElementById('uploadContainer').style.display = 'none';
             document.getElementById('subscriptionsContainer').style.display = 'none';
@@ -3496,14 +3669,14 @@
             document.getElementById('hashtagExplorer').style.display = 'block';
             document.getElementById('hashtagExplorer').classList.add('active');
             
-            loadHashtagExplorer();
+            await loadHashtagExplorer();
             updatePCNavActive('hashtag');
-            toggleMobileMenu(); // Close mobile menu
-            closeAllDropdowns(); // Close dropdowns
+            toggleMobileMenu();
+            closeAllDropdowns();
         }
 
-        function loadHashtagExplorer() {
-            const hashtags = storage.getHashtags();
+        async function loadHashtagExplorer() {
+            const hashtags = await storage.getHashtags();
             const container = document.getElementById('hashtagList');
             
             if (!hashtags || Object.keys(hashtags).length === 0) {
@@ -3528,7 +3701,7 @@
                     <div class="hashtag">#${tag}</div>
                     <div class="hashtag-stats">
                         <span>${data.count} scripts</span>
-                        <span>${getHashtagUsage(tag)}</span>
+                        <span>${data.count * 10} views</span>
                     </div>
                 `;
                 
@@ -3544,30 +3717,24 @@
             document.getElementById('totalHashtags').textContent = Object.keys(hashtags).length;
         }
 
-        function getHashtagUsage(tag) {
-            const scripts = storage.getScriptsByHashtag(tag);
-            const totalViews = scripts.reduce((sum, script) => sum + (script.views || 0), 0);
-            return `${totalViews} views`;
-        }
-
-        function showChannel() {
+        async function showChannel() {
             document.getElementById('dashboardContainer').style.display = 'none';
             document.getElementById('uploadContainer').style.display = 'none';
             document.getElementById('subscriptionsContainer').style.display = 'none';
             document.getElementById('channelContainer').style.display = 'block';
             document.getElementById('hashtagExplorer').style.display = 'none';
             
-            loadChannelData();
+            await loadChannelData();
             updatePCNavActive('channel');
-            toggleMobileMenu(); // Close mobile menu
-            closeAllDropdowns(); // Close dropdowns
+            toggleMobileMenu();
+            closeAllDropdowns();
         }
 
-        function loadChannelData() {
+        async function loadChannelData() {
             if (!currentUser) return;
             
-            const stats = storage.getUserChannelStats(currentUser.username);
-            const userScripts = storage.getScriptsByUser(currentUser.username);
+            const stats = await storage.getUserChannelStats(currentUser.username);
+            const userScripts = await storage.getScriptsByUser(currentUser.username);
             
             // Update channel info
             document.getElementById('channelUsername').textContent = currentUser.username;
@@ -3596,7 +3763,7 @@
             }
             
             // Sort by date (newest first)
-            userScripts.sort((a, b) => new Date(b.uploadDateTime) - new Date(a.uploadDateTime));
+            userScripts.sort((a, b) => new Date(b.createdAt || b.uploadDateTime) - new Date(a.createdAt || a.uploadDateTime));
             
             container.innerHTML = '';
             userScripts.forEach(script => {
@@ -3605,22 +3772,22 @@
             });
         }
 
-        function showSubscriptions() {
+        async function showSubscriptions() {
             document.getElementById('dashboardContainer').style.display = 'none';
             document.getElementById('uploadContainer').style.display = 'none';
             document.getElementById('channelContainer').style.display = 'none';
             document.getElementById('hashtagExplorer').style.display = 'none';
             document.getElementById('subscriptionsContainer').style.display = 'block';
             
-            loadSubscriptions();
+            await loadSubscriptions();
             updatePCNavActive('subscriptions');
-            toggleMobileMenu(); // Close mobile menu
-            closeAllDropdowns(); // Close dropdowns
+            toggleMobileMenu();
+            closeAllDropdowns();
         }
 
-        function loadSubscriptions() {
-            const subscriptions = storage.getSubscriptions(currentUser.username);
-            const allScripts = storage.getScripts();
+        async function loadSubscriptions() {
+            const subscriptions = await storage.getSubscriptions(currentUser.username);
+            const allScripts = await storage.getScripts();
             
             // Get scripts from subscribed creators
             const subscriptionScripts = allScripts.filter(script => 
@@ -3628,7 +3795,7 @@
             );
             
             // Sort by date (newest first)
-            subscriptionScripts.sort((a, b) => new Date(b.uploadDateTime) - new Date(a.uploadDateTime));
+            subscriptionScripts.sort((a, b) => new Date(b.createdAt || b.uploadDateTime) - new Date(a.createdAt || a.uploadDateTime));
             
             const container = document.getElementById('subscriptionsList');
             
@@ -3650,7 +3817,7 @@
             });
         }
 
-        function handleSubscribe() {
+        async function handleSubscribe() {
             if (!currentUser || !currentViewScript) return;
             
             const creator = currentViewScript.uploader;
@@ -3660,7 +3827,7 @@
                 return;
             }
             
-            const subscribed = storage.subscribe(currentUser.username, creator);
+            const subscribed = await storage.subscribe(currentUser.username, creator);
             
             if (subscribed) {
                 document.getElementById('subscribeText').textContent = 'Subscribed';
@@ -3674,11 +3841,11 @@
             
             // Update channel stats if viewing own channel
             if (document.getElementById('channelContainer').style.display === 'block') {
-                loadChannelData();
+                await loadChannelData();
             }
         }
 
-        function handleLike() {
+        async function handleLike() {
             if (!currentUser || !currentViewScript) return;
             
             const likeBtn = document.getElementById('viewLikeBtn');
@@ -3689,7 +3856,7 @@
             dislikeBtn.disabled = true;
             
             const scriptId = currentViewScript.id;
-            const result = storage.recordInteraction(currentUser.username, scriptId, 'like');
+            const result = await storage.recordInteraction(currentUser.username, scriptId, 'like');
             
             if (!result.success) {
                 showToast(result.error);
@@ -3698,197 +3865,134 @@
                 return;
             }
             
-            // Update script counts based on the result
-            const oldLikes = currentViewScript.likes || 0;
-            const oldDislikes = currentViewScript.dislikes || 0;
-            
-            if (result.liked) {
-                // User liked the script
-                if (result.wasDisliked) {
-                    // User switched from dislike to like
-                    currentViewScript.dislikes = Math.max(0, oldDislikes - 1);
-                    currentViewScript.likes = oldLikes + 1;
-                } else {
-                    // New like
-                    currentViewScript.likes = oldLikes + 1;
-                }
-            } else {
-                // User removed like
-                currentViewScript.likes = Math.max(0, oldLikes - 1);
-            }
-            
-            // Save updated script
-            storage.updateScript(currentViewScript);
-            
-            // Update UI - FIXED: Reset colors properly
-            document.getElementById('viewLikeCount').textContent = currentViewScript.likes || 0;
-            document.getElementById('viewLikeCountText').textContent = currentViewScript.likes || 0;
-            document.getElementById('viewDislikeCount').textContent = currentViewScript.dislikes || 0;
-            document.getElementById('viewDislikeCountText').textContent = currentViewScript.dislikes || 0;
-            
-            // Reset both buttons to default state first
-            document.getElementById('viewLikeBtn').classList.remove('liked');
-            document.getElementById('viewDislikeBtn').classList.remove('disliked');
-            
-            // Then apply correct states
+            // Update UI
             if (result.liked) {
                 document.getElementById('viewLikeBtn').classList.add('liked');
-            }
-            if (result.disliked) {
-                document.getElementById('viewDislikeBtn').classList.add('disliked');
-            }
-            
-            // Animate the count
-            const likeCountElement = document.getElementById('viewLikeCountText');
-            likeCountElement.classList.add('count');
-            setTimeout(() => {
-                likeCountElement.classList.remove('count');
-            }, 500);
-            
-            showToast(result.liked ? 'Liked script' : 'Removed like');
-            renderScripts(); // Update main view
-            
-            // Update channel stats if viewing own channel
-            if (document.getElementById('channelContainer').style.display === 'block') {
-                loadChannelData();
-            }
-            
-            // Re-enable buttons after a short delay
-            setTimeout(() => {
-                likeBtn.disabled = false;
-                dislikeBtn.disabled = false;
-            }, 1000);
-        }
-
-        function handleDislike() {
-            if (!currentUser || !currentViewScript) return;
-            
-            const likeBtn = document.getElementById('viewLikeBtn');
-            const dislikeBtn = document.getElementById('viewDislikeBtn');
-            
-            // Disable buttons during processing to prevent spam
-            likeBtn.disabled = true;
-            dislikeBtn.disabled = true;
-            
-            const scriptId = currentViewScript.id;
-            const result = storage.recordInteraction(currentUser.username, scriptId, 'dislike');
-            
-            if (!result.success) {
-                showToast(result.error);
-                likeBtn.disabled = false;
-                dislikeBtn.disabled = false;
-                return;
-            }
-            
-            // Update script counts based on the result
-            const oldLikes = currentViewScript.likes || 0;
-            const oldDislikes = currentViewScript.dislikes || 0;
-            
-            if (result.disliked) {
-                // User disliked the script
-                if (result.wasLiked) {
-                    // User switched from like to dislike
-                    currentViewScript.likes = Math.max(0, oldLikes - 1);
-                    currentViewScript.dislikes = oldDislikes + 1;
-                } else {
-                    // New dislike
-                    currentViewScript.dislikes = oldDislikes + 1;
-                }
-            } else {
-                // User removed dislike
-                currentViewScript.dislikes = Math.max(0, oldDislikes - 1);
-            }
-            
-            // Save updated script
-            storage.updateScript(currentViewScript);
-            
-            // Update UI - FIXED: Reset colors properly
-            document.getElementById('viewDislikeCount').textContent = currentViewScript.dislikes || 0;
-            document.getElementById('viewDislikeCountText').textContent = currentViewScript.dislikes || 0;
-            document.getElementById('viewLikeCount').textContent = currentViewScript.likes || 0;
-            document.getElementById('viewLikeCountText').textContent = currentViewScript.likes || 0;
-            
-            // Reset both buttons to default state first
-            document.getElementById('viewLikeBtn').classList.remove('liked');
-            document.getElementById('viewDislikeBtn').classList.remove('disliked');
-            
-            // Then apply correct states
-            if (result.liked) {
-                document.getElementById('viewLikeBtn').classList.add('liked');
-            }
-            if (result.disliked) {
-                document.getElementById('viewDislikeBtn').classList.add('disliked');
-            }
-            
-            // Animate the count
-            const dislikeCountElement = document.getElementById('viewDislikeCountText');
-            dislikeCountElement.classList.add('count');
-            setTimeout(() => {
-                dislikeCountElement.classList.remove('count');
-            }, 500);
-            
-            showToast(result.disliked ? 'Disliked script' : 'Removed dislike');
-            renderScripts(); // Update main view
-            
-            // Update channel stats if viewing own channel
-            if (document.getElementById('channelContainer').style.display === 'block') {
-                loadChannelData();
-            }
-            
-            // Re-enable buttons after a short delay
-            setTimeout(() => {
-                likeBtn.disabled = false;
-                dislikeBtn.disabled = false;
-            }, 1000);
-        }
-
-        function updateScriptInStorage(script) {
-            storage.updateScript(script);
-        }
-
-        function handleHashtagClick(hashtag, scriptId) {
-            if (!currentUser) return;
-            
-            // Record hashtag view (once per user per script per hashtag)
-            const viewRecorded = storage.recordHashtagView(currentUser.username, scriptId, hashtag);
-            
-            if (viewRecorded) {
-                // Update view count in modal
-                if (currentViewScript && currentViewScript.id === scriptId) {
-                    currentViewScript.views = (currentViewScript.views || 0) + 1;
-                    document.getElementById('viewViewCount').textContent = currentViewScript.views;
-                    document.getElementById('viewLikeCountText').textContent = currentViewScript.likes || 0;
-                    document.getElementById('viewDislikeCountText').textContent = currentViewScript.dislikes || 0;
+                document.getElementById('viewDislikeBtn').classList.remove('disliked');
+                
+                // Update counts
+                const currentLikes = parseInt(document.getElementById('viewLikeCountText').textContent) || 0;
+                const currentDislikes = parseInt(document.getElementById('viewDislikeCountText').textContent) || 0;
+                
+                document.getElementById('viewLikeCount').textContent = currentLikes + 1;
+                document.getElementById('viewLikeCountText').textContent = currentLikes + 1;
+                
+                // If previously disliked, remove dislike
+                if (result.disliked === false && currentDislikes > 0) {
+                    document.getElementById('viewDislikeCount').textContent = currentDislikes - 1;
+                    document.getElementById('viewDislikeCountText').textContent = currentDislikes - 1;
                 }
                 
-                // Show scripts with this hashtag
-                filterByHashtag(hashtag);
-                showDashboard();
+                showToast('Liked script');
+            } else {
+                document.getElementById('viewLikeBtn').classList.remove('liked');
+                
+                // Update counts
+                const currentLikes = parseInt(document.getElementById('viewLikeCountText').textContent) || 0;
+                if (currentLikes > 0) {
+                    document.getElementById('viewLikeCount').textContent = currentLikes - 1;
+                    document.getElementById('viewLikeCountText').textContent = currentLikes - 1;
+                }
+                
+                showToast('Removed like');
             }
+            
+            // Refresh script data
+            await loadScripts();
+            
+            // Re-enable buttons after a short delay
+            setTimeout(() => {
+                likeBtn.disabled = false;
+                dislikeBtn.disabled = false;
+            }, 1000);
         }
 
-        function showScriptView(script) {
+        async function handleDislike() {
+            if (!currentUser || !currentViewScript) return;
+            
+            const likeBtn = document.getElementById('viewLikeBtn');
+            const dislikeBtn = document.getElementById('viewDislikeBtn');
+            
+            // Disable buttons during processing to prevent spam
+            likeBtn.disabled = true;
+            dislikeBtn.disabled = true;
+            
+            const scriptId = currentViewScript.id;
+            const result = await storage.recordInteraction(currentUser.username, scriptId, 'dislike');
+            
+            if (!result.success) {
+                showToast(result.error);
+                likeBtn.disabled = false;
+                dislikeBtn.disabled = false;
+                return;
+            }
+            
+            // Update UI
+            if (result.disliked) {
+                document.getElementById('viewDislikeBtn').classList.add('disliked');
+                document.getElementById('viewLikeBtn').classList.remove('liked');
+                
+                // Update counts
+                const currentLikes = parseInt(document.getElementById('viewLikeCountText').textContent) || 0;
+                const currentDislikes = parseInt(document.getElementById('viewDislikeCountText').textContent) || 0;
+                
+                document.getElementById('viewDislikeCount').textContent = currentDislikes + 1;
+                document.getElementById('viewDislikeCountText').textContent = currentDislikes + 1;
+                
+                // If previously liked, remove like
+                if (result.liked === false && currentLikes > 0) {
+                    document.getElementById('viewLikeCount').textContent = currentLikes - 1;
+                    document.getElementById('viewLikeCountText').textContent = currentLikes - 1;
+                }
+                
+                showToast('Disliked script');
+            } else {
+                document.getElementById('viewDislikeBtn').classList.remove('disliked');
+                
+                // Update counts
+                const currentDislikes = parseInt(document.getElementById('viewDislikeCountText').textContent) || 0;
+                if (currentDislikes > 0) {
+                    document.getElementById('viewDislikeCount').textContent = currentDislikes - 1;
+                    document.getElementById('viewDislikeCountText').textContent = currentDislikes - 1;
+                }
+                
+                showToast('Removed dislike');
+            }
+            
+            // Refresh script data
+            await loadScripts();
+            
+            // Re-enable buttons after a short delay
+            setTimeout(() => {
+                likeBtn.disabled = false;
+                dislikeBtn.disabled = false;
+            }, 1000);
+        }
+
+        async function showScriptView(script) {
             currentViewScript = script;
             
-            // FIXED: Record view only once per user
-            if (currentUser && !storage.hasViewedScript(currentUser.username, script.id)) {
-                const viewRecorded = storage.recordScriptView(currentUser.username, script.id);
-                if (viewRecorded) {
-                    script.views = (script.views || 0) + 1;
-                    updateScriptInStorage(script);
+            // Record view only once per user
+            if (currentUser) {
+                await storage.recordScriptView(currentUser.username, script.id);
+                // Refresh script data to get updated view count
+                await loadScripts();
+                const updatedScripts = scripts.find(s => s.id === script.id);
+                if (updatedScripts) {
+                    currentViewScript = updatedScripts;
                 }
             }
             
             // Update UI
             document.getElementById('viewScriptName').textContent = script.name;
             document.getElementById('viewScriptAuthor').textContent = `Uploaded by ${script.uploader}`;
-            document.getElementById('viewScriptDate').textContent = ` on ${script.uploadDate}`;
+            document.getElementById('viewScriptDate').textContent = ` on ${script.uploadDate || 'Unknown date'}`;
             document.getElementById('viewLikeCount').textContent = script.likes || 0;
             document.getElementById('viewLikeCountText').textContent = script.likes || 0;
             document.getElementById('viewDislikeCount').textContent = script.dislikes || 0;
             document.getElementById('viewDislikeCountText').textContent = script.dislikes || 0;
             document.getElementById('viewViewCount').textContent = script.views || 0;
-            document.getElementById('viewStepsCount').textContent = script.steps.length;
+            document.getElementById('viewStepsCount').textContent = script.steps ? script.steps.length : 0;
             
             // Show description
             const descriptionElement = document.getElementById('viewScriptDescription');
@@ -3942,12 +4046,12 @@
             }
             
             // Check if user is subscribed
-            const isSubscribed = storage.isSubscribed(currentUser.username, script.uploader);
+            const isSubscribed = await storage.isSubscribed(currentUser.username, script.uploader);
             document.getElementById('subscribeText').textContent = isSubscribed ? 'Subscribed' : 'Subscribe';
             document.getElementById('viewSubscribeBtn').classList.toggle('subscribed', isSubscribed);
             
             // Check if user has liked/disliked
-            const interactionState = storage.getInteractionState(currentUser.username, script.id);
+            const interactionState = await storage.getInteractionState(currentUser.username, script.id);
             
             // Reset both buttons to default state first
             document.getElementById('viewLikeBtn').classList.remove('liked');
@@ -3984,14 +4088,13 @@
         }
 
         // ============ ORIGINAL FUNCTIONALITY (UPDATED) ============
-        function loadScripts() {
-            scripts = storage.getScripts();
-            if (scripts.length > 0) {
-                nextId = Math.max(...scripts.map(s => s.id)) + 1;
-            }
+        async function loadScripts() {
+            scripts = await storage.getScripts();
+            // For Firebase, IDs are auto-generated
+            nextId = scripts.length + 1;
         }
 
-        function showDashboard() {
+        async function showDashboard() {
             document.getElementById('dashboardContainer').style.display = 'block';
             document.getElementById('uploadContainer').style.display = 'none';
             document.getElementById('subscriptionsContainer').style.display = 'none';
@@ -3999,11 +4102,11 @@
             document.getElementById('hashtagExplorer').style.display = 'none';
             document.getElementById('hashtagExplorer').classList.remove('active');
             
-            renderScripts();
+            await renderScripts();
             updateStats();
             updatePCNavActive('dashboard');
             window.scrollTo(0, 0);
-            closeAllDropdowns(); // Close dropdowns
+            closeAllDropdowns();
         }
 
         function showUploadForm() {
@@ -4032,7 +4135,7 @@
             
             updatePCNavActive('upload');
             window.scrollTo(0, 0);
-            closeAllDropdowns(); // Close dropdowns
+            closeAllDropdowns();
         }
 
         function addVertexStep() {
@@ -4113,11 +4216,11 @@
             });
         }
 
-        function updateStats() {
-            const allScripts = storage.getScripts();
+        async function updateStats() {
+            const allScripts = scripts;
             const totalScripts = allScripts.length;
             const myScripts = allScripts.filter(script => script.uploader === currentUser.username).length;
-            const hashtags = storage.getHashtags();
+            const hashtags = await storage.getHashtags();
             const totalHashtags = hashtags ? Object.keys(hashtags).length : 0;
             
             document.getElementById('totalScripts').textContent = totalScripts;
@@ -4188,9 +4291,12 @@
             }
             
             // Recent scripts get small boost
-            const ageInDays = (new Date() - new Date(script.uploadDateTime)) / (1000 * 60 * 60 * 24);
-            if (ageInDays < 7) {
-                score += 50 - (ageInDays * 5);
+            const createdAt = script.createdAt || script.uploadDateTime;
+            if (createdAt) {
+                const ageInDays = (new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24);
+                if (ageInDays < 7) {
+                    score += 50 - (ageInDays * 5);
+                }
             }
             
             // Hashtag boost for required hashtags
@@ -4210,9 +4316,9 @@
             return score;
         }
 
-        function renderScripts() {
+        async function renderScripts() {
             const scriptsList = document.getElementById('scriptsList');
-            loadScripts(); // Reload from storage
+            await loadScripts(); // Reload from storage
             
             if (scripts.length === 0) {
                 scriptsList.innerHTML = `
@@ -4255,19 +4361,16 @@
             scriptCard.className = 'pc-script-card';
             scriptCard.dataset.id = script.id;
             
-            // Add pin icon if pinned
-            const pinIcon = script.pinned ? '<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>' : '';
-            
             // Check if user can delete this script
-            const canDelete = currentUser.username === 'plstealme2' || script.uploader === currentUser.username;
+            const canDelete = currentUser.isAdmin || script.uploader === currentUser.username;
             const deleteBtn = canDelete ? `
                 <button class="action-btn delete-btn" data-id="${script.id}" aria-label="Delete script">
                     <i class="fas fa-trash"></i>
                 </button>
             ` : '';
             
-            // Check if plstealme2 can pin
-            const pinBtn = currentUser.username === 'plstealme2' ? `
+            // Check if admin can pin
+            const pinBtn = currentUser.isAdmin ? `
                 <button class="action-btn pin-btn ${script.pinned ? 'pinned' : ''}" data-id="${script.id}" aria-label="${script.pinned ? 'Unpin' : 'Pin'} script">
                     <i class="fas fa-thumbtack"></i>
                 </button>
@@ -4312,7 +4415,6 @@
             scriptCard.innerHTML = `
                 ${thumbnailHtml}
                 <div class="pc-script-content">
-                    ${pinIcon}
                     <div class="script-card-actions">
                         ${pinBtn}
                         ${deleteBtn}
@@ -4326,7 +4428,7 @@
                         <div class="script-uploader">
                             <i class="fas fa-user"></i>
                             ${script.uploader}
-                            <span>• ${script.uploadDate}</span>
+                            <span>• ${script.uploadDate || 'Unknown date'}</span>
                         </div>
                         <div class="script-stats">
                             <span><i class="fas fa-thumbs-up"></i> ${script.likes || 0}</span>
@@ -4360,8 +4462,8 @@
                 });
             }
             
-            // Pin button (for plstealme2 only)
-            if (currentUser.username === 'plstealme2') {
+            // Pin button (for admin only)
+            if (currentUser.isAdmin) {
                 scriptCard.querySelector('.pin-btn').addEventListener('click', function(e) {
                     e.stopPropagation();
                     togglePinScript(script.id);
@@ -4385,19 +4487,16 @@
             scriptCard.className = 'script-card';
             scriptCard.dataset.id = script.id;
             
-            // Add pin icon if pinned
-            const pinIcon = script.pinned ? '<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>' : '';
-            
             // Check if user can delete this script
-            const canDelete = currentUser.username === 'plstealme2' || script.uploader === currentUser.username;
+            const canDelete = currentUser.isAdmin || script.uploader === currentUser.username;
             const deleteBtn = canDelete ? `
                 <button class="action-btn delete-btn" data-id="${script.id}" aria-label="Delete script">
                     <i class="fas fa-trash"></i>
                 </button>
             ` : '';
             
-            // Check if plstealme2 can pin
-            const pinBtn = currentUser.username === 'plstealme2' ? `
+            // Check if admin can pin
+            const pinBtn = currentUser.isAdmin ? `
                 <button class="action-btn pin-btn ${script.pinned ? 'pinned' : ''}" data-id="${script.id}" aria-label="${script.pinned ? 'Unpin' : 'Pin'} script">
                     <i class="fas fa-thumbtack"></i>
                 </button>
@@ -4430,7 +4529,6 @@
             }
             
             scriptCard.innerHTML = `
-                ${pinIcon}
                 <div class="script-card-actions">
                     ${pinBtn}
                     ${deleteBtn}
@@ -4442,7 +4540,7 @@
                         <div class="script-uploader">
                             <i class="fas fa-user"></i>
                             ${script.uploader}
-                            <span>• ${script.uploadDate}</span>
+                            <span>• ${script.uploadDate || 'Unknown date'}</span>
                         </div>
                         <div class="script-stats">
                             <span><i class="fas fa-thumbs-up"></i> ${script.likes || 0}</span>
@@ -4451,9 +4549,9 @@
                     </div>
                     ${script.description ? `<div class="script-description" style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${script.description}</div>` : ''}
                     <div class="steps-indicator">
-                        ${script.steps.map((step, index) => 
+                        ${script.steps ? script.steps.map((step, index) => 
                             `<div class="step-dot ${index === 0 ? 'active' : ''}"></div>`
-                        ).join('')}
+                        ).join('') : '<div class="step-dot active"></div>'}
                     </div>
                     <button class="btn unlock-script-btn" data-id="${script.id}">
                         <i class="fas fa-unlock-alt"></i> Unlock Script
@@ -4482,8 +4580,8 @@
                 });
             }
             
-            // Pin button (for plstealme2 only)
-            if (currentUser.username === 'plstealme2') {
+            // Pin button (for admin only)
+            if (currentUser.isAdmin) {
                 scriptCard.querySelector('.pin-btn').addEventListener('click', function(e) {
                     e.stopPropagation();
                     togglePinScript(script.id);
@@ -4493,21 +4591,20 @@
             return scriptCard;
         }
 
-        function togglePinScript(scriptId) {
-            let scripts = storage.getScripts();
+        async function togglePinScript(scriptId) {
             const script = scripts.find(s => s.id === scriptId);
             
             if (script) {
                 script.pinned = !script.pinned;
-                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
-                renderScripts();
+                await storage.updateScript(script);
+                await renderScripts();
                 showToast(script.pinned ? 'Script pinned to top' : 'Script unpinned');
             }
         }
 
         function confirmDelete(scriptId) {
             const script = scripts.find(s => s.id === scriptId);
-            if (script && (currentUser.username === 'plstealme2' || script.uploader === currentUser.username)) {
+            if (script && (currentUser.isAdmin || script.uploader === currentUser.username)) {
                 scriptToDelete = scriptId;
                 document.getElementById('deleteMessage').textContent = `Are you sure you want to delete "${script.name}"? This action cannot be undone.`;
                 document.getElementById('deleteModal').style.display = 'flex';
@@ -4515,22 +4612,26 @@
             }
         }
 
-        function confirmDeleteScript() {
+        async function confirmDeleteScript() {
             if (scriptToDelete) {
-                storage.deleteScript(scriptToDelete);
-                scriptToDelete = null;
-                renderScripts();
-                updateStats();
-                showToast('Script deleted successfully');
-                
-                // Update channel if viewing it
-                if (document.getElementById('channelContainer').style.display === 'block') {
-                    loadChannelData();
-                }
-                
-                // Update hashtag explorer if viewing it
-                if (document.getElementById('hashtagExplorer').classList.contains('active')) {
-                    loadHashtagExplorer();
+                const result = await storage.deleteScript(scriptToDelete);
+                if (result.success) {
+                    scriptToDelete = null;
+                    await renderScripts();
+                    await updateStats();
+                    showToast('Script deleted successfully');
+                    
+                    // Update channel if viewing it
+                    if (document.getElementById('channelContainer').style.display === 'block') {
+                        await loadChannelData();
+                    }
+                    
+                    // Update hashtag explorer if viewing it
+                    if (document.getElementById('hashtagExplorer').classList.contains('active')) {
+                        await loadHashtagExplorer();
+                    }
+                } else {
+                    showToast(result.error);
                 }
             }
             document.getElementById('deleteModal').style.display = 'none';
@@ -4543,7 +4644,7 @@
             document.body.style.overflow = 'auto';
         }
 
-        function uploadScript(e) {
+        async function uploadScript(e) {
             e.preventDefault();
             
             const scriptName = document.getElementById('scriptName').value;
@@ -4605,7 +4706,7 @@
             }
         }
 
-        function finishUpload(scriptName, description, scriptLink, thumbnail, youtubeVideo, hashtags) {
+        async function finishUpload(scriptName, description, scriptLink, thumbnail, youtubeVideo, hashtags) {
             // Get all steps
             const stepContainers = document.querySelectorAll('.step-container');
             const steps = [];
@@ -4634,7 +4735,6 @@
             
             // Create new script object
             const newScript = {
-                id: nextId++,
                 name: scriptName,
                 description: description.substring(0, 500), // Limit description
                 thumbnail: thumbnail,
@@ -4643,7 +4743,6 @@
                 steps: steps,
                 hashtags: hashtags,
                 uploader: currentUser.username,
-                uploadDate: new Date().toLocaleDateString(),
                 uploadDateTime: new Date().toISOString(),
                 likes: 0,
                 dislikes: 0,
@@ -4651,9 +4750,13 @@
                 pinned: false
             };
             
-            storage.saveScript(newScript);
-            showDashboard();
-            showToast(`Script "${scriptName}" uploaded successfully!`);
+            const result = await storage.saveScript(newScript);
+            if (result.success) {
+                await showDashboard();
+                showToast(`Script "${scriptName}" uploaded successfully!`);
+            } else {
+                showToast(`Error: ${result.error}`);
+            }
         }
 
         function startUnlockProcess(script) {
@@ -4671,30 +4774,34 @@
             const stepChecks = document.getElementById('stepChecks');
             stepChecks.innerHTML = '';
             
-            script.steps.forEach((step, index) => {
-                const stepCheck = document.createElement('div');
-                stepCheck.className = 'step-check';
-                stepCheck.id = `stepCheck${index}`;
-                stepCheck.innerHTML = `
-                    <div class="check-circle" id="checkCircle${index}">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="step-text">
-                        <div class="step-name">${step.name.length > 40 ? step.name.substring(0, 40) + '...' : step.name}</div>
-                        <div class="step-desc">${step.url}</div>
-                        <button class="step-link-btn" id="stepLinkBtn${index}" data-url="${step.url}" aria-label="Open ${step.name}">
-                            <i class="fas fa-external-link-alt"></i> Open Link
-                        </button>
-                    </div>
-                `;
-                stepChecks.appendChild(stepCheck);
-                
-                document.getElementById(`stepLinkBtn${index}`).addEventListener('click', function() {
-                    const stepIndex = parseInt(this.id.replace('stepLinkBtn', ''));
-                    const stepUrl = this.getAttribute('data-url');
-                    startStepTimer(stepIndex, stepUrl);
+            if (script.steps && script.steps.length > 0) {
+                script.steps.forEach((step, index) => {
+                    const stepCheck = document.createElement('div');
+                    stepCheck.className = 'step-check';
+                    stepCheck.id = `stepCheck${index}`;
+                    stepCheck.innerHTML = `
+                        <div class="check-circle" id="checkCircle${index}">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="step-text">
+                            <div class="step-name">${step.name.length > 40 ? step.name.substring(0, 40) + '...' : step.name}</div>
+                            <div class="step-desc">${step.url}</div>
+                            <button class="step-link-btn" id="stepLinkBtn${index}" data-url="${step.url}" aria-label="Open ${step.name}">
+                                <i class="fas fa-external-link-alt"></i> Open Link
+                            </button>
+                        </div>
+                    `;
+                    stepChecks.appendChild(stepCheck);
+                    
+                    document.getElementById(`stepLinkBtn${index}`).addEventListener('click', function() {
+                        const stepIndex = parseInt(this.id.replace('stepLinkBtn', ''));
+                        const stepUrl = this.getAttribute('data-url');
+                        startStepTimer(stepIndex, stepUrl);
+                    });
                 });
-            });
+            } else {
+                stepChecks.innerHTML = '<p>No unlock steps required for this script.</p>';
+            }
             
             document.getElementById('timer').textContent = countdown;
             document.getElementById('progress').style.width = '0%';
@@ -4705,7 +4812,7 @@
         }
 
         function processNextStep() {
-            if (currentStep >= currentUnlockScript.steps.length) {
+            if (!currentUnlockScript.steps || currentStep >= currentUnlockScript.steps.length) {
                 startCountdown();
                 return;
             }
@@ -4719,7 +4826,7 @@
             }
             
             const stepBtn = document.getElementById(`stepLinkBtn${currentStep}`);
-            stepBtn.disabled = false;
+            if (stepBtn) stepBtn.disabled = false;
         }
 
         function startStepTimer(stepIndex, stepUrl) {
