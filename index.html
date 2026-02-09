@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>VertexScripts Pro - Secure Script Platform</title>
+    <title>VertexScripts - Script Uploader & Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -23,55 +23,374 @@
         }
         
         .container {
-            max-width: 1600px;
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
             padding: 0 10px;
         }
         
-        /* Login Screen */
-        #loginScreen {
+        /* New Auth Styles */
+        .auth-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            min-height: 80vh;
         }
         
-        .login-card {
+        .auth-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
+            border-radius: 15px;
+            padding: 30px;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         }
         
-        .login-header i {
-            font-size: 3rem;
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .auth-tab.active {
             color: #4bcffa;
-            margin-bottom: 15px;
+            border-bottom: 2px solid #4bcffa;
         }
         
-        .login-header h1 {
-            font-size: 2rem;
-            background: linear-gradient(to right, #4bcffa, #5d79ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        
-        /* Main App */
-        #mainApp {
+        .auth-form {
             display: none;
         }
         
+        .auth-form.active {
+            display: block;
+        }
+        
+        .auth-error {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .delete-account-btn {
+            background: #ff6b6b;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        /* Dropdown Menu */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: rgba(30, 30, 46, 0.95);
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5px;
+        }
+        
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .dropdown-content a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        /* Script View Modal */
+        .script-view-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .script-view-content {
+            background: #1a1a2e;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .script-view-header {
+            padding: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .close-view {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .close-view:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .script-view-body {
+            padding: 25px;
+        }
+        
+        .script-view-thumbnail {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .script-view-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .script-view-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .like-btn, .dislike-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            padding: 5px;
+        }
+        
+        .like-btn:hover {
+            color: #4bcffa;
+        }
+        
+        .dislike-btn:hover {
+            color: #ff6b6b;
+        }
+        
+        .like-btn.liked {
+            color: #4bcffa;
+        }
+        
+        .dislike-btn.disliked {
+            color: #ff6b6b;
+        }
+        
+        .subscribe-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .subscribe-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .subscribe-btn.subscribed {
+            background: #4bcffa;
+            color: #0c2461;
+        }
+        
+        /* Subscriptions Container */
+        .subscriptions-container {
+            display: none;
+        }
+        
+        .subscriptions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* Pin Icon */
+        .pin-icon {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #ffd700;
+            font-size: 1.2rem;
+            z-index: 1;
+        }
+        
+        .pin-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .pin-btn.pinned {
+            color: #ffd700;
+        }
+        
+        /* Script Details in Card */
+        .script-details {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .script-uploader {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .script-uploader i {
+            color: #4bcffa;
+        }
+        
+        /* Mobile Dropdown Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .dropdown-btn {
+                display: none;
+            }
+            
+            .mobile-dropdown-content {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(30, 30, 46, 0.98);
+                z-index: 1000;
+                padding: 10px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .mobile-dropdown-content.active {
+                display: block;
+            }
+            
+            .mobile-dropdown-content a {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px 15px;
+                color: white;
+                text-decoration: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .header-controls {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .search-container {
+                flex: 1;
+            }
+        }
+        
+        /* Updated Header */
         header {
             display: flex;
             flex-direction: column;
@@ -79,6 +398,7 @@
             padding: 15px 0;
             margin-bottom: 20px;
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
         
         @media (min-width: 768px) {
@@ -91,6 +411,28 @@
             }
         }
         
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        @media (min-width: 768px) {
+            .logo-section {
+                width: auto;
+            }
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* Original Styles Continue Below */
         .logo {
             display: flex;
             align-items: center;
@@ -111,28 +453,14 @@
             letter-spacing: 0.5px;
         }
         
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #4bcffa, #5d79ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-        
-        .user-name {
-            font-weight: 600;
-            color: #4bcffa;
+        @media (min-width: 768px) {
+            .logo i {
+                font-size: 2.5rem;
+            }
+            
+            .logo h1 {
+                font-size: 2.2rem;
+            }
         }
         
         .header-controls {
@@ -147,17 +475,49 @@
                 flex-direction: row;
                 align-items: center;
                 width: auto;
-                gap: 20px;
             }
         }
         
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        .search-container {
+            position: relative;
+            width: 100%;
         }
         
-        .btn {
+        @media (min-width: 768px) {
+            .search-container {
+                width: auto;
+            }
+        }
+        
+        .search-input {
+            padding: 12px 15px 12px 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            width: 100%;
+            -webkit-appearance: none;
+            font-size: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .search-input {
+                width: 250px;
+                padding: 10px 15px 10px 40px;
+            }
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+        }
+        
+        .upload-btn {
             background: linear-gradient(to right, #4bcffa, #5d79ff);
             color: white;
             border: none;
@@ -170,30 +530,37 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            width: 100%;
             font-size: 1rem;
             touch-action: manipulation;
-            min-height: 44px;
         }
         
-        .btn:hover, .btn:active {
+        @media (min-width: 768px) {
+            .upload-btn {
+                width: auto;
+                padding: 10px 20px;
+            }
+        }
+        
+        .upload-btn:hover, .upload-btn:active {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(75, 207, 250, 0.3);
         }
         
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
+        .credit {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
         }
         
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-danger {
-            background: #ff6b6b;
-        }
-        
-        .btn-success {
-            background: #00b894;
+        @media (min-width: 768px) {
+            .credit {
+                width: auto;
+            }
         }
         
         .main-content {
@@ -203,60 +570,11 @@
             margin-bottom: 30px;
         }
         
-        @media (min-width: 1200px) {
+        @media (min-width: 1024px) {
             .main-content {
-                grid-template-columns: 300px 1fr;
                 gap: 30px;
+                margin-bottom: 40px;
             }
-        }
-        
-        .sidebar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            height: fit-content;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .sidebar-stats {
-            margin-bottom: 25px;
-        }
-        
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .sidebar-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .menu-btn {
-            background: transparent;
-            border: none;
-            color: white;
-            padding: 12px 15px;
-            border-radius: 8px;
-            text-align: left;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .menu-btn:hover, .menu-btn.active {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .menu-btn i {
-            width: 20px;
         }
         
         .card {
@@ -269,28 +587,350 @@
             overflow: hidden;
         }
         
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
+        @media (min-width: 768px) {
+            .card {
+                padding: 25px;
+            }
         }
         
-        .section-title {
-            font-size: 1.5rem;
+        .card h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+        }
+        
+        @media (min-width: 768px) {
+            .card h2 {
+                margin-bottom: 20px;
+                font-size: 1.6rem;
+            }
+        }
+        
+        .card h2 i {
             color: #4bcffa;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .dashboard-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 25px;
+            }
+        }
+        
+        .dashboard-title {
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
+        .dashboard-stats {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        @media (min-width: 768px) {
+            .dashboard-stats {
+                gap: 20px;
+                justify-content: flex-start;
+            }
+        }
+        
+        .stat {
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4bcffa;
+        }
+        
+        @media (min-width: 768px) {
+            .stat-number {
+                font-size: 1.8rem;
+            }
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        @media (min-width: 768px) {
+            .stat-label {
+                font-size: 0.9rem;
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .form-group {
+                margin-bottom: 20px;
+            }
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #ddd;
+            font-size: 0.95rem;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            -webkit-appearance: none;
+            min-height: 48px;
+        }
+        
+        @media (min-width: 768px) {
+            input, textarea {
+                padding: 12px 15px;
+            }
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #4bcffa;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 48px;
+        }
+        
+        .file-upload-label:hover, .file-upload-label:active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4bcffa;
+        }
+        
+        .file-upload-label i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            color: #4bcffa;
+        }
+        
+        .thumbnail-preview {
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+        }
+        
+        .thumbnail-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .step-container {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        
+        @media (min-width: 768px) {
+            .step-container {
+                margin-bottom: 15px;
+            }
+        }
+        
+        .step-container.vertex-step {
+            background: rgba(75, 207, 250, 0.1);
+            border: 1px solid rgba(75, 207, 250, 0.3);
+        }
+        
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #4bcffa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .step-title i {
+            color: #ff6b6b;
+        }
+        
+        .vertex-step .step-title i {
+            color: #4bcffa;
+        }
+        
+        .remove-step {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            min-height: 32px;
+            touch-action: manipulation;
+        }
+        
+        .vertex-step .remove-step {
+            display: none !important;
+        }
+        
+        .step-url {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        .vertex-step .step-url {
+            background: rgba(0, 0, 0, 0.2) !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+            cursor: not-allowed;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #4bcffa, #5d79ff);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            font-size: 1rem;
+            touch-action: manipulation;
+        }
+        
+        @media (min-width: 768px) {
+            .btn {
+                width: auto;
+                padding: 12px 25px;
+            }
+        }
+        
+        .btn:hover, .btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(75, 207, 250, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn-secondary:hover, .btn-secondary:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-danger {
+            background: #ff6b6b;
+        }
+        
+        .btn-danger:hover, .btn-danger:active {
+            background: #ff5252;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .button-group {
+                flex-direction: row;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        }
+        
         .scripts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
             margin-top: 20px;
+        }
+        
+        @media (min-width: 640px) {
+            .scripts-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 20px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .scripts-grid {
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 25px;
+            }
         }
         
         .script-card {
@@ -309,24 +949,6 @@
             background: rgba(255, 255, 255, 0.08);
         }
         
-        .script-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: #ff6b6b;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            z-index: 2;
-        }
-        
-        .pinned-badge {
-            background: #ffd700;
-            color: #000;
-        }
-        
         .script-card-actions {
             position: absolute;
             top: 10px;
@@ -342,6 +964,12 @@
             opacity: 1;
         }
         
+        @media (hover: none) {
+            .script-card-actions {
+                opacity: 1;
+            }
+        }
+        
         .action-btn {
             width: 36px;
             height: 36px;
@@ -355,10 +983,23 @@
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        .action-btn:hover, .action-btn:active {
+            transform: scale(1.1);
+        }
+        
+        .delete-btn:hover, .delete-btn:active {
+            background: #ff6b6b;
+        }
+        
+        .edit-btn:hover, .edit-btn:active {
+            background: #4bcffa;
         }
         
         .script-thumbnail {
-            height: 180px;
+            height: 160px;
             width: 100%;
             background: linear-gradient(45deg, #0c2461, #1e3799);
             display: flex;
@@ -366,19 +1007,19 @@
             justify-content: center;
             color: #4bcffa;
             font-size: 2.5rem;
-            cursor: pointer;
-            overflow: hidden;
+        }
+        
+        @media (min-width: 768px) {
+            .script-thumbnail {
+                height: 180px;
+                font-size: 3rem;
+            }
         }
         
         .script-thumbnail img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-        
-        .script-thumbnail:hover img {
-            transform: scale(1.05);
         }
         
         .script-info {
@@ -388,209 +1029,71 @@
             flex-direction: column;
         }
         
+        @media (min-width: 768px) {
+            .script-info {
+                padding: 20px;
+            }
+        }
+        
         .script-title {
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 8px;
-            cursor: pointer;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        @media (min-width: 768px) {
+            .script-title {
+                font-size: 1.3rem;
+            }
+        }
+        
+        .script-author {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .script-meta {
             font-size: 0.85rem;
             opacity: 0.8;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 5px;
         }
         
-        .script-stats {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .stat-icon {
+        .steps-indicator {
             display: flex;
             align-items: center;
             gap: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .stat-icon i {
-            color: #4bcffa;
-        }
-        
-        .script-author {
-            display: flex;
-            align-items: center;
-            gap: 8px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
         
-        .author-avatar {
-            width: 30px;
-            height: 30px;
+        .step-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: linear-gradient(45deg, #4bcffa, #5d79ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        
-        .script-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: auto;
-        }
-        
-        .action-button {
-            flex: 1;
-            padding: 8px;
-            border-radius: 6px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            transition: all 0.3s ease;
-        }
-        
-        .action-button:hover {
             background: rgba(255, 255, 255, 0.2);
         }
         
-        .action-button.liked {
-            color: #ff6b6b;
-        }
-        
-        .action-button.subscribed {
-            background: rgba(255, 255, 255, 0.2);
-            color: #4bcffa;
-        }
-        
-        /* Script Viewer */
-        .script-viewer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1000;
-            display: none;
-            overflow-y: auto;
-        }
-        
-        .viewer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            height: 100%;
-        }
-        
-        .viewer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .close-viewer {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .close-viewer:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .viewer-main {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 30px;
-        }
-        
-        @media (min-width: 992px) {
-            .viewer-main {
-                grid-template-columns: 1fr 350px;
+        @media (min-width: 768px) {
+            .step-dot {
+                width: 10px;
+                height: 10px;
             }
         }
         
-        .viewer-thumbnail {
-            height: 400px;
-            border-radius: 15px;
-            overflow: hidden;
-            background: #000;
-        }
-        
-        .viewer-thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .viewer-details {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .viewer-stats {
-            display: flex;
-            gap: 20px;
-            justify-content: space-around;
-        }
-        
-        .viewer-stat {
-            text-align: center;
-        }
-        
-        .viewer-stat-number {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #4bcffa;
-        }
-        
-        .viewer-stat-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-        
-        .viewer-description {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        
-        .viewer-steps {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        
-        .step-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            border-left: 3px solid #4bcffa;
+        .step-dot.active {
+            background: #4bcffa;
         }
         
         .modal {
@@ -603,8 +1106,9 @@
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1001;
+            z-index: 1000;
             padding: 20px;
+            overflow-y: auto;
         }
         
         .modal-content {
@@ -612,125 +1116,405 @@
             border-radius: 15px;
             width: 100%;
             max-width: 500px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #ddd;
-        }
-        
-        input, textarea, select {
-            width: 100%;
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 16px;
-        }
-        
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #4bcffa;
-        }
-        
-        .password-strength {
-            margin-top: 5px;
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-        
-        .strength-weak { color: #ff6b6b; }
-        .strength-medium { color: #feca57; }
-        .strength-strong { color: #00b894; }
-        
-        .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            grid-column: 1 / -1;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 20px;
+        @media (min-width: 768px) {
+            .modal-content {
+                padding: 30px;
+            }
+        }
+        
+        .modal h3 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            color: #4bcffa;
+            word-break: break-word;
+        }
+        
+        @media (min-width: 768px) {
+            .modal h3 {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+        }
+        
+        .timer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
             color: #4bcffa;
         }
         
-        .subscription-feed {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        @media (min-width: 768px) {
+            .timer {
+                font-size: 3rem;
+                margin: 25px 0;
+            }
         }
         
-        .subscription-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #4bcffa;
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
         }
         
-        .subscription-header {
+        @media (min-width: 768px) {
+            .progress-bar {
+                margin: 20px 0;
+            }
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #4bcffa, #5d79ff);
+            width: 0%;
+            transition: width 1s linear;
+        }
+        
+        .step-check {
             display: flex;
-            justify-content: space-between;
+            align-items: flex-start;
+            margin: 15px 0;
+            transition: opacity 0.3s ease;
+            text-align: left;
+        }
+        
+        .step-check.completed {
+            opacity: 0.85;
+        }
+        
+        .step-check.completed .check-circle {
+            border-color: #4bcffa;
+        }
+        
+        .step-check.completed .check-circle i {
+            opacity: 1;
+        }
+        
+        .step-check.in-progress .check-circle {
+            border-color: #4bcffa;
+            border-top-color: transparent;
+        }
+        
+        .check-circle {
+            min-width: 40px;
+            min-height: 40px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex;
             align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        @media (min-width: 768px) {
+            .check-circle {
+                min-width: 50px;
+                min-height: 50px;
+                width: 50px;
+                height: 50px;
+                margin-right: 15px;
+            }
+        }
+        
+        .check-circle.spinning {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .check-circle i {
+            color: #4bcffa;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        @media (min-width: 768px) {
+            .check-circle i {
+                font-size: 1.5rem;
+            }
+        }
+        
+        .step-text {
+            text-align: left;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .step-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+        
+        .step-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+        
+        @media (min-width: 768px) {
+            .step-desc {
+                font-size: 0.9rem;
+            }
+        }
+        
+        .step-link-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            touch-action: manipulation;
+        }
+        
+        @media (min-width: 768px) {
+            .step-link-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        .step-link-btn:hover, .step-link-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .step-link-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .unlock-btn {
+            background: #00b894;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .unlock-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.7;
+            grid-column: 1 / -1;
+        }
+        
+        @media (min-width: 768px) {
+            .empty-state {
+                padding: 60px 20px;
+            }
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #4bcffa;
+        }
+        
+        @media (min-width: 768px) {
+            .empty-state i {
+                font-size: 4rem;
+                margin-bottom: 20px;
+            }
+        }
+        
+        .empty-state h3 {
+            font-size: 1.3rem;
             margin-bottom: 10px;
         }
         
-        .subscription-time {
-            font-size: 0.8rem;
-            opacity: 0.7;
+        @media (min-width: 768px) {
+            .empty-state h3 {
+                font-size: 1.5rem;
+            }
+        }
+        
+        .upload-container {
+            display: none;
+        }
+        
+        .back-to-dashboard {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        @media (min-width: 768px) {
+            .back-to-dashboard {
+                width: auto;
+                padding: 10px 20px;
+                justify-content: flex-start;
+            }
+        }
+        
+        .back-to-dashboard:hover, .back-to-dashboard:active {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         footer {
             text-align: center;
-            padding: 20px;
+            padding: 20px 10px;
             margin-top: 30px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
             opacity: 0.7;
+            width: 100%;
         }
         
-        @media (max-width: 767px) {
-            .login-card {
-                padding: 20px;
-            }
-            
-            .scripts-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .script-stats {
-                flex-wrap: wrap;
+        .step-counter {
+            display: inline-block;
+            background: #4bcffa;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 22px;
+            font-size: 0.75rem;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        
+        @media (min-width: 768px) {
+            .step-counter {
+                width: 24px;
+                height: 24px;
+                line-height: 24px;
+                font-size: 0.8rem;
             }
         }
         
-        .admin-controls {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
+        .user-id-display {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 10px;
             padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
-            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 767px) {
+            .hide-on-mobile {
+                display: none !important;
+            }
+            
+            .mobile-full-width {
+                width: 100% !important;
+            }
+            
+            .mobile-stack {
+                flex-direction: column !important;
+            }
+        }
+        
+        /* Prevent text size adjustment on orientation change */
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        
+        /* Improve touch scrolling */
+        .modal-content, #stepChecks {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Loading animation for better UX */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #4bcffa;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        /* Swipe gestures support */
+        @media (hover: none) and (pointer: coarse) {
+            .script-card {
+                cursor: pointer;
+            }
+            
+            .btn, .upload-btn, .action-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+        }
+        
+        /* Toast styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 10000;
+            font-size: 14px;
+            animation: fadeInOut 3s ease;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
         }
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div id="loginScreen" class="container">
-        <div class="login-card">
-            <div class="login-header">
-                <i class="fas fa-code"></i>
-                <h1>VertexScripts Pro</h1>
-                <p>Secure Script Platform</p>
+    <!-- Authentication Container -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="loginTab">Login</button>
+                <button class="auth-tab" id="registerTab">Register</button>
             </div>
             
-            <form id="loginForm">
+            <form id="loginForm" class="auth-form active">
                 <div class="form-group">
                     <label for="loginUsername">Username</label>
                     <input type="text" id="loginUsername" placeholder="Enter username" required>
@@ -741,532 +1525,529 @@
                     <input type="password" id="loginPassword" placeholder="Enter password" required>
                 </div>
                 
-                <button type="submit" class="btn" style="width: 100%;">
-                    <i class="fas fa-sign-in-alt"></i> Sign In
-                </button>
+                <div class="auth-error" id="loginError"></div>
+                
+                <button type="submit" class="btn">Login</button>
             </form>
             
-            <div style="margin-top: 20px; text-align: center;">
-                <p>Don't have an account?</p>
-                <button id="showRegisterBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">
-                    <i class="fas fa-user-plus"></i> Create Account
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Register Modal -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 20px; color: #4bcffa;">Create Account</h2>
-            
-            <form id="registerForm">
+            <form id="registerForm" class="auth-form">
                 <div class="form-group">
                     <label for="registerUsername">Username</label>
                     <input type="text" id="registerUsername" placeholder="Choose username" required>
-                    <div id="usernameError" style="color: #ff6b6b; font-size: 0.8rem; margin-top: 5px;"></div>
                 </div>
                 
                 <div class="form-group">
                     <label for="registerPassword">Password</label>
-                    <input type="password" id="registerPassword" placeholder="Create secure password" required>
-                    <div class="password-strength" id="passwordStrength"></div>
-                    <div id="passwordError" style="color: #ff6b6b; font-size: 0.8rem; margin-top: 5px;"></div>
+                    <input type="password" id="registerPassword" placeholder="Choose password" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
                     <input type="password" id="confirmPassword" placeholder="Confirm password" required>
-                    <div id="confirmError" style="color: #ff6b6b; font-size: 0.8rem; margin-top: 5px;"></div>
                 </div>
                 
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success" style="flex: 1;">
-                        <i class="fas fa-check"></i> Register
-                    </button>
-                    <button type="button" id="cancelRegisterBtn" class="btn btn-secondary" style="flex: 1;">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                </div>
+                <div class="auth-error" id="registerError"></div>
+                
+                <button type="submit" class="btn">Register</button>
             </form>
         </div>
     </div>
     
-    <!-- Main Application -->
-    <div id="mainApp" class="container">
-        <header>
-            <div class="logo">
-                <i class="fas fa-code"></i>
-                <h1>VertexScripts Pro</h1>
-            </div>
-            
-            <div class="user-info">
-                <div class="user-avatar" id="userAvatar">U</div>
-                <div>
-                    <div class="user-name" id="userName"></div>
-                    <div style="font-size: 0.8rem; opacity: 0.7;" id="userRole"></div>
-                </div>
-            </div>
-            
-            <div class="header-controls">
-                <div class="nav-buttons">
-                    <button class="btn" id="uploadScriptBtn">
-                        <i class="fas fa-upload"></i> Upload Script
-                    </button>
-                    <button class="btn btn-secondary" id="subscriptionsBtn">
-                        <i class="fas fa-bell"></i> Subscriptions
-                    </button>
-                    <button class="btn btn-danger" id="deleteAccountBtn">
-                        <i class="fas fa-trash"></i> Delete Account
-                    </button>
-                </div>
-            </div>
-        </header>
-        
-        <div class="main-content">
-            <aside class="sidebar">
-                <div class="sidebar-stats">
-                    <div class="stat-item">
-                        <span>Total Scripts:</span>
-                        <span id="sidebarTotalScripts">0</span>
+    <!-- Main Application Container -->
+    <div id="appContainer" style="display: none;">
+        <div class="container">
+            <header>
+                <div class="logo-section">
+                    <div class="logo">
+                        <i class="fas fa-code"></i>
+                        <h1>VertexScripts</h1>
                     </div>
-                    <div class="stat-item">
-                        <span>My Scripts:</span>
-                        <span id="sidebarMyScripts">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Subscriptions:</span>
-                        <span id="sidebarSubscriptions">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Subscribers:</span>
-                        <span id="sidebarSubscribers">0</span>
+                    
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <div class="user-info">
+                        <span id="currentUserDisplay"></span>
+                        <div class="dropdown">
+                            <button class="dropdown-btn">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="usernameDisplay"></span>
+                                <i class="fas fa-caret-down"></i>
+                            </button>
+                            <div class="dropdown-content">
+                                <a href="#" id="subscriptionsBtn">
+                                    <i class="fas fa-bell"></i> Subscriptions
+                                </a>
+                                <a href="#" id="deleteAccountBtn">
+                                    <i class="fas fa-trash"></i> Delete Account
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="sidebar-menu">
-                    <button class="menu-btn active" data-section="all">
-                        <i class="fas fa-globe"></i> All Scripts
-                    </button>
-                    <button class="menu-btn" data-section="trending">
-                        <i class="fas fa-fire"></i> Trending
-                    </button>
-                    <button class="menu-btn" data-section="subscriptions">
-                        <i class="fas fa-bell"></i> My Feed
-                    </button>
-                    <button class="menu-btn" data-section="my-scripts">
-                        <i class="fas fa-code"></i> My Scripts
-                    </button>
-                    <button class="menu-btn" data-section="liked">
-                        <i class="fas fa-heart"></i> Liked Scripts
-                    </button>
+                <div class="mobile-dropdown-content" id="mobileDropdown">
+                    <a href="#" id="mobileSubscriptionsBtn">
+                        <i class="fas fa-bell"></i> Subscriptions
+                    </a>
+                    <a href="#" id="mobileDeleteAccountBtn">
+                        <i class="fas fa-trash"></i> Delete Account
+                    </a>
                 </div>
-            </aside>
+                
+                <div class="header-controls">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search scripts...">
+                    </div>
+                    <button class="upload-btn" id="showUploadBtn">
+                        <i class="fas fa-upload"></i> Upload Script
+                    </button>
+                    <div class="credit">VertexScripts</div>
+                </div>
+            </header>
             
-            <main>
-                <div class="card">
+            <main class="main-content">
+                <!-- Subscriptions Section -->
+                <section id="subscriptionsContainer" class="card subscriptions-container">
+                    <button class="back-to-dashboard" id="backToDashboardFromSubs">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                    
+                    <h2><i class="fas fa-bell"></i> Subscriptions</h2>
+                    <p>Latest scripts from creators you follow</p>
+                    
+                    <div id="subscriptionsList" class="subscriptions-grid">
+                        <!-- Subscription scripts will be dynamically added here -->
+                    </div>
+                </section>
+                
+                <!-- Dashboard Section -->
+                <section id="dashboardContainer" class="card">
                     <div class="dashboard-header">
-                        <h2 class="section-title">
-                            <i class="fas fa-code"></i>
-                            <span id="sectionTitle">All Scripts</span>
-                        </h2>
-                        
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="searchInput" placeholder="Search scripts..." 
-                                   style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); 
-                                          border: 1px solid rgba(255,255,255,0.2); color: white; min-width: 200px;">
-                            <select id="sortSelect" style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); 
-                                                          border: 1px solid rgba(255,255,255,0.2); color: white;">
-                                <option value="score">Sort by Score</option>
-                                <option value="date">Sort by Date</option>
-                                <option value="views">Sort by Views</option>
-                                <option value="likes">Sort by Likes</option>
-                            </select>
+                        <div class="dashboard-title">
+                            <h2><i class="fas fa-tachometer-alt"></i> Script Dashboard</h2>
+                        </div>
+                        <div class="dashboard-stats">
+                            <div class="stat">
+                                <div class="stat-number" id="totalScripts">0</div>
+                                <div class="stat-label">Total Scripts</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number" id="myScripts">0</div>
+                                <div class="stat-label">My Scripts</div>
+                            </div>
                         </div>
                     </div>
+                    <p>Browse and manage all available scripts</p>
                     
                     <div id="scriptsList" class="scripts-grid">
                         <!-- Scripts will be dynamically added here -->
                     </div>
-                </div>
-            </main>
-        </div>
-        
-        <!-- Script Viewer -->
-        <div id="scriptViewer" class="script-viewer">
-            <div class="viewer-content">
-                <div class="viewer-header">
-                    <h2 id="viewerTitle"></h2>
-                    <button class="close-viewer" id="closeViewerBtn">
-                        <i class="fas fa-times"></i>
+                </section>
+                
+                <!-- Upload Script Section -->
+                <section id="uploadContainer" class="card upload-container">
+                    <button class="back-to-dashboard" id="backToDashboardBtn">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
                     </button>
-                </div>
-                
-                <div class="viewer-main">
-                    <div>
-                        <div class="viewer-thumbnail" id="viewerThumbnail"></div>
-                        
-                        <div class="viewer-description" id="viewerDescription">
-                            <h3>Description</h3>
-                            <p id="viewerDescText">No description provided.</p>
-                        </div>
-                        
-                        <div class="viewer-steps" id="viewerSteps">
-                            <h3>Unlock Steps</h3>
-                            <div id="stepsList"></div>
-                        </div>
-                    </div>
                     
-                    <div class="viewer-details">
-                        <div class="viewer-stats">
-                            <div class="viewer-stat">
-                                <div class="viewer-stat-number" id="viewerViews">0</div>
-                                <div class="viewer-stat-label">Views</div>
+                    <h2><i class="fas fa-upload"></i> Upload New Script</h2>
+                    <form id="uploadForm">
+                        <div class="form-group">
+                            <label for="scriptName">Script Name</label>
+                            <input type="text" id="scriptName" placeholder="Enter script name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="thumbnail">Script Thumbnail</label>
+                            <div class="file-upload">
+                                <label for="thumbnailInput" class="file-upload-label">
+                                    <i class="fas fa-image"></i>
+                                    <span id="fileLabelText">Click to upload thumbnail image</span>
+                                </label>
+                                <input type="file" id="thumbnailInput" accept="image/*" required>
                             </div>
-                            <div class="viewer-stat">
-                                <div class="viewer-stat-number" id="viewerLikes">0</div>
-                                <div class="viewer-stat-label">Likes</div>
-                            </div>
-                            <div class="viewer-stat">
-                                <div class="viewer-stat-number" id="viewerDislikes">0</div>
-                                <div class="viewer-stat-label">Dislikes</div>
+                            <div class="thumbnail-preview" id="thumbnailPreview">
+                                <img id="previewImage" src="" alt="Thumbnail Preview">
                             </div>
                         </div>
                         
-                        <div id="viewerAuthorInfo"></div>
+                        <div class="form-group">
+                            <label for="videoLink">Video URL (Optional)</label>
+                            <input type="text" id="videoLink" placeholder="https://youtube.com/watch?v=...">
+                        </div>
                         
-                        <div style="margin-top: 20px;">
-                            <button id="unlockScriptBtn" class="btn" style="width: 100%; margin-bottom: 10px;">
-                                <i class="fas fa-unlock-alt"></i> Unlock Script
-                            </button>
+                        <div class="form-group">
+                            <label for="scriptLink">Script Download Link</label>
+                            <input type="text" id="scriptLink" placeholder="https://example.com/script.zip" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Unlock Steps (Users must complete these before accessing your script)</label>
+                            <div id="stepsContainer">
+                                <!-- Vertex step is added by default and cannot be removed -->
+                            </div>
                             
-                            <div style="display: flex; gap: 10px;">
-                                <button id="likeBtn" class="btn btn-secondary" style="flex: 1;">
-                                    <i class="fas fa-thumbs-up"></i> Like
+                            <div class="button-group">
+                                <button type="button" id="addStepBtn" class="btn btn-secondary">
+                                    <i class="fas fa-plus"></i> Add Step
                                 </button>
-                                <button id="dislikeBtn" class="btn btn-secondary" style="flex: 1;">
-                                    <i class="fas fa-thumbs-down"></i> Dislike
+                                <button type="button" id="addYoutubeStepBtn" class="btn btn-secondary">
+                                    <i class="fab fa-youtube"></i> Add YouTube Step
                                 </button>
                             </div>
                         </div>
                         
-                        <div style="margin-top: 20px; font-size: 0.9rem; opacity: 0.8;">
-                            <div>Uploaded: <span id="viewerUploadDate"></span></div>
-                            <div>Last updated: <span id="viewerUpdateDate"></span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Upload Script Modal -->
-        <div id="uploadModal" class="modal">
-            <div class="modal-content">
-                <h2 style="margin-bottom: 20px; color: #4bcffa;">Upload New Script</h2>
-                
-                <form id="uploadForm">
-                    <div class="form-group">
-                        <label for="scriptName">Script Name</label>
-                        <input type="text" id="scriptName" placeholder="Enter script name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="scriptDescription">Description</label>
-                        <textarea id="scriptDescription" placeholder="Describe your script..." rows="4"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="thumbnailInput">Script Thumbnail</label>
-                        <input type="file" id="thumbnailInput" accept="image/*" required style="padding: 10px;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="scriptLink">Script Download Link</label>
-                        <input type="text" id="scriptLink" placeholder="https://example.com/script.zip" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Unlock Steps (Users must complete these before accessing your script)</label>
-                        <div id="stepsContainer">
-                            <div class="step-item" style="margin-bottom: 10px;">
-                                <input type="text" class="step-url" placeholder="https://youtube.com/@VertexR_S" 
-                                       style="width: 100%;" value="https://youtube.com/@VertexR_S" readonly>
-                            </div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button type="button" id="addStepBtn" class="btn btn-secondary">
-                                <i class="fas fa-plus"></i> Add Step
-                            </button>
-                            <button type="button" id="addYoutubeStepBtn" class="btn btn-secondary">
-                                <i class="fab fa-youtube"></i> Add YouTube Step
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="adminControls" class="admin-controls" style="display: none;">
-                        <h3><i class="fas fa-shield-alt"></i> Admin Controls</h3>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" id="pinScript"> Pin to Top
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button type="submit" class="btn" style="flex: 1;">
+                        <button type="submit" class="btn mobile-full-width">
                             <i class="fas fa-cloud-upload-alt"></i> Upload Script
                         </button>
-                        <button type="button" id="cancelUploadBtn" class="btn btn-secondary" style="flex: 1;">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
+                    </form>
+                </section>
+            </main>
+            
+            <!-- Unlock Modal -->
+            <div id="unlockModal" class="modal">
+                <div class="modal-content">
+                    <h3>Unlock Script: <span id="unlockScriptName"></span></h3>
+                    <p>Complete all steps to unlock the script</p>
+                    
+                    <div id="stepChecks">
+                        <!-- Step checks will be dynamically added here -->
                     </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Subscriptions Modal -->
-        <div id="subscriptionsModal" class="modal">
-            <div class="modal-content">
-                <h2 style="margin-bottom: 20px; color: #4bcffa;">Subscription Feed</h2>
-                
-                <div id="subscriptionsContent" class="subscription-feed">
-                    <!-- Subscription items will be added here -->
-                </div>
-                
-                <button id="closeSubscriptionsBtn" class="btn" style="width: 100%; margin-top: 20px;">
-                    <i class="fas fa-times"></i> Close
-                </button>
-            </div>
-        </div>
-        
-        <!-- Delete Account Modal -->
-        <div id="deleteAccountModal" class="modal">
-            <div class="modal-content">
-                <h2 style="margin-bottom: 20px; color: #ff6b6b;">
-                    <i class="fas fa-exclamation-triangle"></i> Delete Account
-                </h2>
-                
-                <p style="margin-bottom: 20px;">
-                    This will permanently delete your account and all associated data:
-                </p>
-                
-                <ul style="margin-bottom: 20px; padding-left: 20px;">
-                    <li>All your uploaded scripts</li>
-                    <li>Your likes and dislikes</li>
-                    <li>Your subscriptions</li>
-                    <li>Your subscriber list</li>
-                    <li>Account information</li>
-                </ul>
-                
-                <p style="color: #ff6b6b; font-weight: bold; margin-bottom: 20px;">
-                    This action cannot be undone!
-                </p>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button id="confirmDeleteAccountBtn" class="btn btn-danger" style="flex: 1;">
-                        <i class="fas fa-trash"></i> Delete Everything
+                    
+                    <div class="progress-bar">
+                        <div id="progress" class="progress"></div>
+                    </div>
+                    
+                    <div class="timer" id="timer">20</div>
+                    
+                    <button id="accessLinkBtn" class="btn unlock-btn" disabled>
+                        <i class="fas fa-lock"></i> Unlocking... Please wait
                     </button>
-                    <button id="cancelDeleteAccountBtn" class="btn btn-secondary" style="flex: 1;">
+                    
+                    <button id="cancelBtn" class="btn btn-secondary" style="margin-top: 10px;">
                         <i class="fas fa-times"></i> Cancel
                     </button>
                 </div>
             </div>
-        </div>
-        
-        <!-- Unlock Script Modal -->
-        <div id="unlockModal" class="modal">
-            <div class="modal-content">
-                <h3>Unlock Script: <span id="unlockScriptName"></span></h3>
-                <p>Complete all steps to unlock the script</p>
-                
-                <div id="stepChecks"></div>
-                
-                <div class="progress-bar" style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 20px 0;">
-                    <div id="progress" class="progress" style="height: 100%; background: linear-gradient(to right, #4bcffa, #5d79ff); width: 0%;"></div>
+            
+            <!-- Script View Modal -->
+            <div id="scriptViewModal" class="modal script-view-modal">
+                <div class="script-view-content">
+                    <div class="script-view-header">
+                        <h3 id="viewScriptName"></h3>
+                        <button class="close-view" id="closeScriptView">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="script-view-body">
+                        <div class="script-view-thumbnail">
+                            <img id="viewScriptThumbnail" src="" alt="Script Thumbnail">
+                        </div>
+                        
+                        <div class="script-details">
+                            <div class="script-uploader">
+                                <i class="fas fa-user"></i>
+                                <span id="viewScriptAuthor"></span>
+                                <span id="viewScriptDate"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="script-view-stats">
+                            <div class="stat-item">
+                                <button class="like-btn" id="viewLikeBtn">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span id="viewLikeCount">0</span>
+                                </button>
+                            </div>
+                            <div class="stat-item">
+                                <button class="dislike-btn" id="viewDislikeBtn">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    <span id="viewDislikeCount">0</span>
+                                </button>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-eye"></i>
+                                <span id="viewViewCount">0</span> views
+                            </div>
+                            <button class="subscribe-btn" id="viewSubscribeBtn">
+                                <i class="fas fa-bell"></i>
+                                <span id="subscribeText">Subscribe</span>
+                            </button>
+                        </div>
+                        
+                        <button class="btn" id="viewUnlockBtn">
+                            <i class="fas fa-unlock-alt"></i> Unlock Script
+                        </button>
+                    </div>
                 </div>
-                
-                <div class="timer" id="timer" style="font-size: 2.5rem; font-weight: bold; margin: 20px 0; color: #4bcffa;">20</div>
-                
-                <button id="accessLinkBtn" class="btn btn-success" style="width: 100%;" disabled>
-                    <i class="fas fa-lock"></i> Unlocking... Please wait
-                </button>
-                
-                <button id="cancelUnlockBtn" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
             </div>
+            
+            <!-- Delete Confirmation Modal -->
+            <div id="deleteModal" class="modal">
+                <div class="modal-content">
+                    <h3><i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i> Confirm Delete</h3>
+                    <p id="deleteMessage">Are you sure you want to delete this script? This action cannot be undone.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 25px;">
+                        <button id="confirmDeleteBtn" class="btn btn-danger mobile-full-width">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        <button id="cancelDeleteBtn" class="btn btn-secondary mobile-full-width">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delete Account Modal -->
+            <div id="deleteAccountModal" class="modal">
+                <div class="modal-content">
+                    <h3><i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i> Delete Account</h3>
+                    <p>This will permanently delete your account, all your uploaded scripts, subscriptions, likes, and everything associated with your account. This action cannot be undone!</p>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="confirmUsername">Type your username to confirm</label>
+                        <input type="text" id="confirmUsername" placeholder="Enter your username">
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 25px;">
+                        <button id="confirmAccountDeleteBtn" class="btn btn-danger mobile-full-width">
+                            <i class="fas fa-trash"></i> Permanently Delete Account
+                        </button>
+                        <button id="cancelAccountDeleteBtn" class="btn btn-secondary mobile-full-width">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <footer>
+                <p>VertexScripts Dashboard &copy; 2023 | All scripts are property of their respective owners</p>
+            </footer>
         </div>
-        
-        <footer>
-            <p>VertexScripts Pro &copy; 2024 | Secure Script Sharing Platform</p>
-        </footer>
     </div>
 
     <script>
-        // =============================================
-        // ENHANCED DATA STORAGE SYSTEM
-        // =============================================
+        // ============ ENHANCED STORAGE SYSTEM ============
         class VertexStorage {
             constructor() {
-                this.USERS_KEY = 'vertex_pro_users';
-                this.SCRIPTS_KEY = 'vertex_pro_scripts';
-                this.SESSIONS_KEY = 'vertex_pro_sessions';
-                this.INTERACTIONS_KEY = 'vertex_pro_interactions';
-                this.SUBSCRIPTIONS_KEY = 'vertex_pro_subscriptions';
-                
                 this.initStorage();
             }
             
             initStorage() {
-                // Initialize all storage keys if they don't exist
-                const keys = [
-                    this.USERS_KEY,
-                    this.SCRIPTS_KEY,
-                    this.SESSIONS_KEY,
-                    this.INTERACTIONS_KEY,
-                    this.SUBSCRIPTIONS_KEY
-                ];
+                // Initialize all storage keys
+                if (!localStorage.getItem('vertex_users')) {
+                    localStorage.setItem('vertex_users', JSON.stringify({}));
+                }
+                if (!localStorage.getItem('vertex_scripts')) {
+                    localStorage.setItem('vertex_scripts', JSON.stringify([]));
+                }
+                if (!localStorage.getItem('vertex_interactions')) {
+                    localStorage.setItem('vertex_interactions', JSON.stringify({}));
+                }
+                if (!localStorage.getItem('vertex_subscriptions')) {
+                    localStorage.setItem('vertex_subscriptions', JSON.stringify({}));
+                }
+                if (!localStorage.getItem('vertex_current_user')) {
+                    localStorage.setItem('vertex_current_user', JSON.stringify(null));
+                }
+            }
+            
+            // User management
+            registerUser(username, password) {
+                const users = JSON.parse(localStorage.getItem('vertex_users'));
                 
-                keys.forEach(key => {
-                    if (!localStorage.getItem(key)) {
-                        localStorage.setItem(key, JSON.stringify({}));
-                    }
-                });
+                if (users[username]) {
+                    return { success: false, error: 'Username already exists' };
+                }
+                
+                if (password === username) {
+                    return { success: false, error: 'Password cannot be the same as username' };
+                }
+                
+                // Simple password validation (minimum 6 chars)
+                if (password.length < 6) {
+                    return { success: false, error: 'Password must be at least 6 characters' };
+                }
+                
+                // Hash password (simple example - in production use proper hashing)
+                const hashedPassword = this.hashPassword(password);
+                
+                users[username] = {
+                    username: username,
+                    password: hashedPassword,
+                    createdAt: new Date().toISOString(),
+                    isAdmin: username === 'plstealme2'
+                };
+                
+                localStorage.setItem('vertex_users', JSON.stringify(users));
+                return { success: true };
             }
             
-            // User Management
-            saveUser(user) {
-                const users = this.getAllUsers();
-                users[user.username] = user;
-                localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+            loginUser(username, password) {
+                const users = JSON.parse(localStorage.getItem('vertex_users'));
+                
+                if (!users[username]) {
+                    return { success: false, error: 'Invalid username or password' };
+                }
+                
+                const hashedPassword = this.hashPassword(password);
+                if (users[username].password !== hashedPassword) {
+                    return { success: false, error: 'Invalid username or password' };
+                }
+                
+                return { success: true, user: users[username] };
             }
             
-            getUser(username) {
-                const users = this.getAllUsers();
+            hashPassword(password) {
+                // Simple hash for demo purposes
+                // In production, use a proper hashing library
+                let hash = 0;
+                for (let i = 0; i < password.length; i++) {
+                    const char = password.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString();
+            }
+            
+            setCurrentUser(username) {
+                localStorage.setItem('vertex_current_user', JSON.stringify(username));
+            }
+            
+            getCurrentUser() {
+                const username = JSON.parse(localStorage.getItem('vertex_current_user'));
+                if (!username) return null;
+                
+                const users = JSON.parse(localStorage.getItem('vertex_users'));
                 return users[username] || null;
             }
             
-            getAllUsers() {
-                return JSON.parse(localStorage.getItem(this.USERS_KEY) || '{}');
+            logoutUser() {
+                localStorage.setItem('vertex_current_user', JSON.stringify(null));
             }
             
             deleteUser(username) {
-                const users = this.getAllUsers();
+                const users = JSON.parse(localStorage.getItem('vertex_users'));
                 delete users[username];
-                localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+                localStorage.setItem('vertex_users', JSON.stringify(users));
+                
+                // Delete user's scripts
+                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
+                scripts = scripts.filter(script => script.uploader !== username);
+                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
+                
+                // Delete user's subscriptions
+                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
+                delete subscriptions[username];
+                localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
+                
+                // Delete user's interactions
+                const interactions = JSON.parse(localStorage.getItem('vertex_interactions'));
+                delete interactions[username];
+                localStorage.setItem('vertex_interactions', JSON.stringify(interactions));
+                
+                // Remove as subscriber from other users
+                Object.keys(subscriptions).forEach(user => {
+                    const index = subscriptions[user].indexOf(username);
+                    if (index > -1) {
+                        subscriptions[user].splice(index, 1);
+                    }
+                });
+                
+                this.logoutUser();
             }
             
-            // Script Management
+            // Script management
             saveScript(script) {
-                const scripts = this.getAllScripts();
-                scripts[script.id] = script;
-                localStorage.setItem(this.SCRIPTS_KEY, JSON.stringify(scripts));
+                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
+                scripts.push(script);
+                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
             }
             
-            getScript(id) {
-                const scripts = this.getAllScripts();
-                return scripts[id] || null;
+            getScripts() {
+                return JSON.parse(localStorage.getItem('vertex_scripts'));
             }
             
-            getAllScripts() {
-                return JSON.parse(localStorage.getItem(this.SCRIPTS_KEY) || '{}');
+            deleteScript(scriptId) {
+                let scripts = JSON.parse(localStorage.getItem('vertex_scripts'));
+                scripts = scripts.filter(script => script.id !== scriptId);
+                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
             }
             
-            deleteScript(id) {
-                const scripts = this.getAllScripts();
-                delete scripts[id];
-                localStorage.setItem(this.SCRIPTS_KEY, JSON.stringify(scripts));
-            }
-            
-            // Session Management
-            saveSession(username) {
-                const sessions = JSON.parse(localStorage.getItem(this.SESSIONS_KEY) || '{}');
-                sessions.current = username;
-                localStorage.setItem(this.SESSIONS_KEY, JSON.stringify(sessions));
-            }
-            
-            getCurrentSession() {
-                const sessions = JSON.parse(localStorage.getItem(this.SESSIONS_KEY) || '{}');
-                return sessions.current || null;
-            }
-            
-            clearSession() {
-                const sessions = JSON.parse(localStorage.getItem(this.SESSIONS_KEY) || '{}');
-                delete sessions.current;
-                localStorage.setItem(this.SESSIONS_KEY, JSON.stringify(sessions));
-            }
-            
-            // Interaction Tracking
-            recordInteraction(scriptId, username, type) {
-                const interactions = JSON.parse(localStorage.getItem(this.INTERACTIONS_KEY) || '{}');
+            // Interaction tracking
+            recordInteraction(username, scriptId, type) {
+                let interactions = JSON.parse(localStorage.getItem('vertex_interactions'));
                 
-                if (!interactions[scriptId]) {
-                    interactions[scriptId] = {};
+                if (!interactions[username]) {
+                    interactions[username] = {};
                 }
                 
-                if (!interactions[scriptId][type]) {
-                    interactions[scriptId][type] = [];
+                if (!interactions[username][scriptId]) {
+                    interactions[username][scriptId] = {};
                 }
                 
-                // Add user to interaction if not already there
-                if (!interactions[scriptId][type].includes(username)) {
-                    interactions[scriptId][type].push(username);
-                }
+                interactions[username][scriptId][type] = true;
+                localStorage.setItem('vertex_interactions', JSON.stringify(interactions));
+            }
+            
+            hasInteracted(username, scriptId, type) {
+                const interactions = JSON.parse(localStorage.getItem('vertex_interactions'));
+                return interactions[username] && 
+                       interactions[username][scriptId] && 
+                       interactions[username][scriptId][type];
+            }
+            
+            // Subscription management
+            subscribe(subscriber, creator) {
+                if (subscriber === creator) return false;
                 
-                localStorage.setItem(this.INTERACTIONS_KEY, JSON.stringify(interactions));
-            }
-            
-            hasInteracted(scriptId, username, type) {
-                const interactions = JSON.parse(localStorage.getItem(this.INTERACTIONS_KEY) || '{}');
-                return interactions[scriptId] && 
-                       interactions[scriptId][type] && 
-                       interactions[scriptId][type].includes(username);
-            }
-            
-            getInteractionCount(scriptId, type) {
-                const interactions = JSON.parse(localStorage.getItem(this.INTERACTIONS_KEY) || '{}');
-                return interactions[scriptId] && interactions[scriptId][type] 
-                    ? interactions[scriptId][type].length 
-                    : 0;
-            }
-            
-            // Subscription Management
-            subscribe(subscriber, target) {
-                const subscriptions = JSON.parse(localStorage.getItem(this.SUBSCRIPTIONS_KEY) || '{}');
+                let subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
                 
                 if (!subscriptions[subscriber]) {
                     subscriptions[subscriber] = [];
                 }
                 
-                if (!subscriptions[subscriber].includes(target)) {
-                    subscriptions[subscriber].push(target);
+                if (!subscriptions[subscriber].includes(creator)) {
+                    subscriptions[subscriber].push(creator);
+                    localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
+                    return true;
                 }
                 
-                localStorage.setItem(this.SUBSCRIPTIONS_KEY, JSON.stringify(subscriptions));
+                return false;
             }
             
-            unsubscribe(subscriber, target) {
-                const subscriptions = JSON.parse(localStorage.getItem(this.SUBSCRIPTIONS_KEY) || '{}');
+            unsubscribe(subscriber, creator) {
+                let subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
                 
                 if (subscriptions[subscriber]) {
-                    subscriptions[subscriber] = subscriptions[subscriber].filter(u => u !== target);
-                    localStorage.setItem(this.SUBSCRIPTIONS_KEY, JSON.stringify(subscriptions));
+                    const index = subscriptions[subscriber].indexOf(creator);
+                    if (index > -1) {
+                        subscriptions[subscriber].splice(index, 1);
+                        localStorage.setItem('vertex_subscriptions', JSON.stringify(subscriptions));
+                        return true;
+                    }
                 }
+                
+                return false;
             }
             
-            isSubscribed(subscriber, target) {
-                const subscriptions = JSON.parse(localStorage.getItem(this.SUBSCRIPTIONS_KEY) || '{}');
-                return subscriptions[subscriber] && subscriptions[subscriber].includes(target);
+            isSubscribed(subscriber, creator) {
+                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
+                return subscriptions[subscriber] && subscriptions[subscriber].includes(creator);
             }
             
             getSubscriptions(username) {
-                const subscriptions = JSON.parse(localStorage.getItem(this.SUBSCRIPTIONS_KEY) || '{}');
+                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
                 return subscriptions[username] || [];
             }
             
             getSubscribers(username) {
-                const subscriptions = JSON.parse(localStorage.getItem(this.SUBSCRIPTIONS_KEY) || '{}');
+                const subscriptions = JSON.parse(localStorage.getItem('vertex_subscriptions'));
                 const subscribers = [];
                 
                 Object.keys(subscriptions).forEach(subscriber => {
@@ -1277,875 +2058,834 @@
                 
                 return subscribers;
             }
-            
-            deleteUserData(username) {
-                // Remove user
-                this.deleteUser(username);
-                
-                // Remove user's scripts
-                const scripts = this.getAllScripts();
-                Object.keys(scripts).forEach(scriptId => {
-                    if (scripts[scriptId].author === username) {
-                        this.deleteScript(scriptId);
-                    }
-                });
-                
-                // Remove from interactions
-                const interactions = JSON.parse(localStorage.getItem(this.INTERACTIONS_KEY) || '{}');
-                Object.keys(interactions).forEach(scriptId => {
-                    Object.keys(interactions[scriptId]).forEach(type => {
-                        interactions[scriptId][type] = interactions[scriptId][type].filter(u => u !== username);
-                    });
-                });
-                localStorage.setItem(this.INTERACTIONS_KEY, JSON.stringify(interactions));
-                
-                // Remove subscriptions
-                const subscriptions = JSON.parse(localStorage.getItem(this.SUBSCRIPTIONS_KEY) || '{}');
-                delete subscriptions[username]; // Remove user's subscriptions
-                
-                // Remove user from others' subscription lists
-                Object.keys(subscriptions).forEach(user => {
-                    subscriptions[user] = subscriptions[user].filter(u => u !== username);
-                });
-                
-                localStorage.setItem(this.SUBSCRIPTIONS_KEY, JSON.stringify(subscriptions));
-                
-                // Clear session if this user is logged in
-                if (this.getCurrentSession() === username) {
-                    this.clearSession();
-                }
-            }
         }
 
-        // =============================================
-        // MAIN APPLICATION
-        // =============================================
+        // ============ MAIN APPLICATION ============
         const storage = new VertexStorage();
         let currentUser = null;
-        let currentSection = 'all';
-        let scripts = {};
+        let scripts = [];
+        let nextId = 1;
         let currentUnlockScript = null;
         let currentStep = 0;
         let countdown = 20;
         let countdownInterval = null;
         let completedSteps = new Set();
         let stepTimers = {};
+        let scriptToDelete = null;
+        let currentViewScript = null;
 
         // Initialize application
         document.addEventListener('DOMContentLoaded', function() {
-            checkAutoLogin();
+            // Check if user is already logged in
+            currentUser = storage.getCurrentUser();
+            
+            if (currentUser) {
+                showApp();
+            } else {
+                showAuth();
+            }
+            
             setupEventListeners();
+            loadScripts();
+            updateStats();
         });
 
-        function checkAutoLogin() {
-            const username = storage.getCurrentSession();
-            if (username) {
-                const user = storage.getUser(username);
-                if (user) {
-                    loginUser(user);
-                    return true;
-                }
-            }
-            return false;
-        }
-
         function setupEventListeners() {
-            // Login form
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const username = document.getElementById('loginUsername').value.trim();
-                const password = document.getElementById('loginPassword').value;
-                
-                if (authenticateUser(username, password)) {
-                    const user = storage.getUser(username);
-                    loginUser(user);
-                } else {
-                    showToast('Invalid username or password', 'error');
-                }
-            });
+            // Auth tabs
+            document.getElementById('loginTab').addEventListener('click', () => switchAuthTab('login'));
+            document.getElementById('registerTab').addEventListener('click', () => switchAuthTab('register'));
             
-            // Register form
-            document.getElementById('registerForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                registerUser();
-            });
+            // Auth forms
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
             
-            // Buttons
-            document.getElementById('showRegisterBtn').addEventListener('click', showRegisterModal);
-            document.getElementById('cancelRegisterBtn').addEventListener('click', hideRegisterModal);
-            document.getElementById('uploadScriptBtn').addEventListener('click', showUploadModal);
-            document.getElementById('cancelUploadBtn').addEventListener('click', hideUploadModal);
-            document.getElementById('subscriptionsBtn').addEventListener('click', showSubscriptionsModal);
-            document.getElementById('closeSubscriptionsBtn').addEventListener('click', hideSubscriptionsModal);
+            // Main app buttons
+            document.getElementById('uploadForm').addEventListener('submit', uploadScript);
+            document.getElementById('addStepBtn').addEventListener('click', addStep);
+            document.getElementById('addYoutubeStepBtn').addEventListener('click', addYouTubeStep);
+            document.getElementById('thumbnailInput').addEventListener('change', handleThumbnailPreview);
+            document.getElementById('cancelBtn').addEventListener('click', closeUnlockModal);
+            document.getElementById('accessLinkBtn').addEventListener('click', accessScriptLink);
+            document.getElementById('showUploadBtn').addEventListener('click', showUploadForm);
+            document.getElementById('backToDashboardBtn').addEventListener('click', showDashboard);
+            document.getElementById('searchInput').addEventListener('input', filterScripts);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteScript);
+            document.getElementById('cancelDeleteBtn').addEventListener('click', cancelDelete);
+            document.getElementById('confirmAccountDeleteBtn').addEventListener('click', confirmAccountDelete);
+            document.getElementById('cancelAccountDeleteBtn').addEventListener('click', cancelAccountDelete);
+            document.getElementById('subscriptionsBtn').addEventListener('click', showSubscriptions);
+            document.getElementById('mobileSubscriptionsBtn').addEventListener('click', showSubscriptions);
+            document.getElementById('backToDashboardFromSubs').addEventListener('click', showDashboard);
             document.getElementById('deleteAccountBtn').addEventListener('click', showDeleteAccountModal);
-            document.getElementById('confirmDeleteAccountBtn').addEventListener('click', deleteAccount);
-            document.getElementById('cancelDeleteAccountBtn').addEventListener('click', hideDeleteAccountModal);
-            document.getElementById('closeViewerBtn').addEventListener('click', hideScriptViewer);
-            document.getElementById('cancelUnlockBtn').addEventListener('click', closeUnlockModal);
+            document.getElementById('mobileDeleteAccountBtn').addEventListener('click', showDeleteAccountModal);
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
+            document.getElementById('closeScriptView').addEventListener('click', closeScriptView);
+            document.getElementById('viewUnlockBtn').addEventListener('click', unlockFromView);
+            document.getElementById('viewLikeBtn').addEventListener('click', handleLike);
+            document.getElementById('viewDislikeBtn').addEventListener('click', handleDislike);
+            document.getElementById('viewSubscribeBtn').addEventListener('click', handleSubscribe);
             
-            // Search and sort
-            document.getElementById('searchInput').addEventListener('input', function(e) {
-                filterScripts(e.target.value);
-            });
+            // Window events
+            window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
+            window.addEventListener('resize', debounce(handleResize, 250));
             
-            document.getElementById('sortSelect').addEventListener('change', function() {
-                renderScripts();
-            });
-            
-            // Menu buttons
-            document.querySelectorAll('.menu-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const section = this.getAttribute('data-section');
-                    switchSection(section);
-                });
-            });
-            
-            // Upload form
-            document.getElementById('uploadForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                uploadScript();
-            });
-            
-            document.getElementById('addStepBtn').addEventListener('click', function() {
-                const stepsContainer = document.getElementById('stepsContainer');
-                const stepDiv = document.createElement('div');
-                stepDiv.className = 'step-item';
-                stepDiv.innerHTML = `
-                    <input type="text" class="step-url" placeholder="https://example.com" style="width: 100%;">
-                    <button type="button" class="remove-step" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-top: 5px; cursor: pointer;">
-                        <i class="fas fa-times"></i> Remove Step
-                    </button>
-                `;
-                stepsContainer.appendChild(stepDiv);
-                
-                stepDiv.querySelector('.remove-step').addEventListener('click', function() {
-                    stepDiv.remove();
-                });
-            });
-            
-            // Password strength checker
-            document.getElementById('registerPassword').addEventListener('input', checkPasswordStrength);
+            // Initialize
+            addVertexStep();
+            handleResize();
         }
 
-        // =============================================
-        // USER AUTHENTICATION
-        // =============================================
-        function authenticateUser(username, password) {
-            const user = storage.getUser(username);
-            if (!user) return false;
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
             
-            // Simple hash verification (in production, use proper hashing)
-            const hashedPassword = simpleHash(password);
-            return user.password === hashedPassword;
+            if (tab === 'login') {
+                document.getElementById('loginTab').classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.getElementById('registerTab').classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
         }
 
-        function registerUser() {
-            const username = document.getElementById('registerUsername').value.trim();
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const result = storage.loginUser(username, password);
+            
+            if (result.success) {
+                storage.setCurrentUser(username);
+                currentUser = result.user;
+                showApp();
+                showToast('Logged in successfully!');
+            } else {
+                document.getElementById('loginError').textContent = result.error;
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('registerUsername').value;
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             
-            // Validation
-            if (username.length < 3) {
-                document.getElementById('usernameError').textContent = 'Username must be at least 3 characters';
-                return;
-            }
-            
-            if (username === password) {
-                document.getElementById('passwordError').textContent = 'Password cannot be same as username';
-                return;
-            }
-            
-            if (password.length < 8) {
-                document.getElementById('passwordError').textContent = 'Password must be at least 8 characters';
-                return;
-            }
-            
             if (password !== confirmPassword) {
-                document.getElementById('confirmError').textContent = 'Passwords do not match';
+                document.getElementById('registerError').textContent = 'Passwords do not match';
                 return;
             }
             
-            // Check if user exists
-            if (storage.getUser(username)) {
-                document.getElementById('usernameError').textContent = 'Username already exists';
-                return;
+            const result = storage.registerUser(username, password);
+            
+            if (result.success) {
+                storage.setCurrentUser(username);
+                currentUser = storage.getCurrentUser();
+                showApp();
+                showToast('Account created successfully!');
+            } else {
+                document.getElementById('registerError').textContent = result.error;
             }
-            
-            // Create user
-            const user = {
-                username: username,
-                password: simpleHash(password), // Hash password
-                createdAt: new Date().toISOString(),
-                isAdmin: username === 'plstealme2' // Special admin user
-            };
-            
-            // Save user
-            storage.saveUser(user);
-            
-            // Auto login
-            loginUser(user);
-            hideRegisterModal();
-            showToast('Account created successfully!', 'success');
         }
 
-        function loginUser(user) {
-            currentUser = user;
-            storage.saveSession(user.username);
+        function showAuth() {
+            document.getElementById('authContainer').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+        }
+
+        function showApp() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
             
-            // Update UI
-            document.getElementById('userName').textContent = user.username;
-            document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
-            document.getElementById('userRole').textContent = user.isAdmin ? 'Administrator' : 'User';
+            // Update user display
+            document.getElementById('usernameDisplay').textContent = currentUser.username;
+            document.getElementById('currentUserDisplay').textContent = `Welcome, ${currentUser.username}`;
             
-            // Show main app
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
+            // Show admin features for plstealme2
+            if (currentUser.username === 'plstealme2') {
+                // Admin can delete any script
+                document.querySelectorAll('.script-card-actions').forEach(actions => {
+                    if (!actions.querySelector('.admin-delete-btn')) {
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'action-btn delete-btn admin-delete-btn';
+                        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const scriptCard = this.closest('.script-card');
+                            const scriptId = parseInt(scriptCard.dataset.id);
+                            confirmDelete(scriptId);
+                        });
+                        actions.appendChild(deleteBtn);
+                    }
+                });
+            }
             
-            // Load data
+            showDashboard();
             loadScripts();
-            renderScripts();
-            updateSidebarStats();
-            
-            // Show admin controls if applicable
-            if (user.isAdmin) {
-                document.getElementById('adminControls').style.display = 'block';
-            }
-        }
-
-        function deleteAccount() {
-            if (!currentUser) return;
-            
-            storage.deleteUserData(currentUser.username);
-            
-            // Logout
-            currentUser = null;
-            storage.clearSession();
-            
-            // Show login screen
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-            
-            // Clear forms
-            document.getElementById('loginForm').reset();
-            
-            showToast('Account and all data deleted successfully', 'info');
-            hideDeleteAccountModal();
+            updateStats();
         }
 
         function showDeleteAccountModal() {
             document.getElementById('deleteAccountModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
 
-        function hideDeleteAccountModal() {
+        function confirmAccountDelete() {
+            const confirmUsername = document.getElementById('confirmUsername').value;
+            
+            if (confirmUsername !== currentUser.username) {
+                showToast('Username does not match');
+                return;
+            }
+            
+            storage.deleteUser(currentUser.username);
+            currentUser = null;
+            
             document.getElementById('deleteAccountModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            showAuth();
+            showToast('Account deleted successfully');
         }
 
-        // =============================================
-        // SCRIPT MANAGEMENT
-        // =============================================
-        function loadScripts() {
-            scripts = storage.getAllScripts();
+        function cancelAccountDelete() {
+            document.getElementById('deleteAccountModal').style.display = 'none';
+            document.getElementById('confirmUsername').value = '';
+            document.body.style.overflow = 'auto';
         }
 
-        function calculateScriptScore(script) {
-            const views = storage.getInteractionCount(script.id, 'view') || 0;
-            const likes = storage.getInteractionCount(script.id, 'like') || 0;
-            const dislikes = storage.getInteractionCount(script.id, 'dislike') || 0;
-            
-            // Algorithm: likes have positive weight, dislikes have negative weight
-            // Recent uploads get bonus points
-            const uploadDate = new Date(script.uploadDate);
-            const now = new Date();
-            const daysOld = (now - uploadDate) / (1000 * 60 * 60 * 24);
-            const recencyBonus = Math.max(0, 100 - daysOld); // Bonus decreases over time
-            
-            let score = likes * 10 - dislikes * 5 + views * 0.1 + recencyBonus;
-            
-            // Pinned scripts get massive bonus
-            if (script.pinned) {
-                score += 1000;
-            }
-            
-            return Math.max(0, score);
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileDropdown');
+            menu.classList.toggle('active');
         }
 
-        function renderScripts() {
-            const section = currentSection;
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-            const sortBy = document.getElementById('sortSelect').value;
+        function showSubscriptions() {
+            document.getElementById('dashboardContainer').style.display = 'none';
+            document.getElementById('uploadContainer').style.display = 'none';
+            document.getElementById('subscriptionsContainer').style.display = 'block';
             
-            let filteredScripts = Object.values(scripts);
+            loadSubscriptions();
+            toggleMobileMenu(); // Close mobile menu
+        }
+
+        function loadSubscriptions() {
+            const subscriptions = storage.getSubscriptions(currentUser.username);
+            const allScripts = storage.getScripts();
             
-            // Apply section filter
-            switch(section) {
-                case 'my-scripts':
-                    filteredScripts = filteredScripts.filter(s => s.author === currentUser.username);
-                    break;
-                case 'subscriptions':
-                    const subscriptions = storage.getSubscriptions(currentUser.username);
-                    filteredScripts = filteredScripts.filter(s => subscriptions.includes(s.author));
-                    break;
-                case 'liked':
-                    const likedScripts = Object.keys(scripts).filter(scriptId => 
-                        storage.hasInteracted(scriptId, currentUser.username, 'like')
-                    );
-                    filteredScripts = filteredScripts.filter(s => likedScripts.includes(s.id));
-                    break;
-                case 'trending':
-                    // Show top 20 scoring scripts
-                    filteredScripts.forEach(script => {
-                        script.score = calculateScriptScore(script);
-                    });
-                    filteredScripts.sort((a, b) => b.score - a.score);
-                    filteredScripts = filteredScripts.slice(0, 20);
-                    break;
-            }
+            // Get scripts from subscribed creators
+            const subscriptionScripts = allScripts.filter(script => 
+                subscriptions.includes(script.uploader)
+            );
             
-            // Apply search filter
-            if (searchQuery) {
-                filteredScripts = filteredScripts.filter(script => 
-                    script.name.toLowerCase().includes(searchQuery) ||
-                    script.description.toLowerCase().includes(searchQuery) ||
-                    script.author.toLowerCase().includes(searchQuery)
-                );
-            }
+            // Sort by date (newest first)
+            subscriptionScripts.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
             
-            // Calculate scores for sorting
-            filteredScripts.forEach(script => {
-                script.score = calculateScriptScore(script);
-            });
+            const container = document.getElementById('subscriptionsList');
             
-            // Sort scripts
-            filteredScripts.sort((a, b) => {
-                switch(sortBy) {
-                    case 'score':
-                        return b.score - a.score;
-                    case 'date':
-                        return new Date(b.uploadDate) - new Date(a.uploadDate);
-                    case 'views':
-                        return (storage.getInteractionCount(b.id, 'view') || 0) - 
-                               (storage.getInteractionCount(a.id, 'view') || 0);
-                    case 'likes':
-                        return (storage.getInteractionCount(b.id, 'like') || 0) - 
-                               (storage.getInteractionCount(a.id, 'like') || 0);
-                    default:
-                        return b.score - a.score;
-                }
-            });
-            
-            const scriptsList = document.getElementById('scriptsList');
-            
-            if (filteredScripts.length === 0) {
-                let message = '';
-                switch(section) {
-                    case 'my-scripts': message = 'You haven\'t uploaded any scripts yet'; break;
-                    case 'subscriptions': message = 'No new scripts from your subscriptions'; break;
-                    case 'liked': message = 'You haven\'t liked any scripts yet'; break;
-                    default: message = 'No scripts found';
-                }
-                
-                scriptsList.innerHTML = `
+            if (subscriptionScripts.length === 0) {
+                container.innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-code"></i>
-                        <h3>${message}</h3>
-                        ${section === 'my-scripts' ? '<button class="btn" id="emptyUploadBtn" style="margin-top: 20px;"><i class="fas fa-upload"></i> Upload First Script</button>' : ''}
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>No subscriptions yet</h3>
+                        <p>Subscribe to creators to see their latest scripts here</p>
                     </div>
                 `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            subscriptionScripts.forEach(script => {
+                const scriptCard = createScriptCard(script);
+                container.appendChild(scriptCard);
+            });
+        }
+
+        function handleSubscribe() {
+            if (!currentUser || !currentViewScript) return;
+            
+            const creator = currentViewScript.uploader;
+            
+            if (creator === currentUser.username) {
+                showToast("You can't subscribe to yourself");
+                return;
+            }
+            
+            if (storage.isSubscribed(currentUser.username, creator)) {
+                storage.unsubscribe(currentUser.username, creator);
+                document.getElementById('subscribeText').textContent = 'Subscribe';
+                document.getElementById('viewSubscribeBtn').classList.remove('subscribed');
+                showToast(`Unsubscribed from ${creator}`);
+            } else {
+                storage.subscribe(currentUser.username, creator);
+                document.getElementById('subscribeText').textContent = 'Subscribed';
+                document.getElementById('viewSubscribeBtn').classList.add('subscribed');
+                showToast(`Subscribed to ${creator}`);
+            }
+        }
+
+        function handleLike() {
+            if (!currentUser || !currentViewScript) return;
+            
+            const scriptId = currentViewScript.id;
+            
+            // Check if already liked
+            if (storage.hasInteracted(currentUser.username, scriptId, 'like')) {
+                showToast('You have already liked this script');
+                return;
+            }
+            
+            // Remove dislike if exists
+            if (storage.hasInteracted(currentUser.username, scriptId, 'dislike')) {
+                currentViewScript.dislikes = Math.max(0, currentViewScript.dislikes - 1);
+            }
+            
+            // Add like
+            storage.recordInteraction(currentUser.username, scriptId, 'like');
+            currentViewScript.likes = (currentViewScript.likes || 0) + 1;
+            
+            // Save updated script
+            updateScriptInStorage(currentViewScript);
+            
+            // Update UI
+            document.getElementById('viewLikeCount').textContent = currentViewScript.likes;
+            document.getElementById('viewDislikeCount').textContent = currentViewScript.dislikes || 0;
+            document.getElementById('viewLikeBtn').classList.add('liked');
+            document.getElementById('viewDislikeBtn').classList.remove('disliked');
+            
+            showToast('Liked script');
+            renderScripts(); // Update main view
+        }
+
+        function handleDislike() {
+            if (!currentUser || !currentViewScript) return;
+            
+            const scriptId = currentViewScript.id;
+            
+            // Check if already disliked
+            if (storage.hasInteracted(currentUser.username, scriptId, 'dislike')) {
+                showToast('You have already disliked this script');
+                return;
+            }
+            
+            // Remove like if exists
+            if (storage.hasInteracted(currentUser.username, scriptId, 'like')) {
+                currentViewScript.likes = Math.max(0, currentViewScript.likes - 1);
+            }
+            
+            // Add dislike
+            storage.recordInteraction(currentUser.username, scriptId, 'dislike');
+            currentViewScript.dislikes = (currentViewScript.dislikes || 0) + 1;
+            
+            // Save updated script
+            updateScriptInStorage(currentViewScript);
+            
+            // Update UI
+            document.getElementById('viewDislikeCount').textContent = currentViewScript.dislikes;
+            document.getElementById('viewLikeCount').textContent = currentViewScript.likes || 0;
+            document.getElementById('viewDislikeBtn').classList.add('disliked');
+            document.getElementById('viewLikeBtn').classList.remove('liked');
+            
+            showToast('Disliked script');
+            renderScripts(); // Update main view
+        }
+
+        function updateScriptInStorage(script) {
+            let scripts = storage.getScripts();
+            const index = scripts.findIndex(s => s.id === script.id);
+            if (index !== -1) {
+                scripts[index] = script;
+                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
+            }
+        }
+
+        function showScriptView(script) {
+            currentViewScript = script;
+            
+            // Record view (once per user)
+            if (currentUser && !storage.hasInteracted(currentUser.username, script.id, 'view')) {
+                storage.recordInteraction(currentUser.username, script.id, 'view');
+                script.views = (script.views || 0) + 1;
+                updateScriptInStorage(script);
+            }
+            
+            // Update UI
+            document.getElementById('viewScriptName').textContent = script.name;
+            document.getElementById('viewScriptAuthor').textContent = `Uploaded by ${script.uploader}`;
+            document.getElementById('viewScriptDate').textContent = ` on ${script.uploadDate}`;
+            document.getElementById('viewScriptThumbnail').src = script.thumbnail;
+            document.getElementById('viewLikeCount').textContent = script.likes || 0;
+            document.getElementById('viewDislikeCount').textContent = script.dislikes || 0;
+            document.getElementById('viewViewCount').textContent = script.views || 0;
+            
+            // Check if user is subscribed
+            const isSubscribed = storage.isSubscribed(currentUser.username, script.uploader);
+            document.getElementById('subscribeText').textContent = isSubscribed ? 'Subscribed' : 'Subscribe';
+            document.getElementById('viewSubscribeBtn').classList.toggle('subscribed', isSubscribed);
+            
+            // Check if user has liked/disliked
+            const hasLiked = storage.hasInteracted(currentUser.username, script.id, 'like');
+            const hasDisliked = storage.hasInteracted(currentUser.username, script.id, 'dislike');
+            document.getElementById('viewLikeBtn').classList.toggle('liked', hasLiked);
+            document.getElementById('viewDislikeBtn').classList.toggle('disliked', hasDisliked);
+            
+            // Disable buttons if user is the uploader
+            if (script.uploader === currentUser.username) {
+                document.getElementById('viewSubscribeBtn').style.display = 'none';
+            } else {
+                document.getElementById('viewSubscribeBtn').style.display = 'flex';
+            }
+            
+            document.getElementById('scriptViewModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeScriptView() {
+            document.getElementById('scriptViewModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            currentViewScript = null;
+        }
+
+        function unlockFromView() {
+            closeScriptView();
+            startUnlockProcess(currentViewScript);
+        }
+
+        // ============ ORIGINAL FUNCTIONALITY (UPDATED) ============
+        function loadScripts() {
+            scripts = storage.getScripts();
+            if (scripts.length > 0) {
+                nextId = Math.max(...scripts.map(s => s.id)) + 1;
+            }
+        }
+
+        function saveScripts() {
+            // Already handled by storage system
+        }
+
+        function showDashboard() {
+            document.getElementById('dashboardContainer').style.display = 'block';
+            document.getElementById('uploadContainer').style.display = 'none';
+            document.getElementById('subscriptionsContainer').style.display = 'none';
+            renderScripts();
+            updateStats();
+            window.scrollTo(0, 0);
+        }
+
+        function showUploadForm() {
+            document.getElementById('dashboardContainer').style.display = 'none';
+            document.getElementById('uploadContainer').style.display = 'block';
+            document.getElementById('subscriptionsContainer').style.display = 'none';
+            
+            document.getElementById('uploadForm').reset();
+            document.getElementById('thumbnailPreview').style.display = 'none';
+            document.getElementById('fileLabelText').textContent = 'Click to upload thumbnail image';
+            
+            const stepsContainer = document.getElementById('stepsContainer');
+            stepsContainer.innerHTML = '';
+            addVertexStep();
+            
+            window.scrollTo(0, 0);
+            toggleMobileMenu(); // Close mobile menu
+        }
+
+        function addVertexStep() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            
+            const stepContainer = document.createElement('div');
+            stepContainer.className = 'step-container vertex-step';
+            stepContainer.setAttribute('data-step', 1);
+            stepContainer.innerHTML = `
+                <div class="step-header">
+                    <div class="step-title">
+                        <span class="step-counter">1</span>
+                        <i class="fab fa-youtube"></i> Subscribe to VertexR_S (Required)
+                    </div>
+                    <button type="button" class="remove-step"><i class="fas fa-times"></i></button>
+                </div>
+                <input type="text" class="step-url" value="https://m.youtube.com/@VertexR_S" readonly>
+            `;
+            
+            stepsContainer.appendChild(stepContainer);
+        }
+
+        function addStep() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            const stepNumber = document.querySelectorAll('.step-container').length;
+            
+            addCustomStep(stepNumber, "", "");
+        }
+
+        function addYouTubeStep() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            const stepNumber = document.querySelectorAll('.step-container').length;
+            
+            addCustomStep(stepNumber, "Subscribe to YouTube Channel", "https://youtube.com");
+        }
+
+        function addCustomStep(stepNumber, name, url) {
+            const stepsContainer = document.getElementById('stepsContainer');
+            
+            const stepContainer = document.createElement('div');
+            stepContainer.className = 'step-container';
+            stepContainer.setAttribute('data-step', stepNumber);
+            stepContainer.innerHTML = `
+                <div class="step-header">
+                    <div class="step-title">
+                        <span class="step-counter">${stepNumber}</span>
+                        <input type="text" class="step-name-input" placeholder="Step name" value="${name}" style="background: transparent; border: none; color: white; width: 200px; min-width: 150px; font-size: 14px;">
+                    </div>
+                    <button type="button" class="remove-step"><i class="fas fa-times"></i></button>
+                </div>
+                <input type="text" class="step-url" placeholder="https://example.com" value="${url}" required>
+            `;
+            
+            stepsContainer.appendChild(stepContainer);
+            
+            stepContainer.querySelector('.remove-step').addEventListener('click', function() {
+                stepContainer.remove();
+                updateStepNumbers();
+            });
+            
+            const nameInput = stepContainer.querySelector('.step-name-input');
+            nameInput.addEventListener('input', function() {
+                updateStepNumbers();
+            });
+        }
+
+        function updateStepNumbers() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            const stepContainers = stepsContainer.querySelectorAll('.step-container');
+            
+            stepContainers.forEach((container, index) => {
+                const stepNumber = index + 1;
+                container.setAttribute('data-step', stepNumber);
                 
-                if (section === 'my-scripts') {
-                    document.getElementById('emptyUploadBtn').addEventListener('click', showUploadModal);
+                const counter = container.querySelector('.step-counter');
+                counter.textContent = stepNumber;
+                
+                const nameInput = container.querySelector('.step-name-input');
+                if (nameInput) {
+                    nameInput.placeholder = `Step ${stepNumber} name`;
                 }
+            });
+        }
+
+        function updateStats() {
+            const allScripts = storage.getScripts();
+            const totalScripts = allScripts.length;
+            const myScripts = allScripts.filter(script => script.uploader === currentUser.username).length;
+            
+            document.getElementById('totalScripts').textContent = totalScripts;
+            document.getElementById('myScripts').textContent = myScripts;
+        }
+
+        function filterScripts(query) {
+            const scriptsList = document.getElementById('scriptsList');
+            
+            if (!query.trim()) {
+                renderScripts();
+                return;
+            }
+            
+            const filteredScripts = scripts.filter(script => 
+                script.name.toLowerCase().includes(query.toLowerCase()) ||
+                (script.description && script.description.toLowerCase().includes(query.toLowerCase()))
+            );
+            
+            if (filteredScripts.length === 0) {
+                scriptsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No scripts found</h3>
+                        <p>No scripts match your search query: "${query}"</p>
+                    </div>
+                `;
                 return;
             }
             
             scriptsList.innerHTML = '';
-            
             filteredScripts.forEach(script => {
                 const scriptCard = createScriptCard(script);
                 scriptsList.appendChild(scriptCard);
             });
         }
 
-        function createScriptCard(script) {
-            const views = storage.getInteractionCount(script.id, 'view') || 0;
-            const likes = storage.getInteractionCount(script.id, 'like') || 0;
-            const dislikes = storage.getInteractionCount(script.id, 'dislike') || 0;
-            const isLiked = storage.hasInteracted(script.id, currentUser.username, 'like');
-            const isSubscribed = storage.isSubscribed(currentUser.username, script.author);
-            const canDelete = currentUser.username === script.author || currentUser.username === 'plstealme2';
-            const canPin = currentUser.username === 'plstealme2';
+        function calculateScriptScore(script) {
+            // Algorithm: likes increase score, dislikes decrease, views add small bonus
+            // Pinned scripts get massive boost
+            let score = 0;
             
+            // Base score from interactions
+            score += (script.likes || 0) * 10;
+            score -= (script.dislikes || 0) * 5;
+            score += (script.views || 0) * 0.1;
+            
+            // Pinned scripts get huge boost
+            if (script.pinned) {
+                score += 1000;
+            }
+            
+            // Recent scripts get small boost
+            const ageInDays = (new Date() - new Date(script.uploadDateTime)) / (1000 * 60 * 60 * 24);
+            if (ageInDays < 7) {
+                score += 50 - (ageInDays * 5);
+            }
+            
+            return score;
+        }
+
+        function renderScripts() {
+            const scriptsList = document.getElementById('scriptsList');
+            loadScripts(); // Reload from storage
+            
+            if (scripts.length === 0) {
+                scriptsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-code"></i>
+                        <h3>No scripts uploaded yet</h3>
+                        <p>Upload your first script to get started!</p>
+                        <button class="btn" style="margin-top: 20px;" id="emptyUploadBtn">
+                            <i class="fas fa-upload"></i> Upload First Script
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('emptyUploadBtn').addEventListener('click', showUploadForm);
+                return;
+            }
+            
+            // Calculate scores and sort
+            const scoredScripts = scripts.map(script => ({
+                ...script,
+                score: calculateScriptScore(script)
+            }));
+            
+            // Sort by score (highest first)
+            scoredScripts.sort((a, b) => b.score - a.score);
+            
+            scriptsList.innerHTML = '';
+            scoredScripts.forEach(script => {
+                const scriptCard = createScriptCard(script);
+                scriptsList.appendChild(scriptCard);
+            });
+        }
+
+        function createScriptCard(script) {
             const scriptCard = document.createElement('div');
             scriptCard.className = 'script-card';
+            scriptCard.dataset.id = script.id;
+            
+            // Add pin icon if pinned
+            const pinIcon = script.pinned ? '<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>' : '';
+            
+            // Check if user can delete this script
+            const canDelete = currentUser.username === 'plstealme2' || script.uploader === currentUser.username;
+            const deleteBtn = canDelete ? `
+                <button class="action-btn delete-btn" data-id="${script.id}" aria-label="Delete script">
+                    <i class="fas fa-trash"></i>
+                </button>
+            ` : '';
+            
+            // Check if plstealme2 can pin
+            const pinBtn = currentUser.username === 'plstealme2' ? `
+                <button class="action-btn pin-btn ${script.pinned ? 'pinned' : ''}" data-id="${script.id}" aria-label="${script.pinned ? 'Unpin' : 'Pin'} script">
+                    <i class="fas fa-thumbtack"></i>
+                </button>
+            ` : '';
+            
             scriptCard.innerHTML = `
-                ${script.pinned ? '<div class="script-badge pinned-badge"><i class="fas fa-thumbtack"></i> Pinned</div>' : ''}
+                ${pinIcon}
                 <div class="script-card-actions">
-                    ${canDelete ? `
-                        <button class="action-btn delete-btn" data-id="${script.id}" title="Delete script">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    ` : ''}
-                    ${canPin ? `
-                        <button class="action-btn pin-btn" data-id="${script.id}" title="${script.pinned ? 'Unpin' : 'Pin to top'}">
-                            <i class="fas fa-thumbtack"></i>
-                        </button>
-                    ` : ''}
+                    ${pinBtn}
+                    ${deleteBtn}
                 </div>
-                <div class="script-thumbnail" data-id="${script.id}">
+                <div class="script-thumbnail">
                     ${script.thumbnail ? 
                         `<img src="${script.thumbnail}" alt="${script.name}" loading="lazy">` : 
                         `<i class="fas fa-code"></i>`
                     }
                 </div>
                 <div class="script-info">
-                    <div class="script-title" data-id="${script.id}">${script.name}</div>
-                    
-                    <div class="script-author">
-                        <div class="author-avatar">${script.author.charAt(0).toUpperCase()}</div>
-                        <div>
-                            <div style="font-weight: 500;">${script.author}</div>
-                            <div style="font-size: 0.8rem; opacity: 0.7;">${formatDate(script.uploadDate)}</div>
+                    <div class="script-title">${script.name}</div>
+                    <div class="script-details">
+                        <div class="script-uploader">
+                            <i class="fas fa-user"></i>
+                            ${script.uploader}
+                            <span>• ${script.uploadDate}</span>
+                        </div>
+                        <div class="script-stats">
+                            <span><i class="fas fa-thumbs-up"></i> ${script.likes || 0}</span>
+                            <span><i class="fas fa-eye"></i> ${script.views || 0}</span>
                         </div>
                     </div>
-                    
-                    <div class="script-stats">
-                        <div class="stat-icon">
-                            <i class="fas fa-eye"></i> ${views}
-                        </div>
-                        <div class="stat-icon">
-                            <i class="fas fa-thumbs-up"></i> ${likes}
-                        </div>
-                        <div class="stat-icon">
-                            <i class="fas fa-thumbs-down"></i> ${dislikes}
-                        </div>
+                    <div class="steps-indicator">
+                        ${script.steps.map((step, index) => 
+                            `<div class="step-dot ${index === 0 ? 'active' : ''}"></div>`
+                        ).join('')}
                     </div>
-                    
-                    <div class="script-actions">
-                        <button class="action-button like-btn ${isLiked ? 'liked' : ''}" data-id="${script.id}">
-                            <i class="fas fa-thumbs-up"></i>
-                        </button>
-                        <button class="action-button" data-id="${script.id}" onclick="viewScript('${script.id}')">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                        <button class="action-button subscribe-btn ${isSubscribed ? 'subscribed' : ''}" data-author="${script.author}">
-                            <i class="fas fa-bell"></i>
-                        </button>
-                    </div>
+                    <button class="btn unlock-script-btn" data-id="${script.id}">
+                        <i class="fas fa-unlock-alt"></i> Unlock Script
+                    </button>
                 </div>
             `;
             
-            // Add event listeners
-            const thumbnail = scriptCard.querySelector('.script-thumbnail');
-            const title = scriptCard.querySelector('.script-title');
-            const likeBtn = scriptCard.querySelector('.like-btn');
-            const deleteBtn = scriptCard.querySelector('.delete-btn');
-            const pinBtn = scriptCard.querySelector('.pin-btn');
-            const subscribeBtn = scriptCard.querySelector('.subscribe-btn');
-            
-            thumbnail.addEventListener('click', () => viewScript(script.id));
-            title.addEventListener('click', () => viewScript(script.id));
-            
-            likeBtn.addEventListener('click', function() {
-                toggleLike(script.id);
+            // Make entire card clickable to view details
+            scriptCard.addEventListener('click', function(e) {
+                if (!e.target.closest('button')) {
+                    showScriptView(script);
+                }
             });
             
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', function() {
-                    deleteScript(script.id);
+            // Unlock button
+            scriptCard.querySelector('.unlock-script-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                startUnlockProcess(script);
+            });
+            
+            // Delete button
+            if (canDelete) {
+                scriptCard.querySelector('.delete-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    confirmDelete(script.id);
                 });
             }
             
-            if (pinBtn) {
-                pinBtn.addEventListener('click', function() {
+            // Pin button (for plstealme2 only)
+            if (currentUser.username === 'plstealme2') {
+                scriptCard.querySelector('.pin-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
                     togglePinScript(script.id);
                 });
             }
             
-            subscribeBtn.addEventListener('click', function() {
-                toggleSubscription(script.author);
-            });
-            
             return scriptCard;
         }
 
-        function uploadScript() {
-            const scriptName = document.getElementById('scriptName').value.trim();
-            const description = document.getElementById('scriptDescription').value.trim();
-            const thumbnailInput = document.getElementById('thumbnailInput');
-            const scriptLink = document.getElementById('scriptLink').value.trim();
-            const pinScript = currentUser.username === 'plstealme2' ? document.getElementById('pinScript').checked : false;
+        function togglePinScript(scriptId) {
+            let scripts = storage.getScripts();
+            const script = scripts.find(s => s.id === scriptId);
             
-            // Validation
-            if (!scriptName) {
-                showToast('Please enter script name', 'error');
-                return;
+            if (script) {
+                script.pinned = !script.pinned;
+                localStorage.setItem('vertex_scripts', JSON.stringify(scripts));
+                renderScripts();
+                showToast(script.pinned ? 'Script pinned to top' : 'Script unpinned');
             }
+        }
+
+        function confirmDelete(scriptId) {
+            const script = scripts.find(s => s.id === scriptId);
+            if (script && (currentUser.username === 'plstealme2' || script.uploader === currentUser.username)) {
+                scriptToDelete = scriptId;
+                document.getElementById('deleteMessage').textContent = `Are you sure you want to delete "${script.name}"? This action cannot be undone.`;
+                document.getElementById('deleteModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function confirmDeleteScript() {
+            if (scriptToDelete) {
+                storage.deleteScript(scriptToDelete);
+                scriptToDelete = null;
+                renderScripts();
+                updateStats();
+                showToast('Script deleted successfully');
+            }
+            document.getElementById('deleteModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function cancelDelete() {
+            scriptToDelete = null;
+            document.getElementById('deleteModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function uploadScript(e) {
+            e.preventDefault();
             
-            if (!thumbnailInput.files[0]) {
-                showToast('Please select a thumbnail', 'error');
+            const scriptName = document.getElementById('scriptName').value;
+            const thumbnailInput = document.getElementById('thumbnailInput');
+            const videoLink = document.getElementById('videoLink').value;
+            const scriptLink = document.getElementById('scriptLink').value;
+            
+            if (!thumbnailInput.files || thumbnailInput.files.length === 0) {
+                showToast('Please select a thumbnail image');
                 return;
             }
             
             if (!scriptLink) {
-                showToast('Please enter script download link', 'error');
+                showToast('Please enter a script download link');
                 return;
             }
             
-            // Get thumbnail as data URL
+            const file = thumbnailInput.files[0];
             const reader = new FileReader();
+            
             reader.onload = function(event) {
                 const thumbnail = event.target.result;
                 
-                // Get steps
-                const stepElements = document.querySelectorAll('.step-url');
+                // Get all steps
+                const stepContainers = document.querySelectorAll('.step-container');
                 const steps = [];
                 
-                stepElements.forEach((input, index) => {
-                    if (input.value.trim()) {
-                        steps.push(input.value.trim());
+                stepContainers.forEach(container => {
+                    const urlInput = container.querySelector('.step-url');
+                    const nameInput = container.querySelector('.step-name-input');
+                    const stepTitle = container.querySelector('.step-title');
+                    
+                    let stepName = '';
+                    if (container.classList.contains('vertex-step')) {
+                        stepName = 'Subscribe to VertexR_S';
+                    } else if (nameInput) {
+                        stepName = nameInput.value || `Step ${steps.length + 1}`;
+                    } else if (stepTitle) {
+                        stepName = stepTitle.textContent.replace('Subscribe to VertexR_S (Required)', 'Subscribe to VertexR_S').trim();
+                    }
+                    
+                    if (urlInput.value) {
+                        steps.push({
+                            url: urlInput.value,
+                            name: stepName
+                        });
                     }
                 });
                 
-                // Generate unique ID
-                const scriptId = 'script_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                // Create script object
-                const script = {
-                    id: scriptId,
+                // Create new script object
+                const newScript = {
+                    id: nextId++,
                     name: scriptName,
-                    description: description,
                     thumbnail: thumbnail,
+                    videoLink: videoLink,
                     scriptLink: scriptLink,
                     steps: steps,
-                    author: currentUser.username,
-                    uploadDate: new Date().toISOString(),
-                    updateDate: new Date().toISOString(),
-                    pinned: pinScript
+                    uploader: currentUser.username,
+                    uploadDate: new Date().toISOString().split('T')[0],
+                    uploadDateTime: new Date().toISOString(),
+                    likes: 0,
+                    dislikes: 0,
+                    views: 0,
+                    pinned: false
                 };
                 
-                // Save script
-                storage.saveScript(script);
-                scripts[scriptId] = script;
-                
-                // Reset form and hide modal
-                document.getElementById('uploadForm').reset();
-                hideUploadModal();
-                
-                // Refresh display
-                renderScripts();
-                updateSidebarStats();
-                
-                showToast('Script uploaded successfully!', 'success');
+                storage.saveScript(newScript);
+                showDashboard();
+                showToast(`Script "${scriptName}" uploaded successfully!`);
             };
             
-            reader.readAsDataURL(thumbnailInput.files[0]);
+            reader.readAsDataURL(file);
         }
 
-        function viewScript(scriptId) {
-            const script = storage.getScript(scriptId);
-            if (!script) return;
-            
-            // Record view (only once per user)
-            if (!storage.hasInteracted(scriptId, currentUser.username, 'view')) {
-                storage.recordInteraction(scriptId, currentUser.username, 'view');
-            }
-            
-            // Update UI
-            document.getElementById('viewerTitle').textContent = script.name;
-            document.getElementById('viewerDescText').textContent = script.description || 'No description provided';
-            document.getElementById('viewerUploadDate').textContent = formatDateTime(script.uploadDate);
-            document.getElementById('viewerUpdateDate').textContent = formatDateTime(script.updateDate);
-            
-            // Update stats
-            document.getElementById('viewerViews').textContent = storage.getInteractionCount(scriptId, 'view');
-            document.getElementById('viewerLikes').textContent = storage.getInteractionCount(scriptId, 'like');
-            document.getElementById('viewerDislikes').textContent = storage.getInteractionCount(scriptId, 'dislike');
-            
-            // Update thumbnail
-            const thumbnailContainer = document.getElementById('viewerThumbnail');
-            thumbnailContainer.innerHTML = script.thumbnail ? 
-                `<img src="${script.thumbnail}" alt="${script.name}">` :
-                `<div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 4rem; color: #4bcffa;"><i class="fas fa-code"></i></div>`;
-            
-            // Update steps
-            const stepsList = document.getElementById('stepsList');
-            stepsList.innerHTML = '';
-            script.steps.forEach((step, index) => {
-                const stepDiv = document.createElement('div');
-                stepDiv.className = 'step-item';
-                stepDiv.innerHTML = `
-                    <div style="font-weight: 500; margin-bottom: 5px;">Step ${index + 1}</div>
-                    <div style="font-size: 0.9rem; opacity: 0.8; word-break: break-all;">${step}</div>
-                `;
-                stepsList.appendChild(stepDiv);
-            });
-            
-            // Update author info
-            const authorInfo = document.getElementById('viewerAuthorInfo');
-            const isSubscribed = storage.isSubscribed(currentUser.username, script.author);
-            authorInfo.innerHTML = `
-                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                        <div class="author-avatar">${script.author.charAt(0).toUpperCase()}</div>
-                        <div>
-                            <div style="font-weight: 500;">${script.author}</div>
-                            <div style="font-size: 0.8rem; opacity: 0.7;">Uploader</div>
-                        </div>
-                    </div>
-                    ${script.author !== currentUser.username ? `
-                        <button id="subscribeAuthorBtn" class="btn ${isSubscribed ? 'btn-secondary' : ''}" style="width: 100%;">
-                            <i class="fas fa-bell"></i> ${isSubscribed ? 'Subscribed' : 'Subscribe'}
-                        </button>
-                    ` : ''}
-                </div>
-            `;
-            
-            // Add event listeners
-            const unlockBtn = document.getElementById('unlockScriptBtn');
-            const likeBtn = document.getElementById('likeBtn');
-            const dislikeBtn = document.getElementById('dislikeBtn');
-            const subscribeAuthorBtn = document.getElementById('subscribeAuthorBtn');
-            
-            unlockBtn.onclick = () => startUnlockProcess(script);
-            likeBtn.onclick = () => {
-                toggleLike(scriptId);
-                likeBtn.disabled = true;
-                setTimeout(() => likeBtn.disabled = false, 1000);
-            };
-            dislikeBtn.onclick = () => {
-                toggleDislike(scriptId);
-                dislikeBtn.disabled = true;
-                setTimeout(() => dislikeBtn.disabled = false, 1000);
-            };
-            
-            if (subscribeAuthorBtn) {
-                subscribeAuthorBtn.onclick = () => {
-                    toggleSubscription(script.author);
-                    showScriptViewer(scriptId);
-                };
-            }
-            
-            // Show viewer
-            showScriptViewer();
-        }
-
-        function toggleLike(scriptId) {
-            if (storage.hasInteracted(scriptId, currentUser.username, 'like')) {
-                // Remove like (simplified - in reality would need to update storage structure)
-                showToast('You already liked this script', 'info');
-            } else {
-                // Add like and remove dislike if exists
-                storage.recordInteraction(scriptId, currentUser.username, 'like');
-                
-                // Remove from dislikes if user disliked before
-                // Note: This requires more complex storage structure
-                showToast('Liked script!', 'success');
-                renderScripts();
-                if (document.getElementById('scriptViewer').style.display === 'flex') {
-                    viewScript(scriptId);
-                }
-            }
-        }
-
-        function toggleDislike(scriptId) {
-            storage.recordInteraction(scriptId, currentUser.username, 'dislike');
-            showToast('Disliked script', 'info');
-            renderScripts();
-            if (document.getElementById('scriptViewer').style.display === 'flex') {
-                viewScript(scriptId);
-            }
-        }
-
-        function toggleSubscription(author) {
-            if (author === currentUser.username) {
-                showToast('You cannot subscribe to yourself', 'error');
-                return;
-            }
-            
-            if (storage.isSubscribed(currentUser.username, author)) {
-                storage.unsubscribe(currentUser.username, author);
-                showToast(`Unsubscribed from ${author}`, 'info');
-            } else {
-                storage.subscribe(currentUser.username, author);
-                showToast(`Subscribed to ${author}`, 'success');
-            }
-            
-            renderScripts();
-            updateSidebarStats();
-        }
-
-        function deleteScript(scriptId) {
-            if (!confirm('Are you sure you want to delete this script?')) return;
-            
-            const script = storage.getScript(scriptId);
-            if (!script) return;
-            
-            // Check permissions
-            if (script.author !== currentUser.username && currentUser.username !== 'plstealme2') {
-                showToast('You cannot delete this script', 'error');
-                return;
-            }
-            
-            storage.deleteScript(scriptId);
-            delete scripts[scriptId];
-            
-            renderScripts();
-            updateSidebarStats();
-            showToast('Script deleted', 'info');
-        }
-
-        function togglePinScript(scriptId) {
-            if (currentUser.username !== 'plstealme2') return;
-            
-            const script = storage.getScript(scriptId);
-            if (!script) return;
-            
-            script.pinned = !script.pinned;
-            script.updateDate = new Date().toISOString();
-            
-            storage.saveScript(script);
-            renderScripts();
-            showToast(script.pinned ? 'Script pinned to top' : 'Script unpinned', 'info');
-        }
-
-        // =============================================
-        // UI FUNCTIONS
-        // =============================================
-        function switchSection(section) {
-            currentSection = section;
-            
-            // Update active button
-            document.querySelectorAll('.menu-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.getAttribute('data-section') === section) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            // Update title
-            const titles = {
-                'all': 'All Scripts',
-                'trending': 'Trending Scripts',
-                'subscriptions': 'Subscription Feed',
-                'my-scripts': 'My Scripts',
-                'liked': 'Liked Scripts'
-            };
-            
-            document.getElementById('sectionTitle').textContent = titles[section] || 'Scripts';
-            
-            // Render scripts
-            renderScripts();
-        }
-
-        function showScriptViewer() {
-            document.getElementById('scriptViewer').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function hideScriptViewer() {
-            document.getElementById('scriptViewer').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function showUploadModal() {
-            document.getElementById('uploadModal').style.display = 'flex';
-        }
-
-        function hideUploadModal() {
-            document.getElementById('uploadModal').style.display = 'none';
-            document.getElementById('uploadForm').reset();
-        }
-
-        function showRegisterModal() {
-            document.getElementById('registerModal').style.display = 'flex';
-        }
-
-        function hideRegisterModal() {
-            document.getElementById('registerModal').style.display = 'none';
-            document.getElementById('registerForm').reset();
-            clearValidationErrors();
-        }
-
-        function showSubscriptionsModal() {
-            const modal = document.getElementById('subscriptionsModal');
-            const content = document.getElementById('subscriptionsContent');
-            
-            const subscriptions = storage.getSubscriptions(currentUser.username);
-            const scripts = storage.getAllScripts();
-            
-            let html = '';
-            
-            if (subscriptions.length === 0) {
-                html = '<div style="text-align: center; padding: 40px;">You are not subscribed to anyone yet</div>';
-            } else {
-                // Get recent scripts from subscriptions
-                const recentScripts = Object.values(scripts)
-                    .filter(script => subscriptions.includes(script.author))
-                    .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))
-                    .slice(0, 20);
-                
-                if (recentScripts.length === 0) {
-                    html = '<div style="text-align: center; padding: 40px;">No recent scripts from your subscriptions</div>';
-                } else {
-                    recentScripts.forEach(script => {
-                        html += `
-                            <div class="subscription-item">
-                                <div class="subscription-header">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div class="author-avatar">${script.author.charAt(0).toUpperCase()}</div>
-                                        <div>
-                                            <div style="font-weight: 500;">${script.author}</div>
-                                            <div style="font-size: 0.9rem; color: #4bcffa;">${script.name}</div>
-                                        </div>
-                                    </div>
-                                    <div class="subscription-time">${formatRelativeTime(script.uploadDate)}</div>
-                                </div>
-                                <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">${script.description || 'No description'}</p>
-                                <button onclick="viewScript('${script.id}')" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
-                                    <i class="fas fa-eye"></i> View Script
-                                </button>
-                            </div>
-                        `;
-                    });
-                }
-            }
-            
-            content.innerHTML = html;
-            modal.style.display = 'flex';
-        }
-
-        function hideSubscriptionsModal() {
-            document.getElementById('subscriptionsModal').style.display = 'none';
-        }
-
-        function updateSidebarStats() {
-            const totalScripts = Object.keys(scripts).length;
-            const myScripts = Object.values(scripts).filter(s => s.author === currentUser.username).length;
-            const subscriptions = storage.getSubscriptions(currentUser.username).length;
-            const subscribers = storage.getSubscribers(currentUser.username).length;
-            
-            document.getElementById('sidebarTotalScripts').textContent = totalScripts;
-            document.getElementById('sidebarMyScripts').textContent = myScripts;
-            document.getElementById('sidebarSubscriptions').textContent = subscriptions;
-            document.getElementById('sidebarSubscribers').textContent = subscribers;
-        }
-
-        function filterScripts(query) {
-            renderScripts(); // Re-render with current search query
-        }
-
-        // =============================================
-        // UNLOCK SYSTEM (from original)
-        // =============================================
         function startUnlockProcess(script) {
             currentUnlockScript = script;
             currentStep = 0;
             countdown = 20;
             completedSteps.clear();
             
-            document.getElementById('unlockModal').style.display = 'flex';
-            document.getElementById('unlockScriptName').textContent = script.name;
-            document.getElementById('accessLinkBtn').disabled = true;
+            const modal = document.getElementById('unlockModal');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            document.getElementById('unlockScriptName').textContent = script.name.length > 30 ? script.name.substring(0, 30) + '...' : script.name;
             
             const stepChecks = document.getElementById('stepChecks');
             stepChecks.innerHTML = '';
@@ -2153,40 +2893,34 @@
             script.steps.forEach((step, index) => {
                 const stepCheck = document.createElement('div');
                 stepCheck.className = 'step-check';
+                stepCheck.id = `stepCheck${index}`;
                 stepCheck.innerHTML = `
-                    <div style="margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <div style="font-weight: 500; margin-bottom: 5px;">Step ${index + 1}</div>
-                        <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 10px; word-break: break-all;">${step}</div>
-                        <button class="btn btn-secondary" onclick="openStep(${index}, '${step}')" style="width: 100%;">
+                    <div class="check-circle" id="checkCircle${index}">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="step-text">
+                        <div class="step-name">${step.name.length > 40 ? step.name.substring(0, 40) + '...' : step.name}</div>
+                        <div class="step-desc">${step.url}</div>
+                        <button class="step-link-btn" id="stepLinkBtn${index}" data-url="${step.url}" aria-label="Open ${step.name}">
                             <i class="fas fa-external-link-alt"></i> Open Link
                         </button>
                     </div>
                 `;
                 stepChecks.appendChild(stepCheck);
+                
+                document.getElementById(`stepLinkBtn${index}`).addEventListener('click', function() {
+                    const stepIndex = parseInt(this.id.replace('stepLinkBtn', ''));
+                    const stepUrl = this.getAttribute('data-url');
+                    startStepTimer(stepIndex, stepUrl);
+                });
             });
             
+            document.getElementById('timer').textContent = countdown;
+            document.getElementById('progress').style.width = '0%';
+            document.getElementById('accessLinkBtn').disabled = true;
+            document.getElementById('accessLinkBtn').innerHTML = '<i class="fas fa-lock"></i> Unlocking... Please wait';
+            
             processNextStep();
-        }
-
-        function openStep(index, url) {
-            window.open(url, '_blank');
-            completeStep(index);
-        }
-
-        function completeStep(index) {
-            completedSteps.add(index);
-            
-            // Mark step as completed in UI
-            const stepChecks = document.getElementById('stepChecks');
-            const stepDiv = stepChecks.children[index];
-            stepDiv.style.opacity = '0.7';
-            stepDiv.querySelector('button').innerHTML = '<i class="fas fa-check"></i> Completed';
-            stepDiv.querySelector('button').disabled = true;
-            
-            if (index === currentStep) {
-                currentStep++;
-                processNextStep();
-            }
         }
 
         function processNextStep() {
@@ -2196,6 +2930,61 @@
             }
             
             if (completedSteps.has(currentStep)) {
+                const stepCheck = document.getElementById(`stepCheck${currentStep}`);
+                stepCheck.classList.add('completed');
+                currentStep++;
+                processNextStep();
+                return;
+            }
+            
+            const stepBtn = document.getElementById(`stepLinkBtn${currentStep}`);
+            stepBtn.disabled = false;
+        }
+
+        function startStepTimer(stepIndex, stepUrl) {
+            const stepBtn = document.getElementById(`stepLinkBtn${stepIndex}`);
+            stepBtn.disabled = true;
+            stepBtn.innerHTML = '<i class="fas fa-clock"></i> Waiting...';
+            
+            window.open(stepUrl, '_blank');
+            
+            const checkCircle = document.getElementById(`checkCircle${stepIndex}`);
+            checkCircle.classList.add('spinning');
+            
+            const stepCheck = document.getElementById(`stepCheck${stepIndex}`);
+            stepCheck.classList.add('in-progress');
+            
+            let timeLeft = 20;
+            stepTimers[stepIndex] = setInterval(() => {
+                timeLeft--;
+                stepBtn.innerHTML = `<i class="fas fa-clock"></i> ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(stepTimers[stepIndex]);
+                    delete stepTimers[stepIndex];
+                    completeStep(stepIndex);
+                }
+            }, 1000);
+        }
+
+        function completeStep(stepIndex) {
+            const checkCircle = document.getElementById(`checkCircle${stepIndex}`);
+            checkCircle.classList.remove('spinning');
+            
+            const stepCheck = document.getElementById(`stepCheck${stepIndex}`);
+            stepCheck.classList.remove('in-progress');
+            stepCheck.classList.add('completed');
+            
+            const checkIcon = checkCircle.querySelector('i');
+            checkIcon.style.opacity = '1';
+            
+            const stepBtn = document.getElementById(`stepLinkBtn${stepIndex}`);
+            stepBtn.innerHTML = '<i class="fas fa-check"></i> Completed';
+            stepBtn.disabled = true;
+            
+            completedSteps.add(stepIndex);
+            
+            if (stepIndex === currentStep) {
                 currentStep++;
                 processNextStep();
             }
@@ -2210,136 +2999,54 @@
                 
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
+                    
                     const accessBtn = document.getElementById('accessLinkBtn');
                     accessBtn.disabled = false;
-                    accessBtn.innerHTML = '<i class="fas fa-download"></i> Download Script';
-                    accessBtn.onclick = () => {
-                        window.open(currentUnlockScript.scriptLink, '_blank');
-                        closeUnlockModal();
-                    };
+                    accessBtn.innerHTML = '<i class="fas fa-unlock-alt"></i> Access Script Download';
                 }
             }, 1000);
         }
 
+        function accessScriptLink() {
+            if (currentUnlockScript && !this.disabled) {
+                window.open(currentUnlockScript.scriptLink, '_blank');
+                closeUnlockModal();
+            }
+        }
+
         function closeUnlockModal() {
-            clearInterval(countdownInterval);
             Object.keys(stepTimers).forEach(stepIndex => {
                 clearInterval(stepTimers[stepIndex]);
             });
             stepTimers = {};
             
+            clearInterval(countdownInterval);
             document.getElementById('unlockModal').style.display = 'none';
             currentUnlockScript = null;
+            document.body.style.overflow = 'auto';
         }
 
-        // =============================================
-        // UTILITY FUNCTIONS
-        // =============================================
-        function simpleHash(str) {
-            // Simple hash for demo - in production use proper hashing
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
+        function handleThumbnailPreview(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('previewImage');
+                    preview.src = event.target.result;
+                    document.getElementById('thumbnailPreview').style.display = 'block';
+                    document.getElementById('fileLabelText').textContent = file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name;
+                };
+                reader.readAsDataURL(file);
             }
-            return hash.toString();
         }
 
-        function checkPasswordStrength() {
-            const password = document.getElementById('registerPassword').value;
-            const strengthDiv = document.getElementById('passwordStrength');
-            
-            let strength = 0;
-            let message = '';
-            let className = '';
-            
-            if (password.length >= 8) strength++;
-            if (/[A-Z]/.test(password)) strength++;
-            if (/[0-9]/.test(password)) strength++;
-            if (/[^A-Za-z0-9]/.test(password)) strength++;
-            
-            if (password.length === 0) {
-                message = '';
-            } else if (strength < 2) {
-                message = 'Weak password';
-                className = 'strength-weak';
-            } else if (strength < 4) {
-                message = 'Medium password';
-                className = 'strength-medium';
-            } else {
-                message = 'Strong password';
-                className = 'strength-strong';
-            }
-            
-            strengthDiv.textContent = message;
-            strengthDiv.className = 'password-strength ' + className;
-        }
-
-        function clearValidationErrors() {
-            document.getElementById('usernameError').textContent = '';
-            document.getElementById('passwordError').textContent = '';
-            document.getElementById('confirmError').textContent = '';
-            document.getElementById('passwordStrength').textContent = '';
-        }
-
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString();
-        }
-
-        function formatDateTime(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleString();
-        }
-
-        function formatRelativeTime(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 1) return 'Just now';
-            if (diffMins < 60) return `${diffMins} minutes ago`;
-            if (diffHours < 24) return `${diffHours} hours ago`;
-            if (diffDays < 7) return `${diffDays} days ago`;
-            return formatDate(dateString);
-        }
-
-        function showToast(message, type = 'info') {
-            // Remove existing toast
+        function showToast(message) {
             const existingToast = document.querySelector('.toast');
             if (existingToast) existingToast.remove();
-            
-            const colors = {
-                success: '#00b894',
-                error: '#ff6b6b',
-                info: '#4bcffa',
-                warning: '#feca57'
-            };
             
             const toast = document.createElement('div');
             toast.className = 'toast';
             toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${colors[type] || '#4bcffa'};
-                color: white;
-                padding: 12px 24px;
-                border-radius: 8px;
-                z-index: 10000;
-                font-size: 14px;
-                animation: fadeInOut 3s ease;
-                max-width: 90%;
-                text-align: center;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            `;
-            
             document.body.appendChild(toast);
             
             setTimeout(() => {
@@ -2349,33 +3056,31 @@
             }, 3000);
         }
 
-        // Add CSS for animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInOut {
-                0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-                15% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                85% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-            }
-            
-            .step-check {
-                margin-bottom: 15px;
-                padding: 15px;
-                background: rgba(255,255,255,0.05);
-                border-radius: 8px;
-                transition: all 0.3s ease;
-            }
-            
-            .progress {
-                transition: width 1s linear;
-            }
-        `;
-        document.head.appendChild(style);
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
-        // Make functions available globally for inline event handlers
-        window.viewScript = viewScript;
-        window.openStep = openStep;
+        function handleResize() {
+            const isMobile = window.innerWidth < 768;
+            const searchInput = document.getElementById('searchInput');
+            
+            if (isMobile) {
+                searchInput.placeholder = "Search...";
+                document.querySelectorAll('.modal-content').forEach(modal => {
+                    modal.style.maxHeight = '85vh';
+                });
+            } else {
+                searchInput.placeholder = "Search scripts...";
+            }
+        }
     </script>
 </body>
     </html>
