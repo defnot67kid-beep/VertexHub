@@ -29,7 +29,7 @@
             padding: 0 20px;
         }
         
-        /* PC Enhanced Header */
+        /* PC Enhanced Header - FIXED */
         .pc-enhanced-header {
             display: flex;
             justify-content: space-between;
@@ -37,6 +37,11 @@
             padding: 20px 0;
             margin-bottom: 30px;
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(12, 36, 97, 0.95);
+            backdrop-filter: blur(10px);
         }
         
         .pc-header-left {
@@ -53,7 +58,7 @@
         
         .pc-nav {
             display: flex;
-            gap: 20px;
+            gap: 15px;
         }
         
         .pc-nav-btn {
@@ -67,6 +72,8 @@
             align-items: center;
             gap: 8px;
             transition: all 0.3s ease;
+            font-size: 14px;
+            white-space: nowrap;
         }
         
         .pc-nav-btn:hover {
@@ -77,6 +84,183 @@
         .pc-nav-btn.active {
             background: rgba(75, 207, 250, 0.2);
             border: 2px solid #4bcffa;
+        }
+        
+        /* Notification Bell */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .notification-bell i {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .notification-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Profile Dropdown - FIXED */
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .profile-dropdown-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .profile-dropdown-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: rgba(30, 30, 46, 0.98);
+            min-width: 250px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .profile-dropdown.active .profile-dropdown-content {
+            display: block;
+        }
+        
+        .profile-info {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .profile-pic-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4bcffa, #5d79ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .profile-pic-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-name {
+            flex: 1;
+        }
+        
+        .profile-username {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .profile-dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .profile-dropdown-content a:last-child {
+            border-bottom: none;
+        }
+        
+        .profile-dropdown-content a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* FIXED: Dropdown Menu - Separate from profile */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: rgba(30, 30, 46, 0.98);
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5px;
+        }
+        
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .dropdown-content a:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
         
         /* Hashtag Styles */
@@ -300,7 +484,280 @@
             margin-top: 5px;
         }
         
-        /* Description Input with Counter */
+        /* Time Ago Styling */
+        .time-ago {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-left: 5px;
+        }
+        
+        /* Pre-options for Upload Steps */
+        .pre-options-container {
+            margin-bottom: 15px;
+        }
+        
+        .pre-options-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        
+        .pre-options-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4bcffa;
+        }
+        
+        .pre-options-dropdown {
+            display: none;
+            background: rgba(30, 30, 46, 0.95);
+            border-radius: 8px;
+            margin-top: 5px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .pre-options-dropdown.active {
+            display: block;
+        }
+        
+        .platform-option {
+            padding: 10px;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .platform-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .platform-expand {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .platform-expand.active {
+            display: block;
+        }
+        
+        .platform-action {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .platform-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .platform-action i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Profile Edit Modal */
+        .profile-edit-modal {
+            max-width: 500px;
+        }
+        
+        .profile-pic-upload {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .profile-pic-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4bcffa, #5d79ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .profile-pic-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Search Results with Creator Profiles */
+        .creator-search-result {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .creator-search-result:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .creator-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4bcffa, #5d79ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .creator-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .creator-info {
+            flex: 1;
+        }
+        
+        .creator-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .creator-stats {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .subscribe-btn-small {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .subscribe-btn-small:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .subscribe-btn-small.subscribed {
+            background: #4bcffa;
+            color: #0c2461;
+        }
+        
+        /* Mobile Optimized Script Grid - 2 horizontal */
+        @media (max-width: 768px) {
+            .scripts-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+            }
+            
+            .script-card {
+                margin-bottom: 0;
+            }
+            
+            .script-thumbnail {
+                height: 120px !important;
+            }
+            
+            .script-info {
+                padding: 10px !important;
+            }
+            
+            .script-title {
+                font-size: 0.9rem !important;
+                margin-bottom: 5px !important;
+            }
+            
+            .script-description {
+                display: none !important;
+            }
+            
+            .steps-indicator {
+                margin-bottom: 10px !important;
+            }
+        }
+        
+        /* FYP Algorithm Display */
+        .fyp-algorithm {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .algorithm-factors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .algorithm-factor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+        }
+        
+        .factor-value {
+            margin-left: auto;
+            font-weight: bold;
+            color: #4bcffa;
+        }
+        
+        /* Notification Permission */
+        .notification-permission {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 10000;
+            max-width: 300px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(75, 207, 250, 0.3);
+        }
+        
+        /* Existing styles continue... */
+        
+        /* Rest of your existing styles remain here */
+        /* (I'm showing the updated parts, the rest of the CSS remains the same) */
+        
         .description-container {
             position: relative;
         }
@@ -432,57 +889,6 @@
             background: #ff6b6b;
             margin-top: 20px;
             width: 100%;
-        }
-        
-        /* Dropdown Menu */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .dropdown-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-        }
-        
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background: rgba(30, 30, 46, 0.95);
-            min-width: 200px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            border-radius: 8px;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 5px;
-        }
-        
-        .dropdown.active .dropdown-content {
-            display: block;
-        }
-        
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: background 0.3s ease;
-        }
-        
-        .dropdown-content a:hover {
-            background: rgba(255, 255, 255, 0.1);
         }
         
         /* Script View Modal */
@@ -2025,7 +2431,7 @@
     
     <!-- Main Application Container -->
     <div id="appContainer" style="display: none;">
-        <!-- PC Enhanced Header -->
+        <!-- PC Enhanced Header - FIXED -->
         <div class="pc-enhanced-header">
             <div class="pc-header-left">
                 <div class="logo">
@@ -2053,24 +2459,47 @@
             </div>
             
             <div class="pc-header-right">
+                <div class="notification-bell" id="notificationBell">
+                    <i class="fas fa-bell"></i>
+                    <div class="notification-count" id="notificationCount" style="display: none;">0</div>
+                </div>
+                
                 <div class="advanced-search">
                     <input type="text" class="search-input" id="pcSearchInput" placeholder="Search scripts, hashtags, users...">
                     <i class="fas fa-search search-icon"></i>
                     <div class="search-suggestions" id="searchSuggestions"></div>
                 </div>
                 
-                <div class="dropdown">
-                    <button class="dropdown-btn">
-                        <i class="fas fa-user-circle"></i>
+                <!-- Profile Dropdown - FIXED -->
+                <div class="profile-dropdown" id="profileDropdown">
+                    <button class="profile-dropdown-btn">
+                        <div class="profile-pic-small" id="profilePicSmall">
+                            <i class="fas fa-user"></i>
+                        </div>
                         <span id="pcUsernameDisplay"></span>
                         <i class="fas fa-caret-down"></i>
                     </button>
-                    <div class="dropdown-content">
+                    <div class="profile-dropdown-content">
+                        <div class="profile-info">
+                            <div class="profile-pic-small" id="dropdownProfilePic">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="profile-name">
+                                <div id="dropdownUsername"></div>
+                                <div class="profile-username" id="dropdownUserStats">0 subscribers</div>
+                            </div>
+                        </div>
+                        <a href="#" id="pcEditProfileBtn">
+                            <i class="fas fa-user-edit"></i> Edit Profile
+                        </a>
                         <a href="#" id="pcViewChannelBtn">
                             <i class="fas fa-user"></i> My Channel
                         </a>
                         <a href="#" id="pcSubscriptionsBtn2">
                             <i class="fas fa-bell"></i> Subscriptions
+                        </a>
+                        <a href="#" id="pcHashtagExplorerBtn2">
+                            <i class="fas fa-hashtag"></i> Hashtag Explorer
                         </a>
                         <a href="#" id="pcDeleteAccountBtn">
                             <i class="fas fa-trash"></i> Delete Account
@@ -2097,31 +2526,26 @@
                 
                 <div class="user-info">
                     <span id="currentUserDisplay"></span>
-                    <div class="dropdown">
-                        <button class="dropdown-btn">
-                            <i class="fas fa-user-circle"></i>
-                            <span id="usernameDisplay"></span>
-                            <i class="fas fa-caret-down"></i>
-                        </button>
-                        <div class="dropdown-content">
-                            <a href="#" id="viewChannelBtn">
-                                <i class="fas fa-user"></i> My Channel
-                            </a>
-                            <a href="#" id="subscriptionsBtn">
-                                <i class="fas fa-bell"></i> Subscriptions
-                            </a>
-                            <a href="#" id="deleteAccountBtn">
-                                <i class="fas fa-trash"></i> Delete Account
-                            </a>
-                            <a href="#" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
-                        </div>
+                    <div class="notification-bell" id="mobileNotificationBell">
+                        <i class="fas fa-bell"></i>
+                        <div class="notification-count" id="mobileNotificationCount" style="display: none;">0</div>
                     </div>
                 </div>
             </div>
             
             <div class="mobile-dropdown-content" id="mobileDropdown">
+                <div class="profile-info">
+                    <div class="profile-pic-small" id="mobileProfilePic">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="profile-name">
+                        <div id="mobileUsername"></div>
+                        <div class="profile-username" id="mobileUserStats">0 subscribers</div>
+                    </div>
+                </div>
+                <a href="#" id="mobileEditProfileBtn">
+                    <i class="fas fa-user-edit"></i> Edit Profile
+                </a>
                 <a href="#" id="mobileViewChannelBtn">
                     <i class="fas fa-user"></i> My Channel
                 </a>
@@ -2142,7 +2566,7 @@
             <div class="header-controls">
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search scripts...">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search scripts, users...">
                 </div>
                 <button class="upload-btn" id="showUploadBtn">
                     <i class="fas fa-upload"></i> Upload Script
@@ -2238,9 +2662,37 @@
                                 <div class="stat-number" id="totalHashtags">0</div>
                                 <div class="stat-label">Hashtags</div>
                             </div>
+                            <div class="stat">
+                                <div class="stat-number" id="totalCreators">0</div>
+                                <div class="stat-label">Creators</div>
+                            </div>
                         </div>
                     </div>
                     <p>Browse and manage all available scripts</p>
+                    
+                    <!-- FYP Algorithm Display -->
+                    <div class="fyp-algorithm">
+                        <h4><i class="fas fa-chart-line"></i> FYP Algorithm Factors</h4>
+                        <p>Higher subscriber count = Better placement in FYP</p>
+                        <div class="algorithm-factors">
+                            <div class="algorithm-factor">
+                                <i class="fas fa-users"></i> Subscriber Count
+                                <span class="factor-value" id="fypSubscriberFactor">0%</span>
+                            </div>
+                            <div class="algorithm-factor">
+                                <i class="fas fa-thumbs-up"></i> Like/View Ratio
+                                <span class="factor-value" id="fypEngagementFactor">0%</span>
+                            </div>
+                            <div class="algorithm-factor">
+                                <i class="fas fa-history"></i> Upload Recency
+                                <span class="factor-value" id="fypRecencyFactor">0%</span>
+                            </div>
+                            <div class="algorithm-factor">
+                                <i class="fas fa-fire"></i> Trending Score
+                                <span class="factor-value" id="fypTrendingFactor">0%</span>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div id="scriptsList" class="scripts-grid">
                         <!-- Scripts will be dynamically added here -->
@@ -2330,12 +2782,98 @@
                                 <!-- Vertex step is added by default and cannot be removed -->
                             </div>
                             
+                            <!-- Pre-Options Dropdown -->
+                            <div class="pre-options-container">
+                                <button type="button" class="pre-options-btn" id="preOptionsBtn">
+                                    <span><i class="fas fa-bolt"></i> Quick Add Platform Steps</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <div class="pre-options-dropdown" id="preOptionsDropdown">
+                                    <div class="platform-option" data-platform="youtube">
+                                        <i class="fab fa-youtube" style="color: #ff0000;"></i> YouTube
+                                    </div>
+                                    <div class="platform-option" data-platform="tiktok">
+                                        <i class="fab fa-tiktok"></i> TikTok
+                                    </div>
+                                    <div class="platform-option" data-platform="instagram">
+                                        <i class="fab fa-instagram" style="color: #E4405F;"></i> Instagram
+                                    </div>
+                                    <div class="platform-option" data-platform="twitter">
+                                        <i class="fab fa-twitter" style="color: #1DA1F2;"></i> Twitter/X
+                                    </div>
+                                    <div class="platform-option" data-platform="discord">
+                                        <i class="fab fa-discord" style="color: #5865F2;"></i> Discord
+                                    </div>
+                                </div>
+                                
+                                <!-- Platform Specific Options -->
+                                <div class="platform-expand" id="youtubeOptions">
+                                    <div class="platform-action" data-action="subscribe" data-platform="youtube">
+                                        <i class="fas fa-user-plus"></i> Subscribe to Channel
+                                    </div>
+                                    <div class="platform-action" data-action="like" data-platform="youtube">
+                                        <i class="fas fa-thumbs-up"></i> Like Video
+                                    </div>
+                                    <div class="platform-action" data-action="comment" data-platform="youtube">
+                                        <i class="fas fa-comment"></i> Comment on Video
+                                    </div>
+                                    <div class="platform-action" data-action="watch" data-platform="youtube">
+                                        <i class="fas fa-play"></i> Watch Video
+                                    </div>
+                                </div>
+                                
+                                <div class="platform-expand" id="tiktokOptions">
+                                    <div class="platform-action" data-action="follow" data-platform="tiktok">
+                                        <i class="fas fa-user-plus"></i> Follow User
+                                    </div>
+                                    <div class="platform-action" data-action="like" data-platform="tiktok">
+                                        <i class="fas fa-heart"></i> Like Video
+                                    </div>
+                                    <div class="platform-action" data-action="comment" data-platform="tiktok">
+                                        <i class="fas fa-comment"></i> Comment on Video
+                                    </div>
+                                    <div class="platform-action" data-action="watch" data-platform="tiktok">
+                                        <i class="fas fa-play"></i> Watch Video
+                                    </div>
+                                </div>
+                                
+                                <div class="platform-expand" id="instagramOptions">
+                                    <div class="platform-action" data-action="follow" data-platform="instagram">
+                                        <i class="fas fa-user-plus"></i> Follow Account
+                                    </div>
+                                    <div class="platform-action" data-action="like" data-platform="instagram">
+                                        <i class="fas fa-heart"></i> Like Post
+                                    </div>
+                                    <div class="platform-action" data-action="comment" data-platform="instagram">
+                                        <i class="fas fa-comment"></i> Comment on Post
+                                    </div>
+                                </div>
+                                
+                                <div class="platform-expand" id="twitterOptions">
+                                    <div class="platform-action" data-action="follow" data-platform="twitter">
+                                        <i class="fas fa-user-plus"></i> Follow Account
+                                    </div>
+                                    <div class="platform-action" data-action="like" data-platform="twitter">
+                                        <i class="fas fa-heart"></i> Like Tweet
+                                    </div>
+                                    <div class="platform-action" data-action="retweet" data-platform="twitter">
+                                        <i class="fas fa-retweet"></i> Retweet
+                                    </div>
+                                </div>
+                                
+                                <div class="platform-expand" id="discordOptions">
+                                    <div class="platform-action" data-action="join" data-platform="discord">
+                                        <i class="fas fa-user-plus"></i> Join Server
+                                    </div>
+                                    <div class="platform-action" data-action="react" data-platform="discord">
+                                        <i class="fas fa-smile"></i> React to Message
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="button-group">
                                 <button type="button" id="addStepBtn" class="btn btn-secondary">
-                                    <i class="fas fa-plus"></i> Add Step
-                                </button>
-                                <button type="button" id="addYoutubeStepBtn" class="btn btn-secondary">
-                                    <i class="fab fa-youtube"></i> Add YouTube Step
+                                    <i class="fas fa-plus"></i> Add Custom Step
                                 </button>
                             </div>
                         </div>
@@ -2410,9 +2948,11 @@
                         <div class="enhanced-info-section">
                             <div class="script-details">
                                 <div class="script-uploader">
-                                    <i class="fas fa-user"></i>
+                                    <div class="creator-avatar" id="viewCreatorAvatar" style="width: 30px; height: 30px; margin-right: 8px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
                                     <span id="viewScriptAuthor"></span>
-                                    <span id="viewScriptDate"></span>
+                                    <span class="time-ago" id="viewScriptDate"></span>
                                 </div>
                             </div>
                             
@@ -2462,6 +3002,47 @@
                 </div>
             </div>
             
+            <!-- Edit Profile Modal -->
+            <div id="editProfileModal" class="modal">
+                <div class="modal-content profile-edit-modal">
+                    <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                    
+                    <div class="profile-pic-upload">
+                        <div class="profile-pic-preview" id="profilePicPreview">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <p>Upload Profile Picture</p>
+                            <div class="file-upload">
+                                <label for="profilePicInput" class="file-upload-label">
+                                    <i class="fas fa-image"></i> Choose Image
+                                </label>
+                                <input type="file" id="profilePicInput" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editDisplayName">Display Name</label>
+                        <input type="text" id="editDisplayName" placeholder="Enter display name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editBio">Bio</label>
+                        <textarea id="editBio" placeholder="Tell others about yourself..." rows="3"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                        <button id="saveProfileBtn" class="btn">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button id="cancelEditProfileBtn" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Delete Confirmation Modal -->
             <div id="deleteModal" class="modal">
                 <div class="modal-content">
@@ -2475,7 +3056,7 @@
                         <button id="cancelDeleteBtn" class="btn btn-secondary mobile-full-width">
                             <i class="fas fa-times"></i> Cancel
                         </button>
-                </div>
+                    </div>
                 </div>
             </div>
             
@@ -2496,6 +3077,29 @@
                         </button>
                         <button id="cancelAccountDeleteBtn" class="btn btn-secondary mobile-full-width">
                             <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Permission Modal -->
+            <div id="notificationPermissionModal" class="modal">
+                <div class="modal-content">
+                    <h3><i class="fas fa-bell"></i> Enable Notifications</h3>
+                    <p>Get notified when creators you follow upload new scripts!</p>
+                    
+                    <div class="notification-permission" style="position: static; margin: 20px 0;">
+                        <p><i class="fas fa-check-circle" style="color: #4bcffa;"></i> Real-time notifications for new uploads</p>
+                        <p><i class="fas fa-check-circle" style="color: #4bcffa;"></i> Get alerts when your scripts get likes</p>
+                        <p><i class="fas fa-check-circle" style="color: #4bcffa;"></i> New subscriber notifications</p>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                        <button id="enableNotificationsBtn" class="btn">
+                            <i class="fas fa-bell"></i> Enable Notifications
+                        </button>
+                        <button id="skipNotificationsBtn" class="btn btn-secondary">
+                            Not Now
                         </button>
                     </div>
                 </div>
@@ -2539,21 +3143,29 @@
                 onAuthStateChanged(this.auth, async (user) => {
                     if (user) {
                         this.currentUser = user;
-                        // Get username from email
                         const username = user.email.split('@')[0];
                         this.currentUser.username = username;
                         
-                        // Get user data from Firestore
                         try {
                             const userDoc = await getDoc(doc(this.db, "users", username));
                             if (userDoc.exists()) {
-                                this.currentUser.isAdmin = userDoc.data().isAdmin || false;
+                                const data = userDoc.data();
+                                this.currentUser.isAdmin = data.isAdmin || false;
+                                this.currentUser.displayName = data.displayName || username;
+                                this.currentUser.bio = data.bio || '';
+                                this.currentUser.profilePic = data.profilePic || '';
+                                this.currentUser.notificationsEnabled = data.notificationsEnabled || false;
                             } else {
                                 this.currentUser.isAdmin = false;
+                                this.currentUser.displayName = username;
+                                this.currentUser.bio = '';
+                                this.currentUser.profilePic = '';
+                                this.currentUser.notificationsEnabled = false;
                             }
                         } catch (error) {
                             console.error("Error getting user data:", error);
                             this.currentUser.isAdmin = false;
+                            this.currentUser.displayName = username;
                         }
                         
                         if (window.appInitialized) {
@@ -2571,7 +3183,6 @@
             // User management with Firebase
             async registerUser(username, password) {
                 try {
-                    // Check if username contains spaces
                     if (username.includes(' ')) {
                         return { success: false, error: 'Username cannot contain spaces' };
                     }
@@ -2584,26 +3195,34 @@
                         return { success: false, error: 'Password must be at least 6 characters' };
                     }
                     
-                    // Check if username already exists
                     const userDoc = await getDoc(doc(this.db, "users", username));
                     if (userDoc.exists()) {
                         return { success: false, error: 'Username already taken' };
                     }
                     
-                    // Create user with email (using username@vertexscripts.com as email)
                     const email = `${username}@vertexscripts.com`;
                     const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
                     
-                    // Save user data to Firestore
                     await setDoc(doc(this.db, "users", username), {
                         username: username,
+                        displayName: username,
                         email: email,
                         createdAt: serverTimestamp(),
                         isAdmin: username === 'plstealme2',
-                        subscribers: 0
+                        subscribers: 0,
+                        totalLikes: 0,
+                        totalViews: 0,
+                        bio: '',
+                        profilePic: '',
+                        notificationsEnabled: false,
+                        fypScore: 0
                     });
                     
-                    return { success: true, user: { username: username, isAdmin: username === 'plstealme2' } };
+                    return { success: true, user: { 
+                        username: username, 
+                        isAdmin: username === 'plstealme2',
+                        displayName: username 
+                    } };
                 } catch (error) {
                     return { success: false, error: error.message };
                 }
@@ -2614,18 +3233,26 @@
                     const email = `${username}@vertexscripts.com`;
                     await signInWithEmailAndPassword(this.auth, email, password);
                     
-                    // Get user data from Firestore
                     const userDoc = await getDoc(doc(this.db, "users", username));
                     if (userDoc.exists()) {
+                        const data = userDoc.data();
                         return { 
                             success: true, 
                             user: { 
                                 username: username,
-                                isAdmin: userDoc.data().isAdmin || false
+                                isAdmin: data.isAdmin || false,
+                                displayName: data.displayName || username,
+                                bio: data.bio || '',
+                                profilePic: data.profilePic || '',
+                                notificationsEnabled: data.notificationsEnabled || false
                             } 
                         };
                     }
-                    return { success: true, user: { username: username, isAdmin: false } };
+                    return { success: true, user: { 
+                        username: username, 
+                        isAdmin: false,
+                        displayName: username 
+                    } };
                 } catch (error) {
                     return { success: false, error: 'Invalid username or password' };
                 }
@@ -2635,8 +3262,37 @@
                 if (!this.currentUser) return null;
                 return {
                     username: this.currentUser.username,
-                    isAdmin: this.currentUser.isAdmin || false
+                    isAdmin: this.currentUser.isAdmin || false,
+                    displayName: this.currentUser.displayName,
+                    bio: this.currentUser.bio,
+                    profilePic: this.currentUser.profilePic,
+                    notificationsEnabled: this.currentUser.notificationsEnabled
                 };
+            }
+            
+            async updateUserProfile(username, updates) {
+                try {
+                    await updateDoc(doc(this.db, "users", username), {
+                        ...updates,
+                        updatedAt: serverTimestamp()
+                    });
+                    return { success: true };
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            }
+            
+            async getUserProfile(username) {
+                try {
+                    const userDoc = await getDoc(doc(this.db, "users", username));
+                    if (userDoc.exists()) {
+                        return userDoc.data();
+                    }
+                    return null;
+                } catch (error) {
+                    console.error('Error getting user profile:', error);
+                    return null;
+                }
             }
             
             async logoutUser() {
@@ -2645,10 +3301,8 @@
             
             async deleteUser(username) {
                 try {
-                    // Delete user data from Firestore
                     await deleteDoc(doc(this.db, "users", username));
                     
-                    // Delete user's scripts
                     const scriptsQuery = query(collection(this.db, "scripts"), where("uploader", "==", username));
                     const scriptsSnapshot = await getDocs(scriptsQuery);
                     
@@ -2658,13 +3312,9 @@
                     });
                     await Promise.all(deletePromises);
                     
-                    // Delete user's interactions
                     await deleteDoc(doc(this.db, "interactions", username));
-                    
-                    // Delete user's subscriptions
                     await deleteDoc(doc(this.db, "subscriptions", username));
                     
-                    // Get current user and delete account
                     const user = this.auth.currentUser;
                     if (user) {
                         await deleteUser(user);
@@ -2676,25 +3326,28 @@
                 }
             }
             
-            // Script management with Firestore
+            // Script management
             async saveScript(script) {
                 try {
-                    // Add timestamp and initialize counts
                     script.createdAt = serverTimestamp();
                     script.updatedAt = serverTimestamp();
                     script.likes = script.likes || 0;
                     script.dislikes = script.dislikes || 0;
                     script.views = script.views || 0;
+                    script.fypScore = await this.calculateFYPScore(script.uploader);
                     
-                    // Save script
                     const docRef = await addDoc(collection(this.db, "scripts"), script);
                     script.id = docRef.id;
                     
-                    // Update script with ID
                     await updateDoc(docRef, { id: docRef.id });
                     
-                    // Update hashtags
                     await this.updateHashtags(script);
+                    
+                    // Send notifications to subscribers
+                    await this.notifySubscribers(script.uploader, script.name, script.id);
+                    
+                    // Update user's FYP score
+                    await this.updateUserFYPScore(script.uploader);
                     
                     return { success: true, script: script };
                 } catch (error) {
@@ -2705,23 +3358,16 @@
             
             async getScripts() {
                 try {
-                    const q = query(collection(this.db, "scripts"), orderBy("createdAt", "desc"));
+                    const q = query(collection(this.db, "scripts"), orderBy("fypScore", "desc"));
                     const snapshot = await getDocs(q);
                     
                     const scripts = [];
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        // Convert Firestore timestamp to Date
                         if (data.createdAt && data.createdAt.toDate) {
                             data.createdAt = data.createdAt.toDate();
                         }
-                        if (data.uploadDateTime) {
-                            data.uploadDate = new Date(data.uploadDateTime).toLocaleDateString();
-                        } else if (data.createdAt) {
-                            data.uploadDate = new Date(data.createdAt).toLocaleDateString();
-                        } else {
-                            data.uploadDate = "Unknown date";
-                        }
+                        data.uploadDate = this.getTimeAgo(data.createdAt || data.uploadDateTime);
                         scripts.push({
                             id: doc.id,
                             ...data
@@ -2748,11 +3394,7 @@
                         if (data.createdAt && data.createdAt.toDate) {
                             data.createdAt = data.createdAt.toDate();
                         }
-                        if (data.uploadDateTime) {
-                            data.uploadDate = new Date(data.uploadDateTime).toLocaleDateString();
-                        } else if (data.createdAt) {
-                            data.uploadDate = new Date(data.createdAt).toLocaleDateString();
-                        }
+                        data.uploadDate = this.getTimeAgo(data.createdAt || data.uploadDateTime);
                         scripts.push({
                             id: doc.id,
                             ...data
@@ -2768,7 +3410,6 @@
             
             async deleteScript(scriptId) {
                 try {
-                    // Get script first to update hashtags
                     const scriptDoc = await getDoc(doc(this.db, "scripts", scriptId));
                     if (scriptDoc.exists()) {
                         const script = scriptDoc.data();
@@ -2786,6 +3427,7 @@
             async updateScript(updatedScript) {
                 try {
                     updatedScript.updatedAt = serverTimestamp();
+                    updatedScript.fypScore = await this.calculateFYPScore(updatedScript.uploader);
                     
                     const { id, ...scriptData } = updatedScript;
                     await updateDoc(doc(this.db, "scripts", id), scriptData);
@@ -2881,7 +3523,6 @@
                     
                     if (scriptIds.length === 0) return [];
                     
-                    // Get scripts by their IDs
                     const scripts = [];
                     for (const scriptId of scriptIds) {
                         const scriptDoc = await getDoc(doc(this.db, "scripts", scriptId));
@@ -2890,6 +3531,7 @@
                             if (scriptData.createdAt && scriptData.createdAt.toDate) {
                                 scriptData.createdAt = scriptData.createdAt.toDate();
                             }
+                            scriptData.uploadDate = this.getTimeAgo(scriptData.createdAt || scriptData.uploadDateTime);
                             scripts.push({ id: scriptDoc.id, ...scriptData });
                         }
                     }
@@ -2915,11 +3557,9 @@
                         
                         if (type === 'like') {
                             if (currentState.liked) {
-                                // Remove like
                                 await updateDoc(interactionRef, { liked: false });
                                 scriptUpdate.likes = increment(-1);
                             } else {
-                                // Add like, remove dislike if exists
                                 await updateDoc(interactionRef, { 
                                     liked: true, 
                                     disliked: false 
@@ -2931,11 +3571,9 @@
                             }
                         } else if (type === 'dislike') {
                             if (currentState.disliked) {
-                                // Remove dislike
                                 await updateDoc(interactionRef, { disliked: false });
                                 scriptUpdate.dislikes = increment(-1);
                             } else {
-                                // Add dislike, remove like if exists
                                 await updateDoc(interactionRef, { 
                                     disliked: true, 
                                     liked: false 
@@ -2947,7 +3585,6 @@
                             }
                         }
                     } else {
-                        // First interaction
                         if (type === 'like') {
                             await setDoc(interactionRef, { liked: true, disliked: false });
                             scriptUpdate.likes = increment(1);
@@ -2957,12 +3594,25 @@
                         }
                     }
                     
-                    // Update script stats
                     if (Object.keys(scriptUpdate).length > 0) {
                         await updateDoc(doc(this.db, "scripts", scriptId), scriptUpdate);
+                        
+                        // Update creator's total likes
+                        const scriptDoc = await getDoc(doc(this.db, "scripts", scriptId));
+                        if (scriptDoc.exists()) {
+                            const script = scriptDoc.data();
+                            if (type === 'like' && !currentState.liked) {
+                                await updateDoc(doc(this.db, "users", script.uploader), {
+                                    totalLikes: increment(1)
+                                });
+                            } else if (type === 'like' && currentState.liked) {
+                                await updateDoc(doc(this.db, "users", script.uploader), {
+                                    totalLikes: increment(-1)
+                                });
+                            }
+                        }
                     }
                     
-                    // Get updated interaction state
                     const updatedDoc = await getDoc(interactionRef);
                     const updatedData = updatedDoc.exists() ? updatedDoc.data() : { liked: false, disliked: false };
                     
@@ -3002,17 +3652,24 @@
                     const viewDoc = await getDoc(viewRef);
                     
                     if (!viewDoc.exists()) {
-                        // First view from this user
                         await setDoc(viewRef, {
                             username: username,
                             scriptId: scriptId,
                             viewedAt: serverTimestamp()
                         });
                         
-                        // Increment view count
                         await updateDoc(doc(this.db, "scripts", scriptId), {
                             views: increment(1)
                         });
+                        
+                        // Update creator's total views
+                        const scriptDoc = await getDoc(doc(this.db, "scripts", scriptId));
+                        if (scriptDoc.exists()) {
+                            const script = scriptDoc.data();
+                            await updateDoc(doc(this.db, "users", script.uploader), {
+                                totalViews: increment(1)
+                            });
+                        }
                         
                         return true;
                     }
@@ -3025,36 +3682,43 @@
             
             // Subscription management
             async subscribe(subscriber, creator) {
-                if (subscriber === creator) return false;
+                if (subscriber === creator) return { success: false, error: "Cannot subscribe to yourself" };
                 
                 try {
                     const subscriptionRef = doc(this.db, "subscriptions", `${subscriber}_${creator}`);
                     const subscriptionDoc = await getDoc(subscriptionRef);
                     
                     if (subscriptionDoc.exists()) {
-                        // Unsubscribe
                         await deleteDoc(subscriptionRef);
-                        // Update creator's subscriber count
                         await updateDoc(doc(this.db, "users", creator), {
                             subscribers: increment(-1)
                         });
-                        return false;
+                        
+                        // Update creator's FYP score
+                        await this.updateUserFYPScore(creator);
+                        
+                        return { success: true, subscribed: false };
                     } else {
-                        // Subscribe
                         await setDoc(subscriptionRef, {
                             subscriber: subscriber,
                             creator: creator,
                             subscribedAt: serverTimestamp()
                         });
-                        // Update creator's subscriber count
                         await updateDoc(doc(this.db, "users", creator), {
                             subscribers: increment(1)
                         });
-                        return true;
+                        
+                        // Update creator's FYP score
+                        await this.updateUserFYPScore(creator);
+                        
+                        // Send notification to creator
+                        await this.sendNotification(creator, `${subscriber} subscribed to you!`, 'subscription');
+                        
+                        return { success: true, subscribed: true };
                     }
                 } catch (error) {
                     console.error('Error toggling subscription:', error);
-                    return false;
+                    return { success: false, error: error.message };
                 }
             }
             
@@ -3103,26 +3767,26 @@
             // Channel stats
             async getUserChannelStats(username) {
                 try {
+                    const userDoc = await getDoc(doc(this.db, "users", username));
+                    if (!userDoc.exists()) {
+                        return {
+                            scriptsCount: 0,
+                            totalLikes: 0,
+                            totalDislikes: 0,
+                            totalViews: 0,
+                            subscribers: 0
+                        };
+                    }
+                    
+                    const userData = userDoc.data();
                     const scripts = await this.getScriptsByUser(username);
-                    let totalLikes = 0;
-                    let totalDislikes = 0;
-                    let totalViews = 0;
-                    
-                    scripts.forEach(script => {
-                        totalLikes += script.likes || 0;
-                        totalDislikes += script.dislikes || 0;
-                        totalViews += script.views || 0;
-                    });
-                    
-                    // Get subscriber count
-                    const subscribers = await this.getSubscribers(username);
                     
                     return {
                         scriptsCount: scripts.length,
-                        totalLikes,
-                        totalDislikes,
-                        totalViews,
-                        subscribers
+                        totalLikes: userData.totalLikes || 0,
+                        totalDislikes: 0,
+                        totalViews: userData.totalViews || 0,
+                        subscribers: userData.subscribers || 0
                     };
                 } catch (error) {
                     console.error('Error getting channel stats:', error);
@@ -3133,6 +3797,240 @@
                         totalViews: 0,
                         subscribers: 0
                     };
+                }
+            }
+            
+            // FYP Algorithm
+            async calculateFYPScore(username) {
+                try {
+                    const userDoc = await getDoc(doc(this.db, "users", username));
+                    if (!userDoc.exists()) return 0;
+                    
+                    const userData = userDoc.data();
+                    const scripts = await this.getScriptsByUser(username);
+                    
+                    let score = 0;
+                    
+                    // Subscriber factor (40% of score)
+                    const subscriberScore = (userData.subscribers || 0) * 10;
+                    score += subscriberScore * 0.4;
+                    
+                    // Engagement factor (30% of score)
+                    let engagementScore = 0;
+                    scripts.forEach(script => {
+                        if (script.views > 0) {
+                            engagementScore += (script.likes / script.views) * 100;
+                        }
+                    });
+                    score += (engagementScore / Math.max(scripts.length, 1)) * 0.3;
+                    
+                    // Recency factor (20% of score)
+                    let recencyScore = 0;
+                    scripts.forEach(script => {
+                        if (script.createdAt) {
+                            const daysAgo = (new Date() - new Date(script.createdAt)) / (1000 * 60 * 60 * 24);
+                            recencyScore += Math.max(30 - daysAgo, 0);
+                        }
+                    });
+                    score += (recencyScore / Math.max(scripts.length, 1)) * 0.2;
+                    
+                    // Trending factor (10% of score)
+                    const trendingScore = scripts.reduce((sum, script) => sum + (script.views || 0), 0) / 100;
+                    score += trendingScore * 0.1;
+                    
+                    return Math.round(score);
+                } catch (error) {
+                    console.error('Error calculating FYP score:', error);
+                    return 0;
+                }
+            }
+            
+            async updateUserFYPScore(username) {
+                try {
+                    const fypScore = await this.calculateFYPScore(username);
+                    await updateDoc(doc(this.db, "users", username), {
+                        fypScore: fypScore
+                    });
+                    return fypScore;
+                } catch (error) {
+                    console.error('Error updating FYP score:', error);
+                    return 0;
+                }
+            }
+            
+            // Notification system
+            async sendNotification(username, message, type) {
+                try {
+                    const notificationRef = doc(collection(this.db, "notifications"));
+                    await setDoc(notificationRef, {
+                        username: username,
+                        message: message,
+                        type: type,
+                        read: false,
+                        createdAt: serverTimestamp()
+                    });
+                    
+                    // Update notification count
+                    const notificationCount = await this.getUnreadNotificationCount(username);
+                    return notificationCount;
+                } catch (error) {
+                    console.error('Error sending notification:', error);
+                    return 0;
+                }
+            }
+            
+            async getUnreadNotificationCount(username) {
+                try {
+                    const q = query(collection(this.db, "notifications"), 
+                                  where("username", "==", username),
+                                  where("read", "==", false));
+                    const snapshot = await getDocs(q);
+                    return snapshot.size;
+                } catch (error) {
+                    console.error('Error getting notification count:', error);
+                    return 0;
+                }
+            }
+            
+            async getNotifications(username) {
+                try {
+                    const q = query(collection(this.db, "notifications"), 
+                                  where("username", "==", username),
+                                  orderBy("createdAt", "desc"),
+                                  limit(50));
+                    const snapshot = await getDocs(q);
+                    
+                    const notifications = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.createdAt && data.createdAt.toDate) {
+                            data.createdAt = data.createdAt.toDate();
+                        }
+                        data.timeAgo = this.getTimeAgo(data.createdAt);
+                        notifications.push({
+                            id: doc.id,
+                            ...data
+                        });
+                    });
+                    
+                    return notifications;
+                } catch (error) {
+                    console.error('Error getting notifications:', error);
+                    return [];
+                }
+            }
+            
+            async markNotificationAsRead(notificationId) {
+                try {
+                    await updateDoc(doc(this.db, "notifications", notificationId), {
+                        read: true
+                    });
+                    return true;
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                    return false;
+                }
+            }
+            
+            async markAllNotificationsAsRead(username) {
+                try {
+                    const q = query(collection(this.db, "notifications"), 
+                                  where("username", "==", username),
+                                  where("read", "==", false));
+                    const snapshot = await getDocs(q);
+                    
+                    const updatePromises = [];
+                    snapshot.forEach(doc => {
+                        updatePromises.push(updateDoc(doc.ref, { read: true }));
+                    });
+                    
+                    await Promise.all(updatePromises);
+                    return true;
+                } catch (error) {
+                    console.error('Error marking all notifications as read:', error);
+                    return false;
+                }
+            }
+            
+            async notifySubscribers(creator, scriptName, scriptId) {
+                try {
+                    const q = query(collection(this.db, "subscriptions"), 
+                                  where("creator", "==", creator));
+                    const snapshot = await getDocs(q);
+                    
+                    const notificationPromises = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const message = `${creator} uploaded a new script: ${scriptName}`;
+                        notificationPromises.push(
+                            this.sendNotification(data.subscriber, message, 'upload')
+                        );
+                    });
+                    
+                    await Promise.all(notificationPromises);
+                    return true;
+                } catch (error) {
+                    console.error('Error notifying subscribers:', error);
+                    return false;
+                }
+            }
+            
+            // Search functionality
+            async searchCreators(query) {
+                try {
+                    const q = query(collection(this.db, "users"), 
+                                  where("username", ">=", query),
+                                  where("username", "<=", query + '\uf8ff'),
+                                  limit(10));
+                    const snapshot = await getDocs(q);
+                    
+                    const creators = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        creators.push({
+                            username: data.username,
+                            displayName: data.displayName || data.username,
+                            subscribers: data.subscribers || 0,
+                            totalLikes: data.totalLikes || 0,
+                            profilePic: data.profilePic || ''
+                        });
+                    });
+                    
+                    return creators;
+                } catch (error) {
+                    console.error('Error searching creators:', error);
+                    return [];
+                }
+            }
+            
+            // Time formatting
+            getTimeAgo(date) {
+                if (!date) return 'Unknown';
+                
+                const now = new Date();
+                const past = new Date(date);
+                const diffInSeconds = Math.floor((now - past) / 1000);
+                
+                if (diffInSeconds < 60) {
+                    return `${diffInSeconds}s ago`;
+                } else if (diffInSeconds < 3600) {
+                    const minutes = Math.floor(diffInSeconds / 60);
+                    return `${minutes}m ago`;
+                } else if (diffInSeconds < 86400) {
+                    const hours = Math.floor(diffInSeconds / 3600);
+                    return `${hours}h ago`;
+                } else if (diffInSeconds < 604800) {
+                    const days = Math.floor(diffInSeconds / 86400);
+                    return `${days}d ago`;
+                } else if (diffInSeconds < 2592000) {
+                    const weeks = Math.floor(diffInSeconds / 604800);
+                    return `${weeks}w ago`;
+                } else if (diffInSeconds < 31536000) {
+                    const months = Math.floor(diffInSeconds / 2592000);
+                    return `${months}mo ago`;
+                } else {
+                    const years = Math.floor(diffInSeconds / 31536000);
+                    return `${years}y ago`;
                 }
             }
         }
@@ -3154,6 +4052,8 @@
         let currentWatchOption = 'watch-here';
         let activeHashtag = null;
         let dropdownTimeout = null;
+        let notifications = [];
+        let currentPlatform = null;
 
         // Initialize application
         document.addEventListener('DOMContentLoaded', function() {
@@ -3174,6 +4074,7 @@
                 
                 await loadScripts();
                 updateStats();
+                loadFYPFactors();
             }, 1000);
         });
 
@@ -3196,6 +4097,24 @@
             // Description word counter
             document.getElementById('scriptDescription').addEventListener('input', updateWordCount);
             
+            // Pre-options dropdown
+            document.getElementById('preOptionsBtn').addEventListener('click', togglePreOptions);
+            document.querySelectorAll('.platform-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const platform = this.dataset.platform;
+                    selectPlatform(platform);
+                });
+            });
+            
+            // Platform actions
+            document.querySelectorAll('.platform-action').forEach(action => {
+                action.addEventListener('click', function() {
+                    const platform = this.dataset.platform;
+                    const actionType = this.dataset.action;
+                    addPlatformStep(platform, actionType);
+                });
+            });
+            
             // Main app buttons
             document.getElementById('uploadForm').addEventListener('submit', uploadScript);
             document.getElementById('addStepBtn').addEventListener('click', addStep);
@@ -3206,6 +4125,7 @@
             document.getElementById('showUploadBtn').addEventListener('click', showUploadForm);
             document.getElementById('backToDashboardBtn').addEventListener('click', showDashboard);
             document.getElementById('searchInput').addEventListener('input', filterScripts);
+            document.getElementById('pcSearchInput').addEventListener('input', handleAdvancedSearch);
             document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteScript);
             document.getElementById('cancelDeleteBtn').addEventListener('click', cancelDelete);
             document.getElementById('confirmAccountDeleteBtn').addEventListener('click', confirmAccountDelete);
@@ -3227,8 +4147,10 @@
             document.getElementById('pcUploadBtn').addEventListener('click', showUploadForm);
             document.getElementById('pcChannelBtn').addEventListener('click', showChannel);
             document.getElementById('pcSubscriptionsBtn').addEventListener('click', showSubscriptions);
+            document.getElementById('pcEditProfileBtn').addEventListener('click', showEditProfile);
             document.getElementById('pcViewChannelBtn').addEventListener('click', showChannel);
             document.getElementById('pcSubscriptionsBtn2').addEventListener('click', showSubscriptions);
+            document.getElementById('pcHashtagExplorerBtn2').addEventListener('click', showHashtagExplorer);
             document.getElementById('pcDeleteAccountBtn').addEventListener('click', showDeleteAccountModal);
             document.getElementById('pcLogoutBtn').addEventListener('click', logout);
             document.getElementById('pcHashtagExplorerBtn').addEventListener('click', showHashtagExplorer);
@@ -3239,8 +4161,15 @@
             document.getElementById('logoutBtn').addEventListener('click', logout);
             document.getElementById('mobileLogoutBtn').addEventListener('click', logout);
             
+            // Mobile edit profile
+            document.getElementById('mobileEditProfileBtn').addEventListener('click', showEditProfile);
+            
+            // Profile edit
+            document.getElementById('profilePicInput').addEventListener('change', handleProfilePicPreview);
+            document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
+            document.getElementById('cancelEditProfileBtn').addEventListener('click', closeEditProfile);
+            
             // PC search
-            document.getElementById('pcSearchInput').addEventListener('input', handleAdvancedSearch);
             document.getElementById('pcSearchInput').addEventListener('focus', showSearchSuggestions);
             document.getElementById('pcSearchInput').addEventListener('blur', () => {
                 setTimeout(() => {
@@ -3257,27 +4186,29 @@
             document.getElementById('viewDislikeBtn').addEventListener('click', handleDislike);
             document.getElementById('viewSubscribeBtn').addEventListener('click', handleSubscribe);
             
+            // Notifications
+            document.getElementById('notificationBell').addEventListener('click', showNotifications);
+            document.getElementById('mobileNotificationBell').addEventListener('click', showNotifications);
+            
+            // Notification permission
+            document.getElementById('enableNotificationsBtn').addEventListener('click', enableNotifications);
+            document.getElementById('skipNotificationsBtn').addEventListener('click', skipNotifications);
+            
             // Window events
             window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
             window.addEventListener('resize', debounce(handleResize, 250));
             window.addEventListener('click', closeAllDropdowns);
             
-            // Dropdown toggle
-            document.querySelectorAll('.dropdown-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const dropdown = this.closest('.dropdown');
-                    const content = dropdown.querySelector('.dropdown-content');
-                    
-                    // Close all other dropdowns
-                    document.querySelectorAll('.dropdown-content').forEach(d => {
-                        if (d !== content) {
-                            d.parentElement.classList.remove('active');
-                        }
-                    });
-                    
-                    // Toggle current dropdown
-                    dropdown.classList.toggle('active');
+            // Profile dropdown toggle - FIXED
+            document.getElementById('profileDropdown').addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                
+                // Close other dropdowns
+                document.querySelectorAll('.dropdown').forEach(dropdown => {
+                    if (dropdown !== this.closest('.dropdown')) {
+                        dropdown.classList.remove('active');
+                    }
                 });
             });
             
@@ -3303,17 +4234,82 @@
         function switchUploadType(type) {
             uploadType = type;
             
-            // Update button states
             document.getElementById('thumbnailOptionBtn').classList.toggle('active', type === 'thumbnail');
             document.getElementById('youtubeOptionBtn').classList.toggle('active', type === 'youtube');
             
-            // Show/hide sections
             document.getElementById('thumbnailUploadSection').style.display = type === 'thumbnail' ? 'block' : 'none';
             document.getElementById('youtubeUploadSection').style.display = type === 'youtube' ? 'block' : 'none';
             
-            // Update required attribute
             document.getElementById('thumbnailInput').required = type === 'thumbnail';
             document.getElementById('youtubeLink').required = type === 'youtube';
+        }
+
+        function togglePreOptions() {
+            const dropdown = document.getElementById('preOptionsDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function selectPlatform(platform) {
+            currentPlatform = platform;
+            
+            // Hide all platform options
+            document.querySelectorAll('.platform-expand').forEach(expand => {
+                expand.classList.remove('active');
+            });
+            
+            // Show selected platform options
+            document.getElementById(`${platform}Options`).classList.add('active');
+            
+            // Close main dropdown
+            document.getElementById('preOptionsDropdown').classList.remove('active');
+        }
+
+        function addPlatformStep(platform, action) {
+            let stepName = '';
+            let stepUrl = '';
+            
+            const platformConfigs = {
+                youtube: {
+                    subscribe: { name: 'Subscribe to YouTube Channel', url: 'https://youtube.com/@' },
+                    like: { name: 'Like YouTube Video', url: 'https://youtube.com/watch?v=' },
+                    comment: { name: 'Comment on YouTube Video', url: 'https://youtube.com/watch?v=' },
+                    watch: { name: 'Watch YouTube Video', url: 'https://youtube.com/watch?v=' }
+                },
+                tiktok: {
+                    follow: { name: 'Follow TikTok User', url: 'https://tiktok.com/@' },
+                    like: { name: 'Like TikTok Video', url: 'https://tiktok.com/@' },
+                    comment: { name: 'Comment on TikTok Video', url: 'https://tiktok.com/@' },
+                    watch: { name: 'Watch TikTok Video', url: 'https://tiktok.com/@' }
+                },
+                instagram: {
+                    follow: { name: 'Follow Instagram Account', url: 'https://instagram.com/' },
+                    like: { name: 'Like Instagram Post', url: 'https://instagram.com/p/' },
+                    comment: { name: 'Comment on Instagram Post', url: 'https://instagram.com/p/' }
+                },
+                twitter: {
+                    follow: { name: 'Follow Twitter Account', url: 'https://twitter.com/' },
+                    like: { name: 'Like Tweet', url: 'https://twitter.com/' },
+                    retweet: { name: 'Retweet', url: 'https://twitter.com/' }
+                },
+                discord: {
+                    join: { name: 'Join Discord Server', url: 'https://discord.gg/' },
+                    react: { name: 'React to Discord Message', url: 'https://discord.com/channels/' }
+                }
+            };
+            
+            const config = platformConfigs[platform]?.[action];
+            if (config) {
+                stepName = config.name;
+                stepUrl = config.url;
+                
+                addCustomStep(document.querySelectorAll('.step-container').length, stepName, stepUrl);
+                
+                // Reset platform selection
+                currentPlatform = null;
+                document.querySelectorAll('.platform-expand').forEach(expand => {
+                    expand.classList.remove('active');
+                });
+            }
         }
 
         function updateWordCount() {
@@ -3331,14 +4327,13 @@
             wordCount.textContent = count;
             
             if (count >= 100) {
-                // Trim text to 100 words
                 const limitedWords = words.slice(0, 100).join(' ');
                 textarea.value = limitedWords;
                 showToast('Description limited to 100 words');
             }
         }
 
-        function handleAdvancedSearch(e) {
+        async function handleAdvancedSearch(e) {
             const query = e.target.value.toLowerCase();
             const suggestions = document.getElementById('searchSuggestions');
             
@@ -3347,14 +4342,92 @@
                 return;
             }
             
-            // Get suggestions
+            // Check if searching for creator
+            if (query.startsWith('@')) {
+                const creatorQuery = query.substring(1);
+                const creators = await storage.searchCreators(creatorQuery);
+                
+                if (creators.length === 0) {
+                    suggestions.classList.remove('active');
+                    return;
+                }
+                
+                let html = '';
+                creators.forEach(creator => {
+                    html += `
+                        <div class="creator-search-result" data-username="${creator.username}">
+                            <div class="creator-avatar">
+                                ${creator.profilePic ? 
+                                    `<img src="${creator.profilePic}" alt="${creator.displayName}">` : 
+                                    `<i class="fas fa-user"></i>`
+                                }
+                            </div>
+                            <div class="creator-info">
+                                <div class="creator-name">${creator.displayName}</div>
+                                <div class="creator-stats">
+                                    <span>${creator.subscribers} subscribers</span>
+                                    <span>${creator.totalLikes} likes</span>
+                                </div>
+                            </div>
+                            <button class="subscribe-btn-small" data-username="${creator.username}">
+                                Subscribe
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                suggestions.innerHTML = html;
+                suggestions.classList.add('active');
+                
+                // Add click handlers
+                suggestions.querySelectorAll('.creator-search-result').forEach(result => {
+                    result.addEventListener('click', function(e) {
+                        if (!e.target.classList.contains('subscribe-btn-small')) {
+                            const username = this.dataset.username;
+                            showCreatorProfile(username);
+                            document.getElementById('pcSearchInput').value = '';
+                            suggestions.classList.remove('active');
+                        }
+                    });
+                });
+                
+                // Add subscribe button handlers
+                suggestions.querySelectorAll('.subscribe-btn-small').forEach(btn => {
+                    btn.addEventListener('click', async function(e) {
+                        e.stopPropagation();
+                        const username = this.dataset.username;
+                        
+                        if (username === currentUser.username) {
+                            showToast("You can't subscribe to yourself");
+                            return;
+                        }
+                        
+                        const result = await storage.subscribe(currentUser.username, username);
+                        if (result.success) {
+                            if (result.subscribed) {
+                                this.textContent = 'Subscribed';
+                                this.classList.add('subscribed');
+                                showToast(`Subscribed to ${username}`);
+                            } else {
+                                this.textContent = 'Subscribe';
+                                this.classList.remove('subscribed');
+                                showToast(`Unsubscribed from ${username}`);
+                            }
+                        }
+                    });
+                });
+                
+                return;
+            }
+            
+            // Regular search
             const scriptSuggestions = scripts.filter(script => 
                 script.name.toLowerCase().includes(query) ||
                 script.uploader.toLowerCase().includes(query) ||
                 (script.description && script.description.toLowerCase().includes(query))
             );
             
-            const hashtags = storage.getHashtags();
+            const hashtags = await storage.getHashtags();
             const hashtagSuggestions = Object.keys(hashtags).filter(tag => 
                 tag.toLowerCase().includes(query)
             );
@@ -3366,8 +4439,7 @@
             
             let html = '';
             
-            // Add hashtag suggestions first
-            hashtagSuggestions.slice(0, 5).forEach(tag => {
+            hashtagSuggestions.slice(0, 3).forEach(tag => {
                 html += `
                     <div class="suggestion-item" data-type="hashtag" data-value="${tag}">
                         <i class="fas fa-hashtag" style="color: #4bcffa;"></i>
@@ -3377,7 +4449,6 @@
                 `;
             });
             
-            // Add script suggestions
             scriptSuggestions.slice(0, 5).forEach(script => {
                 html += `
                     <div class="suggestion-item" data-type="script" data-value="${script.name}">
@@ -3391,18 +4462,15 @@
             suggestions.innerHTML = html;
             suggestions.classList.add('active');
             
-            // Add click handlers to suggestions
             suggestions.querySelectorAll('.suggestion-item').forEach(item => {
                 item.addEventListener('click', function() {
                     const type = this.dataset.type;
                     const value = this.dataset.value;
                     
                     if (type === 'hashtag') {
-                        // Show scripts with this hashtag
                         filterByHashtag(value);
                         document.getElementById('pcSearchInput').value = value;
                     } else {
-                        // Search for this script
                         document.getElementById('pcSearchInput').value = value;
                         filterScripts({ target: { value: value } });
                     }
@@ -3423,22 +4491,31 @@
             document.getElementById('searchSuggestions').classList.remove('active');
         }
 
-        function filterByHashtag(hashtag) {
-            const filteredScripts = scripts.filter(script => 
-                script.hashtags && script.hashtags.includes(hashtag.toLowerCase())
-            );
+        async function showCreatorProfile(username) {
+            const userProfile = await storage.getUserProfile(username);
+            if (!userProfile) {
+                showToast('User not found');
+                return;
+            }
             
-            renderFilteredScripts(filteredScripts, `Scripts with #${hashtag}`);
+            // Show creator's scripts in dashboard with header
+            const userScripts = await storage.getScriptsByUser(username);
+            
+            if (userScripts.length === 0) {
+                showToast(`${username} has no scripts yet`);
+                return;
+            }
+            
+            renderFilteredScripts(userScripts, `${userProfile.displayName || username}'s Scripts`);
+            showDashboard();
         }
 
         function switchWatchOption(option) {
             currentWatchOption = option;
             
-            // Update button states
             document.getElementById('watchHereBtn').classList.toggle('active', option === 'watch-here');
             document.getElementById('watchYouTubeBtn').classList.toggle('active', option === 'watch-youtube');
             
-            // Update video content based on option
             updateVideoContent();
         }
 
@@ -3449,7 +4526,6 @@
             const videoId = extractYoutubeVideoId(currentViewScript.youtubeVideo);
             
             if (currentWatchOption === 'watch-here') {
-                // Embed YouTube video
                 videoContent.innerHTML = `
                     <div class="video-player-container">
                         <iframe 
@@ -3461,7 +4537,6 @@
                     </div>
                 `;
             } else {
-                // Show thumbnail with play button that opens YouTube
                 videoContent.innerHTML = `
                     <div class="script-view-thumbnail youtube-thumbnail" onclick="window.open('${currentViewScript.youtubeVideo}', '_blank')">
                         <img src="https://img.youtube.com/vi/${videoId}/maxresdefault.jpg" alt="YouTube Video">
@@ -3482,7 +4557,6 @@
                 return;
             }
             
-            // Extract video ID from YouTube URL
             const videoId = extractYoutubeVideoId(youtubeLink);
             
             if (videoId) {
@@ -3519,6 +4593,13 @@
                 currentUser = result.user;
                 showApp();
                 showToast('Logged in successfully!');
+                
+                // Check for notification permission
+                if (!currentUser.notificationsEnabled) {
+                    setTimeout(() => {
+                        showNotificationPermission();
+                    }, 2000);
+                }
             } else {
                 document.getElementById('loginError').textContent = result.error;
             }
@@ -3541,9 +4622,41 @@
                 currentUser = result.user;
                 showApp();
                 showToast('Account created successfully!');
+                
+                // Show notification permission
+                setTimeout(() => {
+                    showNotificationPermission();
+                }, 2000);
             } else {
                 document.getElementById('registerError').textContent = result.error;
             }
+        }
+
+        function showNotificationPermission() {
+            document.getElementById('notificationPermissionModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        async function enableNotifications() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    await storage.updateUserProfile(currentUser.username, {
+                        notificationsEnabled: true
+                    });
+                    currentUser.notificationsEnabled = true;
+                    showToast('Notifications enabled!');
+                }
+            }
+            
+            document.getElementById('notificationPermissionModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function skipNotifications() {
+            document.getElementById('notificationPermissionModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
         async function logout() {
@@ -3564,10 +4677,23 @@
             
             // Update user display
             if (currentUser) {
-                const displayName = currentUser.username;
+                const displayName = currentUser.displayName || currentUser.username;
                 document.getElementById('usernameDisplay').textContent = displayName;
                 document.getElementById('pcUsernameDisplay').textContent = displayName;
                 document.getElementById('currentUserDisplay').textContent = `Welcome, ${displayName}`;
+                document.getElementById('dropdownUsername').textContent = displayName;
+                document.getElementById('mobileUsername').textContent = displayName;
+                
+                // Update profile pictures
+                updateProfilePictures();
+                
+                // Load user stats
+                const stats = await storage.getUserChannelStats(currentUser.username);
+                document.getElementById('dropdownUserStats').textContent = `${stats.subscribers} subscribers`;
+                document.getElementById('mobileUserStats').textContent = `${stats.subscribers} subscribers`;
+                
+                // Load notifications
+                await loadNotifications();
             }
             
             await showDashboard();
@@ -3576,8 +4702,26 @@
             updatePCNavActive('dashboard');
         }
 
+        function updateProfilePictures() {
+            const profilePics = [
+                document.getElementById('profilePicSmall'),
+                document.getElementById('dropdownProfilePic'),
+                document.getElementById('mobileProfilePic'),
+                document.getElementById('profilePicPreview')
+            ];
+            
+            profilePics.forEach(pic => {
+                if (pic) {
+                    if (currentUser.profilePic) {
+                        pic.innerHTML = `<img src="${currentUser.profilePic}" alt="${currentUser.displayName}">`;
+                    } else {
+                        pic.innerHTML = `<i class="fas fa-user"></i>`;
+                    }
+                }
+            });
+        }
+
         function updatePCNavActive(active) {
-            // Update PC navigation buttons
             document.querySelectorAll('.pc-nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -3593,6 +4737,138 @@
             } else if (active === 'hashtag') {
                 document.getElementById('pcHashtagExplorerBtn').classList.add('active');
             }
+        }
+
+        function showEditProfile() {
+            document.getElementById('editDisplayName').value = currentUser.displayName || '';
+            document.getElementById('editBio').value = currentUser.bio || '';
+            
+            const preview = document.getElementById('profilePicPreview');
+            if (currentUser.profilePic) {
+                preview.innerHTML = `<img src="${currentUser.profilePic}" alt="${currentUser.displayName}">`;
+            } else {
+                preview.innerHTML = `<i class="fas fa-user"></i>`;
+            }
+            
+            document.getElementById('editProfileModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            toggleMobileMenu();
+            closeAllDropdowns();
+        }
+
+        function closeEditProfile() {
+            document.getElementById('editProfileModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        async function saveProfile() {
+            const displayName = document.getElementById('editDisplayName').value;
+            const bio = document.getElementById('editBio').value;
+            
+            const updates = {
+                displayName: displayName,
+                bio: bio
+            };
+            
+            if (currentUser.profilePic) {
+                updates.profilePic = currentUser.profilePic;
+            }
+            
+            const result = await storage.updateUserProfile(currentUser.username, updates);
+            
+            if (result.success) {
+                currentUser.displayName = displayName;
+                currentUser.bio = bio;
+                
+                updateProfilePictures();
+                document.getElementById('pcUsernameDisplay').textContent = displayName;
+                document.getElementById('dropdownUsername').textContent = displayName;
+                document.getElementById('mobileUsername').textContent = displayName;
+                
+                closeEditProfile();
+                showToast('Profile updated successfully!');
+            } else {
+                showToast(result.error);
+            }
+        }
+
+        function handleProfilePicPreview(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    currentUser.profilePic = event.target.result;
+                    const preview = document.getElementById('profilePicPreview');
+                    preview.innerHTML = `<img src="${currentUser.profilePic}" alt="${currentUser.displayName}">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function loadNotifications() {
+            if (!currentUser) return;
+            
+            notifications = await storage.getNotifications(currentUser.username);
+            const unreadCount = await storage.getUnreadNotificationCount(currentUser.username);
+            
+            // Update notification count
+            const notificationCounts = [
+                document.getElementById('notificationCount'),
+                document.getElementById('mobileNotificationCount')
+            ];
+            
+            notificationCounts.forEach(count => {
+                if (count) {
+                    if (unreadCount > 0) {
+                        count.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                        count.style.display = 'flex';
+                    } else {
+                        count.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        async function showNotifications() {
+            if (!currentUser) return;
+            
+            await loadNotifications();
+            
+            if (notifications.length === 0) {
+                showToast('No notifications');
+                return;
+            }
+            
+            // Create notification dropdown
+            let html = '<div style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: bold;">Notifications</div>';
+            
+            notifications.slice(0, 10).forEach(notification => {
+                html += `
+                    <div class="suggestion-item" data-id="${notification.id}" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size: 12px; opacity: 0.7; margin-bottom: 5px;">${notification.timeAgo}</div>
+                        <div>${notification.message}</div>
+                        ${!notification.read ? '<div style="width: 8px; height: 8px; background: #4bcffa; border-radius: 50%; margin-left: auto;"></div>' : ''}
+                    </div>
+                `;
+            });
+            
+            if (notifications.length > 10) {
+                html += '<div class="suggestion-item" style="text-align: center; font-size: 12px; opacity: 0.7;">View all notifications</div>';
+            }
+            
+            const suggestions = document.getElementById('searchSuggestions');
+            suggestions.innerHTML = html;
+            suggestions.classList.add('active');
+            
+            // Mark as read on click
+            suggestions.querySelectorAll('.suggestion-item[data-id]').forEach(item => {
+                item.addEventListener('click', async function() {
+                    const notificationId = this.dataset.id;
+                    await storage.markNotificationAsRead(notificationId);
+                    await loadNotifications();
+                    suggestions.classList.remove('active');
+                });
+            });
         }
 
         function showDeleteAccountModal() {
@@ -3615,8 +4891,8 @@
             if (result.success) {
                 currentUser = null;
                 document.getElementById('deleteAccountModal').style.display = 'none';
-                document.body.style.overflow = 'auto';
                 document.getElementById('confirmUsername').value = '';
+                document.body.style.overflow = 'auto';
                 
                 showAuth();
                 showToast('Account deleted successfully');
@@ -3643,7 +4919,7 @@
 
         function closeAllDropdowns(e) {
             // Close PC dropdowns
-            document.querySelectorAll('.dropdown').forEach(dropdown => {
+            document.querySelectorAll('.dropdown, .profile-dropdown').forEach(dropdown => {
                 dropdown.classList.remove('active');
             });
             
@@ -3659,6 +4935,12 @@
             if (searchSuggestions) {
                 searchSuggestions.classList.remove('active');
             }
+            
+            // Close pre-options dropdown
+            document.getElementById('preOptionsDropdown').classList.remove('active');
+            document.querySelectorAll('.platform-expand').forEach(expand => {
+                expand.classList.remove('active');
+            });
         }
 
         async function showHashtagExplorer() {
@@ -3690,7 +4972,6 @@
                 return;
             }
             
-            // Sort hashtags by count (descending)
             const sortedHashtags = Object.entries(hashtags).sort((a, b) => b[1].count - a[1].count);
             
             container.innerHTML = '';
@@ -3713,16 +4994,53 @@
                 container.appendChild(card);
             });
             
-            // Update total hashtags count
             document.getElementById('totalHashtags').textContent = Object.keys(hashtags).length;
+        }
+
+        async function loadFYPFactors() {
+            if (!currentUser) return;
+            
+            const userProfile = await storage.getUserProfile(currentUser.username);
+            if (!userProfile) return;
+            
+            const scripts = await storage.getScriptsByUser(currentUser.username);
+            
+            // Calculate factors
+            const subscriberFactor = Math.min((userProfile.subscribers || 0) / 1000 * 100, 100);
+            let engagementFactor = 0;
+            if (scripts.length > 0) {
+                scripts.forEach(script => {
+                    if (script.views > 0) {
+                        engagementFactor += (script.likes / script.views) * 100;
+                    }
+                });
+                engagementFactor = Math.min(engagementFactor / scripts.length, 100);
+            }
+            
+            let recencyFactor = 0;
+            scripts.forEach(script => {
+                if (script.createdAt) {
+                    const daysAgo = (new Date() - new Date(script.createdAt)) / (1000 * 60 * 60 * 24);
+                    recencyFactor += Math.max(30 - daysAgo, 0);
+                }
+            });
+            recencyFactor = Math.min(recencyFactor / Math.max(scripts.length, 1) / 30 * 100, 100);
+            
+            const trendingFactor = Math.min(scripts.reduce((sum, script) => sum + (script.views || 0), 0) / 1000 * 100, 100);
+            
+            // Update display
+            document.getElementById('fypSubscriberFactor').textContent = `${Math.round(subscriberFactor)}%`;
+            document.getElementById('fypEngagementFactor').textContent = `${Math.round(engagementFactor)}%`;
+            document.getElementById('fypRecencyFactor').textContent = `${Math.round(recencyFactor)}%`;
+            document.getElementById('fypTrendingFactor').textContent = `${Math.round(trendingFactor)}%`;
         }
 
         async function showChannel() {
             document.getElementById('dashboardContainer').style.display = 'none';
             document.getElementById('uploadContainer').style.display = 'none';
             document.getElementById('subscriptionsContainer').style.display = 'none';
-            document.getElementById('channelContainer').style.display = 'block';
             document.getElementById('hashtagExplorer').style.display = 'none';
+            document.getElementById('channelContainer').style.display = 'block';
             
             await loadChannelData();
             updatePCNavActive('channel');
@@ -3736,14 +5054,12 @@
             const stats = await storage.getUserChannelStats(currentUser.username);
             const userScripts = await storage.getScriptsByUser(currentUser.username);
             
-            // Update channel info
-            document.getElementById('channelUsername').textContent = currentUser.username;
+            document.getElementById('channelUsername').textContent = currentUser.displayName || currentUser.username;
             document.getElementById('channelSubscribers').textContent = stats.subscribers;
             document.getElementById('channelTotalLikes').textContent = stats.totalLikes;
             document.getElementById('channelTotalViews').textContent = stats.totalViews;
             document.getElementById('channelScriptsCount').textContent = stats.scriptsCount;
             
-            // Load user's scripts
             const container = document.getElementById('channelScriptsList');
             
             if (userScripts.length === 0) {
@@ -3762,12 +5078,12 @@
                 return;
             }
             
-            // Sort by date (newest first)
             userScripts.sort((a, b) => new Date(b.createdAt || b.uploadDateTime) - new Date(a.createdAt || a.uploadDateTime));
             
             container.innerHTML = '';
+            const isPC = window.innerWidth >= 769;
             userScripts.forEach(script => {
-                const scriptCard = createScriptCard(script);
+                const scriptCard = isPC ? createPCScriptCard(script) : createScriptCard(script);
                 container.appendChild(scriptCard);
             });
         }
@@ -3789,12 +5105,10 @@
             const subscriptions = await storage.getSubscriptions(currentUser.username);
             const allScripts = await storage.getScripts();
             
-            // Get scripts from subscribed creators
             const subscriptionScripts = allScripts.filter(script => 
                 subscriptions.includes(script.uploader)
             );
             
-            // Sort by date (newest first)
             subscriptionScripts.sort((a, b) => new Date(b.createdAt || b.uploadDateTime) - new Date(a.createdAt || a.uploadDateTime));
             
             const container = document.getElementById('subscriptionsList');
@@ -3811,8 +5125,9 @@
             }
             
             container.innerHTML = '';
+            const isPC = window.innerWidth >= 769;
             subscriptionScripts.forEach(script => {
-                const scriptCard = createScriptCard(script);
+                const scriptCard = isPC ? createPCScriptCard(script) : createScriptCard(script);
                 container.appendChild(scriptCard);
             });
         }
@@ -3827,21 +5142,23 @@
                 return;
             }
             
-            const subscribed = await storage.subscribe(currentUser.username, creator);
+            const result = await storage.subscribe(currentUser.username, creator);
             
-            if (subscribed) {
-                document.getElementById('subscribeText').textContent = 'Subscribed';
-                document.getElementById('viewSubscribeBtn').classList.add('subscribed');
-                showToast(`Subscribed to ${creator}`);
-            } else {
-                document.getElementById('subscribeText').textContent = 'Subscribe';
-                document.getElementById('viewSubscribeBtn').classList.remove('subscribed');
-                showToast(`Unsubscribed from ${creator}`);
-            }
-            
-            // Update channel stats if viewing own channel
-            if (document.getElementById('channelContainer').style.display === 'block') {
+            if (result.success) {
+                if (result.subscribed) {
+                    document.getElementById('subscribeText').textContent = 'Subscribed';
+                    document.getElementById('viewSubscribeBtn').classList.add('subscribed');
+                    showToast(`Subscribed to ${creator}`);
+                } else {
+                    document.getElementById('subscribeText').textContent = 'Subscribe';
+                    document.getElementById('viewSubscribeBtn').classList.remove('subscribed');
+                    showToast(`Unsubscribed from ${creator}`);
+                }
+                
                 await loadChannelData();
+                await loadFYPFactors();
+            } else {
+                showToast(result.error);
             }
         }
 
@@ -3851,7 +5168,6 @@
             const likeBtn = document.getElementById('viewLikeBtn');
             const dislikeBtn = document.getElementById('viewDislikeBtn');
             
-            // Disable buttons during processing to prevent spam
             likeBtn.disabled = true;
             dislikeBtn.disabled = true;
             
@@ -3865,19 +5181,16 @@
                 return;
             }
             
-            // Update UI
             if (result.liked) {
                 document.getElementById('viewLikeBtn').classList.add('liked');
                 document.getElementById('viewDislikeBtn').classList.remove('disliked');
                 
-                // Update counts
                 const currentLikes = parseInt(document.getElementById('viewLikeCountText').textContent) || 0;
                 const currentDislikes = parseInt(document.getElementById('viewDislikeCountText').textContent) || 0;
                 
                 document.getElementById('viewLikeCount').textContent = currentLikes + 1;
                 document.getElementById('viewLikeCountText').textContent = currentLikes + 1;
                 
-                // If previously disliked, remove dislike
                 if (result.disliked === false && currentDislikes > 0) {
                     document.getElementById('viewDislikeCount').textContent = currentDislikes - 1;
                     document.getElementById('viewDislikeCountText').textContent = currentDislikes - 1;
@@ -3887,7 +5200,6 @@
             } else {
                 document.getElementById('viewLikeBtn').classList.remove('liked');
                 
-                // Update counts
                 const currentLikes = parseInt(document.getElementById('viewLikeCountText').textContent) || 0;
                 if (currentLikes > 0) {
                     document.getElementById('viewLikeCount').textContent = currentLikes - 1;
@@ -3897,10 +5209,8 @@
                 showToast('Removed like');
             }
             
-            // Refresh script data
             await loadScripts();
             
-            // Re-enable buttons after a short delay
             setTimeout(() => {
                 likeBtn.disabled = false;
                 dislikeBtn.disabled = false;
@@ -3913,7 +5223,6 @@
             const likeBtn = document.getElementById('viewLikeBtn');
             const dislikeBtn = document.getElementById('viewDislikeBtn');
             
-            // Disable buttons during processing to prevent spam
             likeBtn.disabled = true;
             dislikeBtn.disabled = true;
             
@@ -3927,19 +5236,16 @@
                 return;
             }
             
-            // Update UI
             if (result.disliked) {
                 document.getElementById('viewDislikeBtn').classList.add('disliked');
                 document.getElementById('viewLikeBtn').classList.remove('liked');
                 
-                // Update counts
                 const currentLikes = parseInt(document.getElementById('viewLikeCountText').textContent) || 0;
                 const currentDislikes = parseInt(document.getElementById('viewDislikeCountText').textContent) || 0;
                 
                 document.getElementById('viewDislikeCount').textContent = currentDislikes + 1;
                 document.getElementById('viewDislikeCountText').textContent = currentDislikes + 1;
                 
-                // If previously liked, remove like
                 if (result.liked === false && currentLikes > 0) {
                     document.getElementById('viewLikeCount').textContent = currentLikes - 1;
                     document.getElementById('viewLikeCountText').textContent = currentLikes - 1;
@@ -3949,7 +5255,6 @@
             } else {
                 document.getElementById('viewDislikeBtn').classList.remove('disliked');
                 
-                // Update counts
                 const currentDislikes = parseInt(document.getElementById('viewDislikeCountText').textContent) || 0;
                 if (currentDislikes > 0) {
                     document.getElementById('viewDislikeCount').textContent = currentDislikes - 1;
@@ -3959,10 +5264,8 @@
                 showToast('Removed dislike');
             }
             
-            // Refresh script data
             await loadScripts();
             
-            // Re-enable buttons after a short delay
             setTimeout(() => {
                 likeBtn.disabled = false;
                 dislikeBtn.disabled = false;
@@ -3972,21 +5275,18 @@
         async function showScriptView(script) {
             currentViewScript = script;
             
-            // Record view only once per user
             if (currentUser) {
                 await storage.recordScriptView(currentUser.username, script.id);
-                // Refresh script data to get updated view count
                 await loadScripts();
-                const updatedScripts = scripts.find(s => s.id === script.id);
-                if (updatedScripts) {
-                    currentViewScript = updatedScripts;
+                const updatedScript = scripts.find(s => s.id === script.id);
+                if (updatedScript) {
+                    currentViewScript = updatedScript;
                 }
             }
             
-            // Update UI
             document.getElementById('viewScriptName').textContent = script.name;
             document.getElementById('viewScriptAuthor').textContent = `Uploaded by ${script.uploader}`;
-            document.getElementById('viewScriptDate').textContent = ` on ${script.uploadDate || 'Unknown date'}`;
+            document.getElementById('viewScriptDate').textContent = script.uploadDate || 'Unknown';
             document.getElementById('viewLikeCount').textContent = script.likes || 0;
             document.getElementById('viewLikeCountText').textContent = script.likes || 0;
             document.getElementById('viewDislikeCount').textContent = script.dislikes || 0;
@@ -3994,7 +5294,6 @@
             document.getElementById('viewViewCount').textContent = script.views || 0;
             document.getElementById('viewStepsCount').textContent = script.steps ? script.steps.length : 0;
             
-            // Show description
             const descriptionElement = document.getElementById('viewScriptDescription');
             if (script.description && script.description.trim()) {
                 descriptionElement.textContent = script.description;
@@ -4003,7 +5302,6 @@
                 descriptionElement.style.display = 'none';
             }
             
-            // Show hashtags
             const hashtagContainer = document.getElementById('viewHashtags');
             hashtagContainer.innerHTML = '';
             
@@ -4020,7 +5318,6 @@
                 hashtagContainer.style.display = 'none';
             }
             
-            // Show/hide watch options based on whether there's a YouTube video
             const watchOptions = document.getElementById('watchOptions');
             if (script.youtubeVideo) {
                 watchOptions.style.display = 'flex';
@@ -4028,7 +5325,6 @@
                 updateVideoContent();
             } else {
                 watchOptions.style.display = 'none';
-                // Show image thumbnail
                 const videoContent = document.getElementById('videoContent');
                 if (script.thumbnail) {
                     videoContent.innerHTML = `
@@ -4045,19 +5341,15 @@
                 }
             }
             
-            // Check if user is subscribed
             const isSubscribed = await storage.isSubscribed(currentUser.username, script.uploader);
             document.getElementById('subscribeText').textContent = isSubscribed ? 'Subscribed' : 'Subscribe';
             document.getElementById('viewSubscribeBtn').classList.toggle('subscribed', isSubscribed);
             
-            // Check if user has liked/disliked
             const interactionState = await storage.getInteractionState(currentUser.username, script.id);
             
-            // Reset both buttons to default state first
             document.getElementById('viewLikeBtn').classList.remove('liked');
             document.getElementById('viewDislikeBtn').classList.remove('disliked');
             
-            // Then apply correct states
             if (interactionState.liked) {
                 document.getElementById('viewLikeBtn').classList.add('liked');
             }
@@ -4065,11 +5357,19 @@
                 document.getElementById('viewDislikeBtn').classList.add('disliked');
             }
             
-            // Disable subscribe button if user is the uploader
             if (script.uploader === currentUser.username) {
                 document.getElementById('viewSubscribeBtn').style.display = 'none';
             } else {
                 document.getElementById('viewSubscribeBtn').style.display = 'flex';
+            }
+            
+            // Load creator profile picture
+            const creatorProfile = await storage.getUserProfile(script.uploader);
+            const creatorAvatar = document.getElementById('viewCreatorAvatar');
+            if (creatorProfile && creatorProfile.profilePic) {
+                creatorAvatar.innerHTML = `<img src="${creatorProfile.profilePic}" alt="${script.uploader}">`;
+            } else {
+                creatorAvatar.innerHTML = `<i class="fas fa-user"></i>`;
             }
             
             document.getElementById('scriptViewModal').style.display = 'flex';
@@ -4090,7 +5390,6 @@
         // ============ ORIGINAL FUNCTIONALITY (UPDATED) ============
         async function loadScripts() {
             scripts = await storage.getScripts();
-            // For Firebase, IDs are auto-generated
             nextId = scripts.length + 1;
         }
 
@@ -4116,7 +5415,6 @@
             document.getElementById('channelContainer').style.display = 'none';
             document.getElementById('hashtagExplorer').style.display = 'none';
             
-            // Reset form
             document.getElementById('uploadForm').reset();
             document.getElementById('thumbnailPreview').style.display = 'none';
             document.getElementById('youtubePreview').style.display = 'none';
@@ -4125,10 +5423,8 @@
             document.getElementById('scriptDescription').value = '';
             document.getElementById('wordCount').textContent = '0';
             
-            // Reset to default upload type
             switchUploadType('thumbnail');
             
-            // Reset steps
             const stepsContainer = document.getElementById('stepsContainer');
             stepsContainer.innerHTML = '';
             addVertexStep();
@@ -4223,9 +5519,13 @@
             const hashtags = await storage.getHashtags();
             const totalHashtags = hashtags ? Object.keys(hashtags).length : 0;
             
+            // Get total creators
+            const uniqueCreators = [...new Set(allScripts.map(script => script.uploader))];
+            
             document.getElementById('totalScripts').textContent = totalScripts;
             document.getElementById('myScripts').textContent = myScripts;
             document.getElementById('totalHashtags').textContent = totalHashtags;
+            document.getElementById('totalCreators').textContent = uniqueCreators.length;
         }
 
         function filterScripts(e) {
@@ -4262,12 +5562,12 @@
             }
             
             scriptsList.innerHTML = '';
+            const isPC = window.innerWidth >= 769;
             filteredScripts.forEach(script => {
-                const scriptCard = createScriptCard(script);
+                const scriptCard = isPC ? createPCScriptCard(script) : createScriptCard(script);
                 scriptsList.appendChild(scriptCard);
             });
             
-            // Add title if provided
             if (title) {
                 const titleElement = document.createElement('h3');
                 titleElement.textContent = title;
@@ -4280,17 +5580,14 @@
         function calculateScriptScore(script) {
             let score = 0;
             
-            // Base score from interactions
             score += (script.likes || 0) * 10;
             score -= (script.dislikes || 0) * 5;
             score += (script.views || 0) * 0.1;
             
-            // Pinned scripts get huge boost
             if (script.pinned) {
                 score += 1000;
             }
             
-            // Recent scripts get small boost
             const createdAt = script.createdAt || script.uploadDateTime;
             if (createdAt) {
                 const ageInDays = (new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24);
@@ -4299,7 +5596,6 @@
                 }
             }
             
-            // Hashtag boost for required hashtags
             if (script.hashtags) {
                 const requiredHashtags = ['vertex', 'roblox', 'scripts'];
                 const hasRequiredTags = requiredHashtags.every(tag => 
@@ -4309,7 +5605,6 @@
                     score += 50;
                 }
                 
-                // Boost for each additional hashtag
                 score += (script.hashtags.length - requiredHashtags.length) * 5;
             }
             
@@ -4318,7 +5613,7 @@
 
         async function renderScripts() {
             const scriptsList = document.getElementById('scriptsList');
-            await loadScripts(); // Reload from storage
+            await loadScripts();
             
             if (scripts.length === 0) {
                 scriptsList.innerHTML = `
@@ -4336,18 +5631,15 @@
                 return;
             }
             
-            // Calculate scores and sort
             const scoredScripts = scripts.map(script => ({
                 ...script,
                 score: calculateScriptScore(script)
             }));
             
-            // Sort by score (highest first)
             scoredScripts.sort((a, b) => b.score - a.score);
             
             scriptsList.innerHTML = '';
             
-            // Check if we're on PC and use enhanced cards
             const isPC = window.innerWidth >= 769;
             
             scoredScripts.forEach(script => {
@@ -4361,7 +5653,6 @@
             scriptCard.className = 'pc-script-card';
             scriptCard.dataset.id = script.id;
             
-            // Check if user can delete this script
             const canDelete = currentUser.isAdmin || script.uploader === currentUser.username;
             const deleteBtn = canDelete ? `
                 <button class="action-btn delete-btn" data-id="${script.id}" aria-label="Delete script">
@@ -4369,14 +5660,12 @@
                 </button>
             ` : '';
             
-            // Check if admin can pin
             const pinBtn = currentUser.isAdmin ? `
                 <button class="action-btn pin-btn ${script.pinned ? 'pinned' : ''}" data-id="${script.id}" aria-label="${script.pinned ? 'Unpin' : 'Pin'} script">
                     <i class="fas fa-thumbtack"></i>
                 </button>
             ` : '';
             
-            // Determine thumbnail to show
             let thumbnailHtml = '';
             if (script.youtubeVideo) {
                 const videoId = extractYoutubeVideoId(script.youtubeVideo);
@@ -4402,7 +5691,6 @@
                 `;
             }
             
-            // Hashtags
             let hashtagsHtml = '';
             if (script.hashtags && script.hashtags.length > 0) {
                 hashtagsHtml = `
@@ -4428,7 +5716,7 @@
                         <div class="script-uploader">
                             <i class="fas fa-user"></i>
                             ${script.uploader}
-                            <span>• ${script.uploadDate || 'Unknown date'}</span>
+                            <span class="time-ago">• ${script.uploadDate || 'Unknown'}</span>
                         </div>
                         <div class="script-stats">
                             <span><i class="fas fa-thumbs-up"></i> ${script.likes || 0}</span>
@@ -4441,20 +5729,17 @@
                 </div>
             `;
             
-            // Make entire card clickable to view details
             scriptCard.addEventListener('click', function(e) {
                 if (!e.target.closest('button') && !e.target.closest('.youtube-thumbnail')) {
                     showScriptView(script);
                 }
             });
             
-            // Unlock button
             scriptCard.querySelector('.unlock-script-btn').addEventListener('click', function(e) {
                 e.stopPropagation();
                 startUnlockProcess(script);
             });
             
-            // Delete button
             if (canDelete) {
                 scriptCard.querySelector('.delete-btn').addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -4462,7 +5747,6 @@
                 });
             }
             
-            // Pin button (for admin only)
             if (currentUser.isAdmin) {
                 scriptCard.querySelector('.pin-btn').addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -4470,11 +5754,10 @@
                 });
             }
             
-            // Hashtag click handlers
             scriptCard.querySelectorAll('.hashtag').forEach(hashtag => {
                 hashtag.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    const tag = this.textContent.substring(1); // Remove #
+                    const tag = this.textContent.substring(1);
                     handleHashtagClick(tag, script.id);
                 });
             });
@@ -4487,7 +5770,6 @@
             scriptCard.className = 'script-card';
             scriptCard.dataset.id = script.id;
             
-            // Check if user can delete this script
             const canDelete = currentUser.isAdmin || script.uploader === currentUser.username;
             const deleteBtn = canDelete ? `
                 <button class="action-btn delete-btn" data-id="${script.id}" aria-label="Delete script">
@@ -4495,14 +5777,12 @@
                 </button>
             ` : '';
             
-            // Check if admin can pin
             const pinBtn = currentUser.isAdmin ? `
                 <button class="action-btn pin-btn ${script.pinned ? 'pinned' : ''}" data-id="${script.id}" aria-label="${script.pinned ? 'Unpin' : 'Pin'} script">
                     <i class="fas fa-thumbtack"></i>
                 </button>
             ` : '';
             
-            // Determine thumbnail to show
             let thumbnailHtml = '';
             if (script.youtubeVideo) {
                 const videoId = extractYoutubeVideoId(script.youtubeVideo);
@@ -4540,7 +5820,7 @@
                         <div class="script-uploader">
                             <i class="fas fa-user"></i>
                             ${script.uploader}
-                            <span>• ${script.uploadDate || 'Unknown date'}</span>
+                            <span class="time-ago">• ${script.uploadDate || 'Unknown'}</span>
                         </div>
                         <div class="script-stats">
                             <span><i class="fas fa-thumbs-up"></i> ${script.likes || 0}</span>
@@ -4559,20 +5839,17 @@
                 </div>
             `;
             
-            // Make entire card clickable to view details
             scriptCard.addEventListener('click', function(e) {
                 if (!e.target.closest('button') && !e.target.closest('.youtube-thumbnail')) {
                     showScriptView(script);
                 }
             });
             
-            // Unlock button
             scriptCard.querySelector('.unlock-script-btn').addEventListener('click', function(e) {
                 e.stopPropagation();
                 startUnlockProcess(script);
             });
             
-            // Delete button
             if (canDelete) {
                 scriptCard.querySelector('.delete-btn').addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -4580,7 +5857,6 @@
                 });
             }
             
-            // Pin button (for admin only)
             if (currentUser.isAdmin) {
                 scriptCard.querySelector('.pin-btn').addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -4621,12 +5897,10 @@
                     await updateStats();
                     showToast('Script deleted successfully');
                     
-                    // Update channel if viewing it
                     if (document.getElementById('channelContainer').style.display === 'block') {
                         await loadChannelData();
                     }
                     
-                    // Update hashtag explorer if viewing it
                     if (document.getElementById('hashtagExplorer').classList.contains('active')) {
                         await loadHashtagExplorer();
                     }
@@ -4657,7 +5931,6 @@
                 return;
             }
             
-            // Parse hashtags
             const requiredHashtags = ['vertex', 'roblox', 'scripts'];
             const additionalTags = additionalHashtags.split(/\s+/)
                 .filter(tag => tag.startsWith('#') && tag.length > 1)
@@ -4666,7 +5939,6 @@
             
             const allHashtags = [...requiredHashtags, ...additionalTags];
             
-            // Handle thumbnail or YouTube video
             let thumbnail = '';
             let youtubeVideo = '';
             
@@ -4687,7 +5959,6 @@
                 
                 reader.readAsDataURL(file);
             } else {
-                // YouTube video
                 youtubeVideo = document.getElementById('youtubeLink').value;
                 if (!youtubeVideo) {
                     showToast('Please enter a YouTube video URL');
@@ -4700,14 +5971,12 @@
                     return;
                 }
                 
-                // Use YouTube thumbnail as preview
                 thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
                 finishUpload(scriptName, description, scriptLink, thumbnail, youtubeVideo, allHashtags);
             }
         }
 
         async function finishUpload(scriptName, description, scriptLink, thumbnail, youtubeVideo, hashtags) {
-            // Get all steps
             const stepContainers = document.querySelectorAll('.step-container');
             const steps = [];
             
@@ -4733,10 +6002,9 @@
                 }
             });
             
-            // Create new script object
             const newScript = {
                 name: scriptName,
-                description: description.substring(0, 500), // Limit description
+                description: description.substring(0, 500),
                 thumbnail: thumbnail,
                 youtubeVideo: youtubeVideo,
                 scriptLink: scriptLink,
@@ -4971,9 +6239,15 @@
                 pcSearchInput.placeholder = "Search scripts, hashtags, users...";
             }
             
-            // Re-render scripts with appropriate card type
             renderScripts();
         }
+        
+        // Initialize the app
+        window.onload = function() {
+            if (window.appInitialized) {
+                console.log('VertexScripts App Initialized');
+            }
+        };
     </script>
 </body>
     </html>
