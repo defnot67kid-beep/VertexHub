@@ -237,6 +237,94 @@
             overflow-x: hidden;
         }
         
+        /* ============ UNLOCK PAGE STYLES ============ */
+        .unlock-container {
+            min-height: 100vh;
+            width: 100%;
+            background: radial-gradient(circle at 10% 30%, #1a1f2e, var(--dark));
+            padding: clamp(20px, 4vw, 40px);
+            position: relative;
+        }
+        
+        .unlock-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .unlock-progress {
+            background: var(--dark-card);
+            border-radius: 100px;
+            padding: 4px;
+            margin: 32px 0;
+        }
+        
+        .unlock-progress-bar {
+            height: 8px;
+            background: var(--gradient-primary);
+            border-radius: 100px;
+            transition: width 0.3s ease;
+        }
+        
+        .unlock-step-card {
+            background: var(--dark-card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .unlock-step-card.completed {
+            border-color: var(--success);
+            background: rgba(16,185,129,0.05);
+        }
+        
+        .unlock-step-card.locked {
+            opacity: 0.5;
+            filter: grayscale(0.5);
+        }
+        
+        .unlock-button {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 16px;
+        }
+        
+        .unlock-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .unlock-success {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1));
+            border-radius: 32px;
+            margin: 32px 0;
+        }
+        
+        .visitor-count {
+            background: rgba(99,102,241,0.1);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
         /* ============ MODERN COMPONENTS ============ */
         .logo-area {
             display: flex;
@@ -778,110 +866,6 @@
             animation: pulse 2s infinite;
         }
         
-        /* ============ UNLOCK FRAME ============ */
-        .unlock-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: clamp(16px, 4vw, 32px);
-        }
-        
-        .unlock-header {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            padding: clamp(20px, 3vw, 32px);
-            background: var(--dark-card);
-            border-radius: 28px;
-            border: 1px solid var(--border);
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-        }
-        
-        .unlock-progress {
-            flex: 1;
-            min-width: 250px;
-        }
-        
-        .unlock-progress-bar {
-            width: 100%;
-            height: 12px;
-            background: var(--dark-input);
-            border-radius: 100px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-        
-        .unlock-progress-fill {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: 100px;
-            transition: width 0.3s ease;
-        }
-        
-        .unlock-step-card {
-            background: var(--dark-card);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-        
-        .unlock-step-card.completed {
-            border-color: var(--success);
-            background: rgba(16,185,129,0.05);
-        }
-        
-        .unlock-step-card.active {
-            border-color: var(--primary);
-            box-shadow: var(--shadow-glow);
-        }
-        
-        .unlock-step-card.locked {
-            opacity: 0.6;
-            filter: blur(0.5px);
-        }
-        
-        .unlock-timer {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--accent);
-            background: rgba(245,158,11,0.1);
-            padding: 8px 24px;
-            border-radius: 100px;
-            display: inline-block;
-        }
-        
-        .unlock-iframe {
-            width: 100%;
-            height: 600px;
-            border: none;
-            border-radius: 20px;
-            background: white;
-            margin-top: 24px;
-        }
-        
-        .unlock-final-btn {
-            background: var(--gradient-success);
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            border-radius: 100px;
-            font-size: 20px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 16px;
-            margin-top: 32px;
-        }
-        
-        .unlock-final-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px -8px rgba(16,185,129,0.5);
-        }
-        
         /* ============ VIDEO CONTAINER ============ */
         .video-container {
             position: relative;
@@ -1277,85 +1261,92 @@
         let antiSkipActive = true;
         let lastKnownTime = 0;
         let skipAttempts = 0;
+        let currentVisitorId = generateVisitorId();
         
         // GitHub Pages base URL
         const GITHUB_PAGES_URL = "https://defnot67kid-beep.github.io/VertexHub";
 
-        // ============ URL ROUTING ============
-        function handleRouting() {
-            const path = window.location.pathname;
+        // ============ GENERATE UNIQUE VISITOR ID ============
+        function generateVisitorId() {
+            let visitorId = localStorage.getItem('visitorId');
+            if (!visitorId) {
+                visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('visitorId', visitorId);
+            }
+            return visitorId;
+        }
+
+        // ============ CHECK FOR SCRIPT IN URL HASH ============
+        function checkUrlForScript() {
             const hash = window.location.hash;
-            
-            // Check for script route
-            if (path.startsWith('/script/')) {
-                const scriptId = path.split('/script/')[1];
-                if (scriptId) {
-                    loadScriptUnlocker(scriptId);
-                    return true;
-                }
+            if (hash && hash.startsWith('#script-')) {
+                const scriptId = hash.replace('#script-', '');
+                renderUnlockPage(scriptId);
+                return true;
             }
-            
-            // Check for hash routing
-            if (hash.startsWith('#/script/')) {
-                const scriptId = hash.split('#/script/')[1];
-                if (scriptId) {
-                    loadScriptUnlocker(scriptId);
-                    return true;
-                }
-            }
-            
             return false;
         }
 
-        // ============ LOAD SCRIPT UNLOCKER ============
-        async function loadScriptUnlocker(scriptId) {
+        // ============ RENDER UNLOCK PAGE ============
+        async function renderUnlockPage(scriptId) {
             try {
-                const scriptsRef = collection(db, "scripts");
-                const q = query(scriptsRef, where("scriptId", "==", scriptId));
+                // Query for script by scriptId field
+                const q = query(collection(db, "scripts"), where("scriptId", "==", scriptId));
                 const querySnapshot = await getDocs(q);
                 
-                if (!querySnapshot.empty) {
-                    const scriptDoc = querySnapshot.docs[0];
-                    const scriptData = { id: scriptDoc.id, ...scriptDoc.data() };
-                    
-                    // Track unique view
-                    await trackScriptView(scriptDoc.id, scriptData);
-                    
-                    // Render unlocker interface
-                    renderUnlocker(scriptData);
-                } else {
-                    renderNotFound();
+                if (querySnapshot.empty) {
+                    document.getElementById('app').innerHTML = `
+                        <div class="auth-container">
+                            <div class="auth-card" style="text-align: center;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #ef4444; margin-bottom: 24px;"></i>
+                                <h2 style="margin-bottom: 16px;">Script Not Found</h2>
+                                <p style="color: var(--text-dim); margin-bottom: 32px;">The unlocker you're looking for doesn't exist or has been deleted.</p>
+                                <button class="btn-primary" onclick="window.location.href='${GITHUB_PAGES_URL}'">
+                                    <i class="fas fa-home"></i> Go to Home
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
                 }
+                
+                const scriptDoc = querySnapshot.docs[0];
+                const script = { id: scriptDoc.id, ...scriptDoc.data() };
+                
+                // Track unique view
+                await trackUniqueView(script);
+                
+                // Render unlock interface
+                renderUnlockInterface(script);
+                
             } catch (error) {
                 console.error('Error loading script:', error);
-                renderNotFound();
+                document.getElementById('app').innerHTML = `
+                    <div class="auth-container">
+                        <div class="auth-card" style="text-align: center;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #ef4444; margin-bottom: 24px;"></i>
+                            <h2 style="margin-bottom: 16px;">Error Loading Script</h2>
+                            <p style="color: var(--text-dim); margin-bottom: 32px;">${error.message}</p>
+                            <button class="btn-primary" onclick="window.location.href='${GITHUB_PAGES_URL}'">
+                                <i class="fas fa-home"></i> Go to Home
+                            </button>
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        // ============ TRACK UNIQUE VIEWS ============
-        async function trackScriptView(scriptId, scriptData) {
+        // ============ TRACK UNIQUE VIEW ============
+        async function trackUniqueView(script) {
             try {
-                const visitorId = await getVisitorId();
-                const scriptRef = doc(db, "scripts", scriptId);
+                const scriptRef = doc(db, "scripts", script.id);
+                const visitors = script.uniqueVisitors || [];
                 
-                // Check if this visitor has already viewed
-                const currentVisitors = scriptData.uniqueVisitors || [];
-                if (!currentVisitors.includes(visitorId)) {
-                    // New unique view
+                if (!visitors.includes(currentVisitorId)) {
                     await updateDoc(scriptRef, {
                         views: increment(1),
-                        uniqueVisitors: arrayUnion(visitorId),
-                        lastViewAt: serverTimestamp()
+                        uniqueVisitors: arrayUnion(currentVisitorId)
                     });
-                    
-                    // Update user's total views
-                    if (scriptData.ownerId) {
-                        const userRef = doc(db, "users", scriptData.ownerId);
-                        await updateDoc(userRef, {
-                            totalViews: increment(1)
-                        });
-                    }
-                    
                     console.log('New unique view recorded');
                 } else {
                     console.log('Returning visitor - view not counted');
@@ -1365,295 +1356,212 @@
             }
         }
 
-        // ============ TRACK UNLOCK ============
-        async function trackScriptUnlock(scriptId, scriptData) {
-            try {
-                const visitorId = await getVisitorId();
-                const scriptRef = doc(db, "scripts", scriptId);
-                
-                await updateDoc(scriptRef, {
-                    unlocks: increment(1),
-                    lastUnlockAt: serverTimestamp()
-                });
-                
-                // Update user's total unlocks
-                if (scriptData.ownerId) {
-                    const userRef = doc(db, "users", scriptData.ownerId);
-                    await updateDoc(userRef, {
-                        totalUnlocks: increment(1)
-                    });
-                }
-                
-                showCopyNotification('✅ Unlock successful! Redirecting...', false);
-                
-                // Redirect to unlock URL after 2 seconds
-                setTimeout(() => {
-                    window.location.href = scriptData.unlockUrl;
-                }, 2000);
-                
-            } catch (error) {
-                console.error('Error tracking unlock:', error);
-            }
-        }
-
-        // ============ GET UNIQUE VISITOR ID ============
-        async function getVisitorId() {
-            // Try to get from localStorage first
-            let visitorId = localStorage.getItem('visitorId');
-            
-            if (!visitorId) {
-                // Generate new visitor ID
-                visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                
-                // Add some browser fingerprinting
-                const screenProps = `${screen.width}x${screen.height}x${screen.colorDepth}`;
-                const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const language = navigator.language;
-                
-                visitorId = btoa(JSON.stringify({
-                    id: visitorId,
-                    screen: screenProps,
-                    tz: timeZone,
-                    lang: language,
-                    ua: navigator.userAgent.substring(0, 50)
-                }));
-                
-                localStorage.setItem('visitorId', visitorId);
-            }
-            
-            return visitorId;
-        }
-
-        // ============ RENDER UNLOCKER ============
-        function renderUnlocker(script) {
+        // ============ RENDER UNLOCK INTERFACE ============
+        function renderUnlockInterface(script) {
             const app = document.getElementById('app');
-            let currentStep = 0;
-            let stepTimers = {};
+            let stepsHTML = '';
             
-            // Initialize step completion status
-            const steps = script.steps.map((step, index) => ({
-                ...step,
-                completed: false,
-                locked: index > 0
-            }));
+            script.steps.forEach((step, index) => {
+                const isCompleted = step.completed || false;
+                const isLocked = script.sequentialRequired && index > 0 && !script.steps[index - 1].completed;
+                
+                stepsHTML += `
+                    <div class="unlock-step-card ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}" id="step-${index}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="step-badge">
+                                    <i class="fas ${getStepIcon(step.type)}"></i>
+                                    Step ${index + 1}: ${step.label || step.type}
+                                </span>
+                                ${isCompleted ? '<span class="badge-owner" style="background: var(--success);"><i class="fas fa-check"></i> Completed</span>' : ''}
+                            </div>
+                            <span class="step-timer" id="timer-${index}">
+                                <i class="fas fa-hourglass-half"></i>
+                                <span id="timer-value-${index}">${step.waitTime || 20}s</span>
+                            </span>
+                        </div>
+                        
+                        <div class="step-url-container">
+                            <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url || ''}" ${isCompleted ? 'disabled' : ''} ${isLocked ? 'disabled' : ''}>
+                            ${index > 0 && script.sequentialRequired ? 
+                                `<div class="step-lock"><i class="fas ${isLocked ? 'fa-lock' : 'fa-unlock'}"></i> ${isLocked ? 'Complete step ' + index + ' first' : 'Step unlocked'}</div>` : 
+                                ''}
+                        </div>
+                        
+                        <button class="unlock-button" id="verify-btn-${index}" onclick="window.verifyStep(${index})" ${isCompleted ? 'disabled' : ''} ${isLocked ? 'disabled' : ''}>
+                            <i class="fas fa-check-circle"></i> Verify Step
+                        </button>
+                        
+                        <div id="step-timer-${index}" style="display: none; margin-top: 16px; padding: 16px; background: rgba(245,158,11,0.1); border-radius: 12px; text-align: center;">
+                            <i class="fas fa-hourglass-half fa-spin"></i> Please wait <span id="step-countdown-${index}">${step.waitTime || 20}</span> seconds...
+                        </div>
+                    </div>
+                `;
+            });
+            
+            const totalSteps = script.steps.length;
+            const completedSteps = script.steps.filter(s => s.completed).length;
+            const progress = (completedSteps / totalSteps) * 100;
             
             app.innerHTML = `
                 <div class="unlock-container">
                     <div class="unlock-header">
                         <div style="display: flex; align-items: center; gap: 16px;">
-                            <i class="fas fa-cube" style="font-size: 32px; color: #6366f1;"></i>
-                            <div>
-                                <h1 style="margin-bottom: 4px;">${script.title || 'Unlocker'}</h1>
-                                <p style="color: var(--text-dim);">${script.steps.length} steps required • ${script.sequentialRequired ? 'Complete in order' : 'Any order'}</p>
-                            </div>
+                            <i class="fas fa-cube logo-icon" style="font-size: 40px;"></i>
+                            <h1 style="font-size: clamp(24px, 4vw, 32px);">${script.title || 'Content Unlocker'}</h1>
                         </div>
-                        <div class="unlock-progress">
-                            <div class="unlock-progress-bar">
-                                <div class="unlock-progress-fill" id="unlock-progress-fill" style="width: 0%;"></div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-                                <span style="color: var(--text-dim);">Progress</span>
-                                <span style="color: #6366f1; font-weight: 600;" id="unlock-progress-text">0/${steps.length}</span>
-                            </div>
+                        <div class="visitor-count">
+                            <i class="fas fa-eye"></i>
+                            <span>${script.views || 0} ${script.views === 1 ? 'view' : 'views'}</span>
                         </div>
                     </div>
                     
-                    <div id="unlock-steps"></div>
+                    ${script.thumbnail ? `
+                        <div style="margin-bottom: 32px; border-radius: 24px; overflow: hidden;">
+                            <img src="${script.thumbnail}" style="width: 100%; max-height: 300px; object-fit: cover;">
+                        </div>
+                    ` : ''}
                     
-                    <div style="text-align: center; margin-top: 32px;">
-                        <button class="unlock-final-btn" id="unlock-final-btn" style="display: none;" onclick="window.completeUnlock('${script.id}')">
-                            <i class="fas fa-unlock-alt"></i>
-                            Unlock Content Now
-                        </button>
+                    <div class="unlock-progress">
+                        <div class="unlock-progress-bar" style="width: ${progress}%;"></div>
+                    </div>
+                    
+                    <div id="unlock-steps">
+                        ${stepsHTML}
+                    </div>
+                    
+                    <div id="unlock-success" style="display: none;">
+                        <div class="unlock-success">
+                            <i class="fas fa-check-circle" style="font-size: 64px; color: #10b981; margin-bottom: 24px;"></i>
+                            <h2 style="margin-bottom: 16px;">All Steps Completed!</h2>
+                            <p style="color: var(--text-dim); margin-bottom: 32px;">You've successfully completed all verification steps.</p>
+                            <a href="${script.unlockUrl}" target="_blank" class="btn-primary" style="text-decoration: none; width: auto; display: inline-block; padding: 16px 40px;">
+                                <i class="fas fa-unlock-alt"></i> Access Content
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;
             
-            const stepsContainer = document.getElementById('unlock-steps');
-            
-            function renderSteps() {
-                let stepsHTML = '';
-                
-                steps.forEach((step, index) => {
-                    const isActive = currentStep === index && !step.completed && !step.locked;
-                    const isCompleted = step.completed;
-                    const isLocked = step.locked;
-                    
-                    stepsHTML += `
-                        <div class="unlock-step-card ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}" data-step-index="${index}">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span class="step-badge">
-                                        <i class="fas ${getStepIcon(step.type)}"></i>
-                                        Step ${index + 1}: ${step.label || 'Verification'}
-                                    </span>
-                                    ${isCompleted ? '<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Completed</span>' : ''}
-                                </div>
-                                ${isActive ? `
-                                    <span class="unlock-timer" id="step-timer-${index}">
-                                        <i class="fas fa-hourglass-half"></i>
-                                        <span id="timer-${index}">${step.waitTime || 20}s</span>
-                                    </span>
-                                ` : ''}
-                                ${isLocked ? `
-                                    <span style="color: var(--text-dim);">
-                                        <i class="fas fa-lock"></i> Complete step ${index}
-                                    </span>
-                                ` : ''}
-                            </div>
-                            
-                            <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-                                <input type="url" class="step-url-input" value="${step.url || ''}" readonly style="flex: 1; margin-bottom: 0;">
-                                <button class="copy-btn" onclick="window.copyToClipboard('${step.url || ''}', this)">
-                                    <i class="fas fa-copy"></i> Copy Link
-                                </button>
-                                ${isActive ? `
-                                    <button class="btn-primary" style="width: auto; padding: 14px 32px;" onclick="window.verifyStep(${index}, '${script.id}')" id="verify-btn-${index}">
-                                        <i class="fas fa-check"></i> Verify & Continue
-                                    </button>
-                                ` : ''}
-                                ${isCompleted ? `
-                                    <button class="btn-primary" style="width: auto; padding: 14px 32px; background: #10b981;" disabled>
-                                        <i class="fas fa-check-circle"></i> Verified
-                                    </button>
-                                ` : ''}
-                            </div>
-                            
-                            ${isActive ? `
-                                <div style="margin-top: 16px; padding: 12px; background: rgba(245,158,11,0.1); border-radius: 12px; border-left: 4px solid #f59e0b;">
-                                    <i class="fas fa-info-circle" style="color: #f59e0b; margin-right: 8px;"></i>
-                                    Visit the link above and complete the action. Timer will start automatically.
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-                
-                stepsContainer.innerHTML = stepsHTML;
-                updateProgress();
-            }
-            
-            // Start timer for active step
-            function startStepTimer(stepIndex) {
-                if (stepTimers[stepIndex]) clearInterval(stepTimers[stepIndex]);
-                
-                const step = steps[stepIndex];
-                let timeLeft = step.waitTime || 20;
-                const timerSpan = document.getElementById(`timer-${stepIndex}`);
-                const verifyBtn = document.getElementById(`verify-btn-${stepIndex}`);
-                
-                if (verifyBtn) verifyBtn.disabled = true;
-                
-                stepTimers[stepIndex] = setInterval(() => {
-                    timeLeft--;
-                    if (timerSpan) timerSpan.textContent = timeLeft + 's';
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(stepTimers[stepIndex]);
-                        if (verifyBtn) {
-                            verifyBtn.disabled = false;
-                            verifyBtn.innerHTML = '<i class="fas fa-check"></i> Verify Now';
-                        }
-                    }
-                }, 1000);
-            }
-            
-            // Verify step completion
-            window.verifyStep = function(stepIndex, scriptId) {
-                const step = steps[stepIndex];
-                if (!step) return;
-                
-                // Clear timer
-                if (stepTimers[stepIndex]) {
-                    clearInterval(stepTimers[stepIndex]);
-                    delete stepTimers[stepIndex];
-                }
-                
-                // Mark as completed
-                step.completed = true;
-                
-                // Unlock next step if sequential
-                if (script.sequentialRequired && stepIndex + 1 < steps.length) {
-                    steps[stepIndex + 1].locked = false;
-                }
-                
-                // Move to next incomplete step
-                for (let i = 0; i < steps.length; i++) {
-                    if (!steps[i].completed) {
-                        currentStep = i;
-                        break;
-                    }
-                }
-                
-                // Check if all steps completed
-                const allCompleted = steps.every(s => s.completed);
-                
-                // Update UI
-                renderSteps();
-                
-                // Start timer for new active step
-                if (!allCompleted && steps[currentStep] && !steps[currentStep].completed) {
-                    startStepTimer(currentStep);
-                }
-                
-                // Show unlock button if all completed
-                if (allCompleted) {
-                    document.getElementById('unlock-final-btn').style.display = 'inline-flex';
-                    showCopyNotification('✅ All steps completed! Click Unlock to continue.', false);
-                } else {
-                    showCopyNotification(`✅ Step ${stepIndex + 1} completed!`, false);
-                }
-            };
-            
-            function updateProgress() {
-                const completed = steps.filter(s => s.completed).length;
-                const progress = (completed / steps.length) * 100;
-                
-                const progressFill = document.getElementById('unlock-progress-fill');
-                const progressText = document.getElementById('unlock-progress-text');
-                
-                if (progressFill) progressFill.style.width = progress + '%';
-                if (progressText) progressText.textContent = `${completed}/${steps.length}`;
-            }
-            
-            // Start first step timer
-            if (steps.length > 0 && !steps[0].completed) {
-                startStepTimer(0);
-            }
-            
-            renderSteps();
+            // Store script data for verification functions
+            window.currentUnlockScript = script;
         }
 
-        // ============ COMPLETE UNLOCK ============
-        window.completeUnlock = async function(scriptId) {
-            try {
-                const scriptRef = doc(db, "scripts", scriptId);
-                const scriptDoc = await getDoc(scriptRef);
-                
-                if (scriptDoc.exists()) {
-                    await trackScriptUnlock(scriptId, scriptDoc.data());
-                }
-            } catch (error) {
-                console.error('Error completing unlock:', error);
-                showCopyNotification('❌ Error: ' + error.message, true);
+        // ============ VERIFY STEP ============
+        window.verifyStep = async function(stepIndex) {
+            const script = window.currentUnlockScript;
+            if (!script) return;
+            
+            const step = script.steps[stepIndex];
+            const urlInput = document.getElementById(`step-url-${stepIndex}`);
+            
+            if (!urlInput || !urlInput.value) {
+                showCopyNotification('⚠️ Please enter the required URL', true);
+                return;
             }
+            
+            // Show timer
+            const timerDiv = document.getElementById(`step-timer-${stepIndex}`);
+            const countdownSpan = document.getElementById(`step-countdown-${stepIndex}`);
+            const verifyBtn = document.getElementById(`verify-btn-${stepIndex}`);
+            
+            timerDiv.style.display = 'block';
+            verifyBtn.disabled = true;
+            
+            let secondsLeft = step.waitTime || 20;
+            
+            const timer = setInterval(() => {
+                secondsLeft--;
+                if (countdownSpan) countdownSpan.textContent = secondsLeft;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(timer);
+                    completeStep(stepIndex);
+                }
+            }, 1000);
+            
+            // Store timer reference
+            activeStepTimers[stepIndex] = timer;
         };
 
-        // ============ RENDER NOT FOUND ============
-        function renderNotFound() {
-            const app = document.getElementById('app');
-            app.innerHTML = `
-                <div class="auth-container">
-                    <div class="auth-card" style="text-align: center;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #ef4444; margin-bottom: 24px;"></i>
-                        <h1 style="margin-bottom: 16px;">Script Not Found</h1>
-                        <p style="color: var(--text-dim); margin-bottom: 32px;">The unlocker script you're looking for doesn't exist or has been removed.</p>
-                        <button class="btn-primary" onclick="window.location.href='${GITHUB_PAGES_URL}'">
-                            <i class="fas fa-home"></i> Return Home
-                        </button>
-                    </div>
-                </div>
-            `;
+        // ============ COMPLETE STEP ============
+        async function completeStep(stepIndex) {
+            const script = window.currentUnlockScript;
+            if (!script) return;
+            
+            try {
+                // Update step in Firestore
+                const q = query(collection(db, "scripts"), where("scriptId", "==", script.scriptId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    const scriptDoc = querySnapshot.docs[0];
+                    const scriptRef = doc(db, "scripts", scriptDoc.id);
+                    
+                    // Get current steps
+                    const currentData = scriptDoc.data();
+                    const steps = [...currentData.steps];
+                    steps[stepIndex] = { ...steps[stepIndex], completed: true };
+                    
+                    // Check if all steps completed
+                    const allCompleted = steps.every(s => s.completed);
+                    
+                    await updateDoc(scriptRef, { 
+                        steps: steps,
+                        unlocks: allCompleted ? increment(1) : currentData.unlocks
+                    });
+                    
+                    // Update local state
+                    script.steps = steps;
+                    
+                    // Update UI
+                    const stepCard = document.getElementById(`step-${stepIndex}`);
+                    const timerDiv = document.getElementById(`step-timer-${stepIndex}`);
+                    const verifyBtn = document.getElementById(`verify-btn-${stepIndex}`);
+                    
+                    if (stepCard) {
+                        stepCard.classList.add('completed');
+                        const badge = stepCard.querySelector('.step-badge');
+                        if (badge) {
+                            badge.innerHTML += '<span class="badge-owner" style="background: var(--success); margin-left: 8px;"><i class="fas fa-check"></i> Completed</span>';
+                        }
+                    }
+                    
+                    if (timerDiv) timerDiv.style.display = 'none';
+                    if (verifyBtn) verifyBtn.disabled = true;
+                    
+                    // Update progress bar
+                    const completedSteps = steps.filter(s => s.completed).length;
+                    const progress = (completedSteps / steps.length) * 100;
+                    const progressBar = document.querySelector('.unlock-progress-bar');
+                    if (progressBar) progressBar.style.width = progress + '%';
+                    
+                    // Show success message if all completed
+                    if (allCompleted) {
+                        document.getElementById('unlock-success').style.display = 'block';
+                        showCopyNotification('🎉 All steps completed! You can now access the content.', false);
+                    } else {
+                        showCopyNotification(`✅ Step ${stepIndex + 1} completed!`, false);
+                    }
+                    
+                    // Unlock next step if sequential
+                    if (script.sequentialRequired && stepIndex + 1 < steps.length) {
+                        const nextStepCard = document.getElementById(`step-${stepIndex + 1}`);
+                        if (nextStepCard) {
+                            nextStepCard.classList.remove('locked');
+                            const nextVerifyBtn = document.getElementById(`verify-btn-${stepIndex + 1}`);
+                            const nextLockDiv = nextStepCard.querySelector('.step-lock');
+                            if (nextVerifyBtn) nextVerifyBtn.disabled = false;
+                            if (nextLockDiv) {
+                                nextLockDiv.innerHTML = '<i class="fas fa-unlock"></i> Step unlocked';
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error completing step:', error);
+                showCopyNotification('❌ Error completing step: ' + error.message, true);
+            }
         }
 
         // ============ ADVANCED COPY TO CLIPBOARD WITH VISUAL FEEDBACK ============
@@ -1721,8 +1629,8 @@
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             
-            // Check if we're on a script route first
-            if (handleRouting()) {
+            // Check if URL has script hash first
+            if (checkUrlForScript()) {
                 return;
             }
             
@@ -2545,7 +2453,7 @@
                     totalScripts: increment(1)
                 });
                 
-                const shareableLink = `${GITHUB_PAGES_URL}/script/${scriptId}`;
+                const shareableLink = `${GITHUB_PAGES_URL}#script-${scriptId}`;
                 
                 showCopyNotification(`✅ Script created successfully! ${steps.length} steps with timers`, false);
                 
@@ -2610,7 +2518,7 @@
                         
                         <!-- Forced Timer Display -->
                         <div class="forced-timer-container">
-                            <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+                            <div class="forced-timer-display">
                                 <div class="timer-circle" id="timer-circle">17:56</div>
                                 <div style="text-align: left;">
                                     <h3 style="margin-bottom: 4px;">⏳ Time Remaining</h3>
@@ -2976,7 +2884,7 @@
             let scriptsHTML = '';
             currentScripts.forEach(script => {
                 const thumbnailExists = script.thumbnail && script.thumbnail !== '';
-                const shareableLink = `${GITHUB_PAGES_URL}/script/${script.scriptId}`;
+                const shareableLink = `${GITHUB_PAGES_URL}#script-${script.scriptId}`;
                 
                 scriptsHTML += `
                     <div class="script-card">
@@ -3301,7 +3209,7 @@
                                             <td>${script.steps?.length || 0}</td>
                                             <td><span style="color: #6366f1; font-weight: 600;">${script.views || 0}</span></td>
                                             <td><span style="color: #10b981; font-weight: 600;">${script.unlocks || 0}</span></td>
-                                            <td><span style="color: #f59e0b; font-weight: 600;">${script.uniqueVisitors?.length || 0}</span></td>
+                                            <td>${script.uniqueVisitors?.length || 0}</td>
                                             <td>${script.createdAt?.toDate?.().toLocaleDateString() || 'Recent'}</td>
                                         </tr>
                                     `).join('')}
@@ -3483,8 +3391,8 @@
 
         // ============ INITIALIZE ============
         window.onload = function() {
-            // Check for script routing first
-            if (!handleRouting()) {
+            // Check for script in URL first
+            if (!checkUrlForScript()) {
                 renderAuth();
             }
             
@@ -3507,9 +3415,9 @@
                 }
             });
             
-            // Handle hash changes for routing
+            // Listen for hash changes
             window.addEventListener('hashchange', function() {
-                handleRouting();
+                checkUrlForScript();
             });
         };
 
@@ -3538,6 +3446,7 @@
         window.toggleShareLink = window.toggleShareLink;
         window.exportAllData = window.exportAllData;
         window.clearCache = window.clearCache;
+        window.verifyStep = window.verifyStep;
     </script>
 </body>
     </html>
