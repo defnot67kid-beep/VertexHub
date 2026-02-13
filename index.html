@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>VertexHub 6.0 · Advanced Timer System · plastealme2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VertexHub 7.0 · Advanced Timer System · plastealme2</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -90,11 +90,6 @@
                 gap: 20px;
             }
 
-            .admin-scripts-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 24px;
-            }
-
             .mobile-menu-toggle {
                 display: none !important;
             }
@@ -153,11 +148,6 @@
             .templates-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
-            }
-
-            .admin-scripts-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
             }
         }
 
@@ -385,7 +375,7 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
 
-        .scripts-grid, .admin-scripts-grid {
+        .scripts-grid {
             display: grid;
             margin-top: 28px;
         }
@@ -407,21 +397,6 @@
             justify-content: center;
             position: relative;
             overflow: hidden;
-        }
-
-        .script-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .script-no-thumbnail {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
         }
 
         .script-stats {
@@ -495,18 +470,6 @@
             font-size: 11px;
             font-weight: 600;
             color: white;
-        }
-
-        .template-name {
-            font-weight: 700;
-            margin-bottom: 8px;
-            font-size: 18px;
-        }
-
-        .template-desc {
-            color: var(--text-dim);
-            font-size: 13px;
-            margin-bottom: 16px;
         }
 
         .step-card {
@@ -722,13 +685,25 @@
             background: black;
         }
 
+        .custom-shorts-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
+            aspect-ratio: 9 / 16;
+            background: black;
+        }
+
         #custom-youtube-player {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Disable all interactions */
+            pointer-events: none;
         }
 
         .video-overlay {
@@ -746,7 +721,7 @@
             position: absolute;
             bottom: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.9);
             color: white;
             padding: 12px 24px;
             border-radius: 100px;
@@ -836,64 +811,6 @@
             border-radius: 100px;
             border: 1px solid var(--accent);
             animation: pulse 2s infinite;
-        }
-
-        .admin-panel {
-            background: var(--dark-card);
-            border-radius: 28px;
-            padding: 32px;
-            margin-top: 48px;
-        }
-
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .admin-table th {
-            text-align: left;
-            padding: 16px;
-            background: rgba(99,102,241,0.1);
-            color: var(--text-dim);
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .admin-table td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .admin-script-link {
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: rgba(99,102,241,0.1);
-            border-radius: 8px;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-
-        .admin-delete-btn {
-            background: rgba(239,68,68,0.1);
-            color: #ef4444;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-
-        .admin-delete-btn:hover {
-            background: #ef4444;
-            color: white;
         }
 
         .copy-btn {
@@ -1025,6 +942,24 @@
             z-index: 10;
         }
 
+        .step-redirect-info {
+            background: rgba(99,102,241,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(99,102,241,0.3);
+        }
+
+        .redirect-timer {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: monospace;
+        }
+
         @keyframes pulseRing {
             0% { transform: scale(1); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
@@ -1079,27 +1014,24 @@
         let antiSkipActive = true;
         let skipAttempts = 0;
         let videoCheckInterval = null;
-        let customVideoTimer = 0;
-        let videoDuration = 442; // 7 minutes 22 seconds in seconds
-        let videoStartTime = null;
-        let forcedTimerSeconds = 0;
-        let currentMediaURL = null;
         let activeStepStates = {};
+        let redirectTimer = null;
+        let pendingRedirect = null;
         
-        // Premium video ID
-        const PREMIUM_VIDEO_ID = 'u0jrlB7hAk0';
+        // Premium video ID (YouTube Short)
+        const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs'; // https://youtube.com/shorts/C1eQlFWX0Cs
         
         // GitHub Pages base URL
         const GITHUB_PAGES_URL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
         
         // ============ LOCAL STORAGE KEYS ============
         const STORAGE_KEYS = {
-            USERS: 'vertexhub_users_v6',
-            SCRIPTS: 'vertexhub_scripts_v6',
-            CURRENT_USER: 'vertexhub_current_user_v6',
-            SCRIPT_VIEWS: 'vertexhub_script_views_v6',
-            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks_v6',
-            USER_ANALYTICS: 'vertexhub_user_analytics_v6'
+            USERS: 'vertexhub_users_v7',
+            SCRIPTS: 'vertexhub_scripts_v7',
+            CURRENT_USER: 'vertexhub_current_user_v7',
+            SCRIPT_VIEWS: 'vertexhub_script_views_v7',
+            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks_v7',
+            USER_ANALYTICS: 'vertexhub_user_analytics_v7'
         };
 
         // ============ INITIALIZE STORAGE ============
@@ -1137,6 +1069,12 @@
                 return true;
             }
             
+            if (hash.startsWith('#watch-')) {
+                const watchId = hash.replace('#watch-', '');
+                handleWatchRedirect(watchId);
+                return true;
+            }
+            
             if (hash === '#creator' || hash === '#dashboard') {
                 if (currentUser) {
                     renderDashboard();
@@ -1147,6 +1085,30 @@
             }
             
             return false;
+        }
+
+        // ============ HANDLE WATCH REDIRECT ============
+        function handleWatchRedirect(watchId) {
+            const [scriptId, stepIndex] = watchId.split('.');
+            
+            if (!scriptId || stepIndex === undefined) {
+                window.location.hash = '#dashboard';
+                return;
+            }
+            
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const script = scripts.find(s => s.scriptId === scriptId);
+            
+            if (!script || !script.steps[parseInt(stepIndex)]) {
+                window.location.hash = '#dashboard';
+                return;
+            }
+            
+            // Auto-start the watch timer
+            setTimeout(() => {
+                const step = script.steps[parseInt(stepIndex)];
+                openVideoPlayer(step.url, parseInt(stepIndex), step.waitTime, true);
+            }, 500);
         }
 
         // ============ LOAD SCRIPT VIEW ============
@@ -1215,8 +1177,9 @@
                     timerStarted: false,
                     timerComplete: false,
                     timeLeft: step.waitTime,
-                    videoStartTime: null,
-                    interval: null
+                    watchStarted: false,
+                    watchComplete: false,
+                    redirectPending: false
                 };
             });
             
@@ -1271,7 +1234,7 @@
                     statusIcon = 'fa-check-circle';
                     statusText = 'Completed';
                     statusClass = 'completed';
-                } else if (state.linkClicked && step.type === 'watch') {
+                } else if (state.watchStarted) {
                     statusIcon = 'fa-eye';
                     statusText = `Watching video (${state.timeLeft}s remaining)`;
                     statusClass = 'watching';
@@ -1297,7 +1260,8 @@
                         <div class="step-url-container">
                             <input type="url" id="step-url-${index}" class="step-url-input" value="${step.url}" readonly>
                             <button class="visit-link-btn" id="visit-btn-${index}" onclick="window.handleStepLinkClick(${index})" ${state.linkClicked || state.timerComplete ? 'disabled' : ''}>
-                                <i class="fas fa-external-link-alt"></i> ${step.type === 'watch' ? 'Watch Video' : 'Visit Link'}
+                                <i class="fas ${step.type === 'watch' ? 'fa-eye' : 'fa-external-link-alt'}"></i> 
+                                ${step.type === 'watch' ? 'Watch Video' : 'Visit Link'}
                             </button>
                         </div>
                         
@@ -1307,7 +1271,7 @@
                             </div>
                             <div style="flex: 1;">
                                 <div style="font-weight: 600; margin-bottom: 4px;">Status: ${statusText}</div>
-                                ${state.linkClicked && !state.timerComplete ? `
+                                ${(state.watchStarted || state.linkClicked) && !state.timerComplete ? `
                                     <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
                                         <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
                                     </div>
@@ -1315,10 +1279,14 @@
                             </div>
                         </div>
                         
-                        ${state.linkClicked && !state.timerComplete ? `
-                            <button class="step-complete-btn" id="complete-btn-${index}" style="margin-top: 16px;" onclick="window.forceCompleteStep(${index})" disabled>
-                                <i class="fas fa-hourglass-half"></i> ${step.type === 'watch' ? 'Watching video...' : `Wait for timer (${state.timeLeft}s)`}
-                            </button>
+                        ${state.redirectPending ? `
+                            <div class="step-redirect-info">
+                                <i class="fas fa-redo-alt fa-spin" style="color: var(--accent);"></i>
+                                <div>
+                                    <div style="font-weight: 600;">Returning to unlocker...</div>
+                                    <div style="color: var(--text-dim);">Redirecting in <span class="redirect-timer" id="redirect-timer-${index}">20</span>s</div>
+                                </div>
+                            </div>
                         ` : ''}
                         
                         ${state.timerComplete ? `
@@ -1353,8 +1321,22 @@
             if (state.linkClicked || state.timerComplete) return;
             
             if (step.type === 'watch') {
-                // For watch steps, open the video in a modal/overlay
-                openVideoPlayer(step.url, stepIndex);
+                // Generate unique watch ID
+                const watchId = `${script.scriptId}.${stepIndex}`;
+                const watchUrl = `${window.location.origin}${window.location.pathname}#watch-${watchId}`;
+                
+                // Open video in new tab with watch ID
+                window.open(watchUrl, '_blank');
+                
+                state.linkClicked = true;
+                state.watchStarted = true;
+                state.redirectPending = true;
+                
+                // Start the 20-second redirect timer
+                startRedirectTimer(stepIndex, step.waitTime);
+                
+                renderUnlockSteps(script);
+                showCopyNotification(`✅ Video opened! Return in ${step.waitTime}s`, false);
             } else {
                 // Regular link steps
                 window.open(step.url, '_blank');
@@ -1366,21 +1348,70 @@
             }
         };
 
-        // ============ OPEN VIDEO PLAYER ============
-        function openVideoPlayer(videoUrl, stepIndex) {
-            const script = window.currentUnlockScript;
+        // ============ START REDIRECT TIMER ============
+        function startRedirectTimer(stepIndex, totalWaitTime) {
             const state = activeStepStates[stepIndex];
+            let timeLeft = totalWaitTime;
             
-            // Extract YouTube video ID
+            if (state.interval) clearInterval(state.interval);
+            
+            state.interval = setInterval(() => {
+                if (state.timerComplete) {
+                    clearInterval(state.interval);
+                    return;
+                }
+                
+                timeLeft--;
+                state.timeLeft = timeLeft;
+                
+                // Update redirect timer display
+                const redirectTimer = document.getElementById(`redirect-timer-${stepIndex}`);
+                if (redirectTimer) redirectTimer.textContent = timeLeft;
+                
+                // Update step timer display
+                const stepTimerDisplay = document.getElementById(`timer-display-${stepIndex}`);
+                if (stepTimerDisplay) stepTimerDisplay.textContent = timeLeft + 's';
+                
+                // Update progress bar
+                const progressBar = document.getElementById(`progress-${stepIndex}`);
+                if (progressBar) {
+                    const progress = ((totalWaitTime - timeLeft) / totalWaitTime) * 100;
+                    progressBar.style.width = progress + '%';
+                }
+                
+                if (timeLeft <= 0) {
+                    state.timerComplete = true;
+                    state.redirectPending = false;
+                    clearInterval(state.interval);
+                    
+                    // Complete the step
+                    window.completeStep(stepIndex);
+                    
+                    // Close any open tabs? Can't directly, but user will see completion
+                    showCopyNotification('✅ Video requirement completed!', false);
+                }
+            }, 1000);
+        }
+
+        // ============ OPEN VIDEO PLAYER ============
+        function openVideoPlayer(videoUrl, stepIndex, waitTime, autoStart = true) {
+            const script = window.currentUnlockScript;
+            if (!script && !autoStart) return;
+            
+            // Extract YouTube video ID (works for both regular and shorts)
             let videoId = '';
-            if (videoUrl.includes('youtube.com/watch')) {
+            if (videoUrl.includes('youtube.com/shorts/')) {
+                videoId = videoUrl.split('shorts/')[1].split('?')[0].split('/')[0];
+            } else if (videoUrl.includes('youtube.com/watch')) {
                 const urlParams = new URLSearchParams(new URL(videoUrl).search);
                 videoId = urlParams.get('v');
             } else if (videoUrl.includes('youtu.be/')) {
                 videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
             } else {
-                videoId = PREMIUM_VIDEO_ID; // Fallback
+                videoId = PREMIUM_SHORTS_ID; // Fallback to premium short
             }
+            
+            const isShorts = videoUrl.includes('shorts/') || videoId === PREMIUM_SHORTS_ID;
             
             // Create modal overlay
             const modal = document.createElement('div');
@@ -1390,7 +1421,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0,0,0,0.95);
+                background: rgba(0,0,0,0.98);
                 z-index: 10000;
                 display: flex;
                 align-items: center;
@@ -1399,33 +1430,33 @@
             `;
             
             modal.innerHTML = `
-                <div style="width: 90%; max-width: 1000px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="color: white;">Watching Required Video</h2>
-                        <button onclick="this.closest('div').remove()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">
+                <div style="width: 100%; max-width: ${isShorts ? '400px' : '1000px'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 20px;">
+                        <h2 style="color: white;">${isShorts ? 'YouTube Short' : 'Watch Required Video'}</h2>
+                        <button onclick="window.closeVideoPlayer(this)" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                     
-                    <div class="custom-video-container">
-                        <div id="custom-youtube-player"></div>
+                    <div class="${isShorts ? 'custom-shorts-container' : 'custom-video-container'}">
+                        <div id="watch-youtube-player"></div>
                         <div class="video-overlay" id="video-overlay"></div>
                         <div class="video-timer-progress" id="video-progress-bar"></div>
                         <div class="video-timer-display" id="video-timer">
-                            0:00 / 7:22
+                            0:00 / ${formatTime(waitTime)}
                         </div>
                         <div class="video-warning" id="video-warning" style="display: none;">
                             ⚠️ Skip detected! Don't skip!
                         </div>
                     </div>
                     
-                    <div style="margin-top: 20px; text-align: center;">
+                    <div style="margin-top: 20px; text-align: center; padding: 0 20px;">
                         <div class="timer-progress-bar" style="width: 100%;">
                             <div id="modal-progress" class="timer-progress-fill" style="width: 0%;"></div>
                         </div>
                         <p style="color: var(--text-dim); margin-top: 10px;">
                             <i class="fas fa-shield"></i> 
-                            Timer-based verification • No skipping • ${step.waitTime}s required
+                            Timer-based verification • ${waitTime}s required
                         </p>
                     </div>
                 </div>
@@ -1433,9 +1464,19 @@
             
             document.body.appendChild(modal);
             
+            // Store state for this watch session
+            const watchState = {
+                stepIndex: stepIndex,
+                waitTime: waitTime,
+                startTime: Date.now(),
+                completed: false,
+                lastVideoTime: 0,
+                skipAttempts: 0
+            };
+            
             // Load YouTube player with NO CONTROLS
             setTimeout(() => {
-                youtubePlayer = new YT.Player('custom-youtube-player', {
+                youtubePlayer = new YT.Player('watch-youtube-player', {
                     videoId: videoId,
                     width: '100%',
                     height: '100%',
@@ -1449,23 +1490,35 @@
                         showinfo: 0,
                         iv_load_policy: 3,
                         playsinline: 1,
+                        loop: isShorts ? 1 : 0,
+                        playlist: isShorts ? videoId : undefined,
                         enablejsapi: 1
                     },
                     events: {
-                        'onReady': (event) => onVideoPlayerReady(event, stepIndex, modal),
-                        'onStateChange': (event) => onVideoStateChange(event, stepIndex),
+                        'onReady': (event) => onWatchPlayerReady(event, watchState, modal),
+                        'onStateChange': (event) => onWatchStateChange(event, watchState),
                         'onError': onVideoError
                     }
                 });
             }, 100);
         }
 
-        function onVideoPlayerReady(event, stepIndex, modal) {
-            const script = window.currentUnlockScript;
-            const state = activeStepStates[stepIndex];
+        window.closeVideoPlayer = function(button) {
+            const modal = button.closest('div[style*="position: fixed"]');
+            if (modal) modal.remove();
             
-            state.linkClicked = true;
-            state.videoStartTime = Date.now();
+            if (youtubePlayer) {
+                youtubePlayer.destroy();
+                youtubePlayer = null;
+            }
+        };
+
+        function onWatchPlayerReady(event, watchState, modal) {
+            const player = event.target;
+            
+            // Force mute to ensure autoplay
+            player.mute();
+            player.playVideo();
             
             // Overlay to block all interactions
             const overlay = document.getElementById('video-overlay');
@@ -1474,39 +1527,36 @@
                 overlay.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleSkipAttempt('click', stepIndex);
+                    handleWatchSkipAttempt('click', watchState);
                     return false;
                 };
             }
             
-            // Start video timer
-            let lastVideoTime = 0;
             let warningTimeout = null;
+            let lastReportedTime = 0;
             
-            if (state.interval) clearInterval(state.interval);
-            
-            state.interval = setInterval(() => {
-                if (!state.linkClicked || state.timerComplete) {
-                    clearInterval(state.interval);
+            // Start timer interval
+            const timerInterval = setInterval(() => {
+                if (watchState.completed) {
+                    clearInterval(timerInterval);
                     return;
                 }
                 
                 try {
-                    const currentTime = youtubePlayer.getCurrentTime();
-                    const playerState = youtubePlayer.getPlayerState();
+                    const currentTime = player.getCurrentTime();
+                    const playerState = player.getPlayerState();
                     
-                    // Check if video is playing
+                    // Force play if not playing
                     if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
-                        youtubePlayer.playVideo();
+                        player.playVideo();
                     }
                     
                     // Check for skipping (if video time jumps ahead)
-                    if (lastVideoTime > 0 && currentTime > lastVideoTime + 2) {
-                        const skipAmount = currentTime - lastVideoTime;
-                        handleSkipAttempt('skip', stepIndex, skipAmount);
+                    if (watchState.lastVideoTime > 0 && currentTime > watchState.lastVideoTime + 2) {
+                        handleWatchSkipAttempt('skip', watchState, currentTime - watchState.lastVideoTime);
                         
                         // Force video back
-                        youtubePlayer.seekTo(lastVideoTime, true);
+                        player.seekTo(watchState.lastVideoTime, true);
                         
                         // Show warning
                         const warning = document.getElementById('video-warning');
@@ -1518,53 +1568,43 @@
                             }, 3000);
                         }
                     } else {
-                        lastVideoTime = currentTime;
+                        watchState.lastVideoTime = currentTime;
                     }
                     
-                    // Calculate progress based on timer, not video
-                    const elapsedSeconds = Math.floor((Date.now() - state.videoStartTime) / 1000);
-                    state.timeLeft = Math.max(0, script.steps[stepIndex].waitTime - elapsedSeconds);
+                    // Calculate progress based on real time
+                    const elapsedSeconds = Math.floor((Date.now() - watchState.startTime) / 1000);
+                    const timeLeft = Math.max(0, watchState.waitTime - elapsedSeconds);
                     
                     // Update displays
                     const timerDisplay = document.getElementById('video-timer');
                     if (timerDisplay) {
-                        const minutes = Math.floor(currentTime / 60);
-                        const seconds = Math.floor(currentTime % 60);
-                        timerDisplay.innerHTML = `${minutes}:${seconds.toString().padStart(2,'0')} / 7:22`;
+                        timerDisplay.innerHTML = `${formatTime(elapsedSeconds)} / ${formatTime(watchState.waitTime)}`;
                     }
                     
                     const progressBar = document.getElementById('video-progress-bar');
                     if (progressBar) {
-                        const progressPercent = (elapsedSeconds / script.steps[stepIndex].waitTime) * 100;
+                        const progressPercent = (elapsedSeconds / watchState.waitTime) * 100;
                         progressBar.style.width = Math.min(progressPercent, 100) + '%';
                     }
                     
                     const modalProgress = document.getElementById('modal-progress');
                     if (modalProgress) {
-                        const progressPercent = (elapsedSeconds / script.steps[stepIndex].waitTime) * 100;
+                        const progressPercent = (elapsedSeconds / watchState.waitTime) * 100;
                         modalProgress.style.width = Math.min(progressPercent, 100) + '%';
                     }
                     
-                    // Update step timer display
-                    const stepTimerDisplay = document.getElementById(`timer-display-${stepIndex}`);
-                    if (stepTimerDisplay) stepTimerDisplay.textContent = state.timeLeft + 's';
-                    
-                    const stepProgress = document.getElementById(`progress-${stepIndex}`);
-                    if (stepProgress) {
-                        const progress = ((script.steps[stepIndex].waitTime - state.timeLeft) / script.steps[stepIndex].waitTime) * 100;
-                        stepProgress.style.width = progress + '%';
-                    }
-                    
                     // Check if timer completed
-                    if (elapsedSeconds >= script.steps[stepIndex].waitTime) {
-                        state.timerComplete = true;
-                        clearInterval(state.interval);
+                    if (elapsedSeconds >= watchState.waitTime) {
+                        watchState.completed = true;
+                        clearInterval(timerInterval);
                         
                         // Close modal
                         if (modal) modal.remove();
                         
                         // Complete step
-                        window.completeStep(stepIndex);
+                        if (window.currentUnlockScript) {
+                            window.completeStep(watchState.stepIndex);
+                        }
                         
                         showCopyNotification('✅ Video requirement completed!', false);
                     }
@@ -1578,7 +1618,7 @@
                 if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleSkipAttempt('keyboard', stepIndex);
+                    handleWatchSkipAttempt('keyboard', watchState);
                     return false;
                 }
             };
@@ -1598,15 +1638,16 @@
             observer.observe(document.body, { childList: true, subtree: true });
         }
 
-        function onVideoStateChange(event, stepIndex) {
-            const state = activeStepStates[stepIndex];
-            if (!state || !state.linkClicked || state.timerComplete) return;
+        function onWatchStateChange(event, watchState) {
+            const player = event.target;
+            
+            if (watchState.completed) return;
             
             // Force play if paused
             if (event.data === YT.PlayerState.PAUSED) {
                 setTimeout(() => {
-                    if (youtubePlayer && state.linkClicked && !state.timerComplete) {
-                        youtubePlayer.playVideo();
+                    if (player && !watchState.completed) {
+                        player.playVideo();
                     }
                 }, 500);
             }
@@ -1614,19 +1655,19 @@
             // Force play if buffering
             if (event.data === YT.PlayerState.BUFFERING) {
                 setTimeout(() => {
-                    if (youtubePlayer && state.linkClicked && !state.timerComplete) {
-                        youtubePlayer.playVideo();
+                    if (player && !watchState.completed) {
+                        player.playVideo();
                     }
                 }, 1000);
             }
             
-            // Block ending early
+            // Loop shorts
             if (event.data === YT.PlayerState.ENDED) {
-                const state = activeStepStates[stepIndex];
-                if (state && !state.timerComplete) {
-                    youtubePlayer.seekTo(0, true);
-                    youtubePlayer.playVideo();
-                }
+                setTimeout(() => {
+                    if (player && !watchState.completed) {
+                        player.playVideo();
+                    }
+                }, 100);
             }
         }
 
@@ -1635,11 +1676,10 @@
             showCopyNotification('❌ Video error - please refresh', true);
         }
 
-        function handleSkipAttempt(reason, stepIndex, amount = 0) {
-            const state = activeStepStates[stepIndex];
-            if (!state || state.timerComplete) return;
+        function handleWatchSkipAttempt(reason, watchState, amount = 0) {
+            if (watchState.completed) return;
             
-            skipAttempts++;
+            watchState.skipAttempts++;
             
             const warning = document.getElementById('video-warning');
             if (warning) {
@@ -1649,27 +1689,20 @@
                 }, 3000);
             }
             
-            let message = `⚠️ Skip detected! Attempt ${skipAttempts}/3`;
+            let message = `⚠️ Skip detected! Attempt ${watchState.skipAttempts}/3`;
             if (reason === 'keyboard') message = '⚠️ Keyboard controls disabled! ' + message;
             if (reason === 'click') message = '⚠️ Don\'t click the video! ' + message;
             
             showCopyNotification(message, true);
             
-            if (skipAttempts >= 3) {
-                antiSkipActive = false;
+            if (watchState.skipAttempts >= 3) {
                 if (youtubePlayer) youtubePlayer.pauseVideo();
                 
                 showCopyNotification('❌ Too many skips - Refresh page', true);
                 
-                // Disable step
-                state.timerComplete = false;
-                state.linkClicked = false;
-                
-                // Close any open modals
+                // Close modal
                 const modals = document.querySelectorAll('div[style*="position: fixed"]');
                 modals.forEach(modal => modal.remove());
-                
-                renderUnlockSteps(window.currentUnlockScript);
             }
         }
 
@@ -1693,11 +1726,6 @@
                         progressBar.style.width = progress + '%';
                     }
                     
-                    const completeBtn = document.getElementById(`complete-btn-${stepIndex}`);
-                    if (completeBtn) {
-                        completeBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Wait for timer (${state.timeLeft}s)`;
-                    }
-                    
                     if (state.timeLeft <= 0) {
                         state.timerComplete = true;
                         clearInterval(state.interval);
@@ -1713,6 +1741,8 @@
         // ============ COMPLETE STEP ============
         window.completeStep = function(stepIndex) {
             const script = window.currentUnlockScript;
+            if (!script) return;
+            
             const state = activeStepStates[stepIndex];
             
             if (!state.timerComplete) {
@@ -1735,14 +1765,6 @@
             
             renderUnlockSteps(script);
             showCopyNotification(`✅ Step ${stepIndex + 1} completed!`, false);
-        };
-
-        // ============ FORCE COMPLETE STEP ============
-        window.forceCompleteStep = function(stepIndex) {
-            const state = activeStepStates[stepIndex];
-            if (state.timeLeft <= 0) {
-                window.completeStep(stepIndex);
-            }
         };
 
         // ============ UPDATE OVERALL PROGRESS ============
@@ -1776,6 +1798,30 @@
             
             window.location.href = script.unlockUrl;
         };
+
+        // ============ UTILITY FUNCTIONS ============
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function getStepIcon(type) {
+            const icons = {
+                follow: 'fa-user-plus',
+                like: 'fa-heart',
+                comment: 'fa-comment',
+                watch: 'fa-eye',
+                subscribe: 'fa-bell',
+                retweet: 'fa-retweet',
+                reply: 'fa-reply',
+                join: 'fa-door-open',
+                verify: 'fa-check-circle',
+                react: 'fa-smile',
+                custom: 'fa-link'
+            };
+            return icons[type] || 'fa-link';
+        }
 
         // ============ COPY TO CLIPBOARD ============
         window.copyToClipboard = async function(text, element = null) {
@@ -2298,33 +2344,12 @@
                             <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
                         </div>
                         
-                        <div class="wait-time-control ${isOwner ? 'admin-only' : ''}">
+                        <div class="wait-time-control">
                             <span class="wait-time-badge">
-                                <i class="fas fa-clock"></i> Wait Time
+                                <i class="fas fa-clock"></i> Wait Time (0-30s)
                             </span>
-                            ${isOwner ? `
-                                <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="999" step="1">
-                                <span style="color: var(--text-dim);">seconds (Admin: any value)</span>
-                            ` : isPremium ? `
-                                <select id="step-wait-${index}" class="step-select" style="width: auto; margin-bottom: 0;">
-                                    <option value="10" ${step.wait === 10 ? 'selected' : ''}>10 seconds</option>
-                                    <option value="20" ${step.wait === 20 ? 'selected' : ''}>20 seconds</option>
-                                    <option value="30" ${step.wait === 30 ? 'selected' : ''}>30 seconds</option>
-                                    <option value="40" ${step.wait === 40 ? 'selected' : ''}>40 seconds</option>
-                                    <option value="50" ${step.wait === 50 ? 'selected' : ''}>50 seconds</option>
-                                    <option value="60" ${step.wait === 60 ? 'selected' : ''}>60 seconds</option>
-                                </select>
-                                <span style="color: var(--text-dim);">Premium: +10 increments</span>
-                            ` : `
-                                <select id="step-wait-${index}" class="step-select" style="width: auto; margin-bottom: 0;">
-                                    <option value="10" ${step.wait === 10 ? 'selected' : ''}>10 seconds</option>
-                                    <option value="15" ${step.wait === 15 ? 'selected' : ''}>15 seconds</option>
-                                    <option value="20" ${step.wait === 20 ? 'selected' : ''}>20 seconds</option>
-                                    <option value="25" ${step.wait === 25 ? 'selected' : ''}>25 seconds</option>
-                                    <option value="30" ${step.wait === 30 ? 'selected' : ''}>30 seconds</option>
-                                </select>
-                                <span style="color: var(--text-dim);">Free: 0-30 seconds</span>
-                            `}
+                            <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="30" step="1">
+                            <span style="color: var(--text-dim);">seconds</span>
                         </div>
                         
                         <input type="hidden" class="step-type" value="${step.type}">
@@ -2341,17 +2366,6 @@
                         </h1>
                         <span class="badge-premium">${template.steps.length} Steps</span>
                     </div>
-                    
-                    <div class="upload-area" onclick="document.getElementById('media-upload').click()">
-                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                        <h3>Upload Thumbnail (Optional)</h3>
-                        <p style="color: var(--text-dim);">Click to upload image or video</p>
-                        <div class="skip-thumbnail" onclick="event.stopPropagation(); window.skipThumbnail()">
-                            <i class="fas fa-forward"></i> Skip
-                        </div>
-                    </div>
-                    <input type="file" id="media-upload" accept="image/*,video/*" style="display: none;" onchange="window.handleMediaUpload(this.files[0])">
-                    <div id="upload-preview" style="margin-bottom: 32px;"></div>
                     
                     <h2 style="margin-bottom: 20px;">Required Steps</h2>
                     <div id="steps-container">${stepsHTML}</div>
@@ -2409,17 +2423,6 @@
                     <div style="margin-top: 32px;">
                         <h2>Manual Creation</h2>
                         
-                        <div class="upload-area" onclick="document.getElementById('media-upload').click()">
-                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                            <h3>Upload Thumbnail (Optional)</h3>
-                            <p style="color: var(--text-dim);">Click to upload image or video</p>
-                            <div class="skip-thumbnail" onclick="event.stopPropagation(); window.skipThumbnail()">
-                                <i class="fas fa-forward"></i> Skip
-                            </div>
-                        </div>
-                        <input type="file" id="media-upload" accept="image/*,video/*" style="display: none;" onchange="window.handleMediaUpload(this.files[0])">
-                        <div id="upload-preview" style="margin-bottom: 32px;"></div>
-                        
                         <div id="steps-container"></div>
                         
                         <div class="add-step-btn" onclick="window.addManualStep()" style="background: rgba(99,102,241,0.1); border: 2px dashed var(--primary); border-radius: 24px; padding: 32px; text-align: center; cursor: pointer; margin: 32px 0;">
@@ -2459,7 +2462,6 @@
             
             const stepCount = stepsContainer.children.length;
             const maxSteps = isPremium ? 20 : 8;
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
             
             if (stepCount >= maxSteps) {
                 showCopyNotification(`⚠️ Maximum ${maxSteps} steps reached`, true);
@@ -2486,45 +2488,23 @@
                         <option value="like">👍 Like & Subscribe</option>
                         <option value="follow">👥 Follow Channel</option>
                         <option value="comment">💬 Comment</option>
-                        <option value="watch">🎬 Watch Video</option>
+                        <option value="watch" selected>🎬 Watch Video</option>
                         <option value="join">🚪 Join Server</option>
-                        <option value="custom" selected>🔗 Custom Link</option>
+                        <option value="custom">🔗 Custom Link</option>
                     </select>
                     
                     <div class="step-url-container" style="margin-bottom: 8px;">
                         <input type="url" class="step-url-input" placeholder="Enter URL" required>
                     </div>
                     
-                    <div class="wait-time-control ${isOwner ? 'admin-only' : ''}">
+                    <div class="wait-time-control">
                         <span class="wait-time-badge">
-                            <i class="fas fa-clock"></i> Wait Time
+                            <i class="fas fa-clock"></i> Wait Time (0-30s)
                         </span>
-                        ${isOwner ? `
-                            <input type="number" class="wait-time-input" value="20" min="0" max="999" step="1">
-                            <span style="color: var(--text-dim);">Admin: any value</span>
-                        ` : isPremium ? `
-                            <select class="step-select" style="width: auto; margin-bottom: 0;">
-                                <option value="10">10 seconds</option>
-                                <option value="20" selected>20 seconds</option>
-                                <option value="30">30 seconds</option>
-                                <option value="40">40 seconds</option>
-                                <option value="50">50 seconds</option>
-                                <option value="60">60 seconds</option>
-                            </select>
-                            <span style="color: var(--text-dim);">Premium: +10 increments</span>
-                        ` : `
-                            <select class="step-select" style="width: auto; margin-bottom: 0;">
-                                <option value="10">10 seconds</option>
-                                <option value="15">15 seconds</option>
-                                <option value="20" selected>20 seconds</option>
-                                <option value="25">25 seconds</option>
-                                <option value="30">30 seconds</option>
-                            </select>
-                            <span style="color: var(--text-dim);">Free: 0-30 seconds</span>
-                        `}
+                        <input type="number" class="wait-time-input" value="20" min="0" max="30" step="1">
                     </div>
                     
-                    <input type="hidden" class="step-type" value="custom">
+                    <input type="hidden" class="step-type" value="watch">
                 </div>
             `;
             
@@ -2570,36 +2550,6 @@
             if (typeInput) typeInput.value = select.value;
         };
 
-        window.skipThumbnail = function() {
-            const preview = document.getElementById('upload-preview');
-            if (preview) {
-                preview.innerHTML = `
-                    <div style="background: rgba(16,185,129,0.1); border-radius: 16px; padding: 20px; border: 1px solid #10b981;">
-                        <p><i class="fas fa-check-circle" style="color: #10b981;"></i> Thumbnail skipped</p>
-                    </div>
-                `;
-            }
-            window.currentMediaURL = null;
-        };
-
-        window.handleMediaUpload = function(file) {
-            if (!file) return;
-            
-            const preview = document.getElementById('upload-preview');
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                window.currentMediaURL = e.target.result;
-                preview.innerHTML = `
-                    <div style="background: rgba(99,102,241,0.1); border-radius: 16px; padding: 20px; border: 1px solid #6366f1;">
-                        <p><i class="fas fa-check-circle" style="color: #10b981;"></i> Uploaded: ${file.name}</p>
-                    </div>
-                `;
-            };
-            
-            reader.readAsDataURL(file);
-        };
-
         // ============ CREATE SCRIPT ============
         window.createScript = function() {
             if (!currentUser) {
@@ -2614,25 +2564,17 @@
                 const nameInput = card.querySelector('.step-name-input');
                 const urlInput = card.querySelector('.step-url-input');
                 const typeInput = card.querySelector('.step-type');
-                let waitTime = 20;
+                const waitInput = card.querySelector('.wait-time-input');
                 
-                // Get wait time based on user type
-                const waitSelect = card.querySelector('select.step-select:last-of-type');
-                const waitNumber = card.querySelector('.wait-time-input');
-                
-                if (waitNumber) {
-                    waitTime = parseInt(waitNumber.value) || 20;
-                } else if (waitSelect) {
-                    waitTime = parseInt(waitSelect.value) || 20;
-                }
+                const waitTime = waitInput ? parseInt(waitInput.value) || 20 : 20;
                 
                 if (urlInput && urlInput.value) {
                     steps.push({
                         order: index + 1,
-                        type: typeInput ? typeInput.value : 'custom',
+                        type: typeInput ? typeInput.value : 'watch',
                         label: nameInput ? nameInput.value : `Step ${index + 1}`,
                         url: urlInput.value,
-                        waitTime: waitTime,
+                        waitTime: Math.min(30, Math.max(0, waitTime)), // Ensure between 0-30
                         completed: false,
                         locked: index > 0
                     });
@@ -2659,7 +2601,6 @@
                 ownerName: currentUser.displayName || 'Anonymous',
                 title: `${templateName} Unlocker ${new Date().toLocaleDateString()}`,
                 template: templateName,
-                thumbnail: window.currentMediaURL || '',
                 steps: steps,
                 unlockUrl: unlockUrl,
                 isPrivate: document.getElementById('private-script')?.checked || false,
@@ -2688,9 +2629,7 @@
             
             showCopyNotification(`✅ Script created! ${steps.length} steps`);
             
-            window.currentMediaURL = null;
             window.currentTemplate = null;
-            
             window.showMyScripts();
             
             setTimeout(() => {
@@ -2732,14 +2671,6 @@
                 
                 scriptsHTML += `
                     <div class="script-card">
-                        <div class="script-preview">
-                            ${script.thumbnail ? 
-                                `<img src="${script.thumbnail}" alt="Thumbnail">` : 
-                                `<div class="script-no-thumbnail">
-                                    <i class="fas ${getTemplateIcon(script.template)}" style="font-size: 48px;"></i>
-                                </div>`
-                            }
-                        </div>
                         <div class="script-stats">
                             <div class="stat-item">
                                 <div class="stat-value">${scriptViews}</div>
@@ -2795,85 +2726,6 @@
             `;
         };
 
-        // ============ SHOW ADMIN PANEL ============
-        window.showAdminPanel = function() {
-            if (currentUser?.email !== "plastealme2@vertexhub.com") {
-                showCopyNotification('⛔ Admin access only', true);
-                return;
-            }
-            
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS));
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS));
-            
-            let scriptsHTML = '';
-            scripts.forEach(script => {
-                const scriptUrl = `${GITHUB_PAGES_URL}#script-${script.scriptId}`;
-                scriptsHTML += `
-                    <div style="background: var(--dark-card); border-radius: 16px; padding: 20px; margin-bottom: 16px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h3>${script.title}</h3>
-                                <p style="color: var(--text-dim);">Owner: ${script.ownerName} • ${script.steps.length} steps</p>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <a href="${scriptUrl}" target="_blank" class="admin-script-link">
-                                    <i class="fas fa-external-link-alt"></i> View
-                                </a>
-                                <button onclick="window.adminDeleteScript('${script.scriptId}')" class="admin-delete-btn">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
-                            <div>Views: ${views[script.scriptId] || 0}</div>
-                            <div>Unlocks: ${unlocks[script.scriptId] || 0}</div>
-                            <div>Status: ${script.isPrivate ? 'Private' : 'Public'}</div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title">Admin Panel</h1>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h3>${scripts.length}</h3>
-                            <p>Total Scripts</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>${users.length}</h3>
-                            <p>Total Users</p>
-                        </div>
-                    </div>
-                    
-                    <h2 style="margin: 32px 0 20px;">All Scripts</h2>
-                    <div class="admin-scripts-grid">${scriptsHTML}</div>
-                </div>
-            `;
-        };
-
-        window.adminDeleteScript = function(scriptId) {
-            if (currentUser?.email !== "plastealme2@vertexhub.com") {
-                showCopyNotification('⛔ Admin access only', true);
-                return;
-            }
-            
-            if (confirm('Delete this script permanently?')) {
-                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
-                const filtered = scripts.filter(s => s.scriptId !== scriptId);
-                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(filtered));
-                showCopyNotification('✅ Script deleted');
-                window.showAdminPanel();
-            }
-        };
-
         // ============ SHOW UPGRADE ============
         window.showUpgrade = function() {
             const container = document.getElementById('main-content');
@@ -2909,40 +2761,80 @@
                     </div>
                     
                     <div style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.1)); border-radius: 32px; padding: 32px;">
-                        <h2 style="color: #f59e0b;">⚠️ Watch Timer Required</h2>
+                        <h2 style="color: #f59e0b; margin-bottom: 20px;">⚠️ Watch This Short to Upgrade</h2>
                         
-                        <div class="custom-video-container">
+                        <div class="custom-shorts-container">
                             <div id="premium-video-player"></div>
                             <div class="video-overlay" id="premium-overlay"></div>
                             <div class="video-timer-progress" id="premium-progress"></div>
-                            <div class="video-timer-display" id="premium-timer">0:00 / 7:22</div>
+                            <div class="video-timer-display" id="premium-timer">0:00 / 0:30</div>
                         </div>
                         
                         <div style="margin: 20px 0;">
                             <div class="timer-progress-bar">
                                 <div id="premium-timer-progress" class="timer-progress-fill" style="width: 0%;"></div>
                             </div>
-                            <p id="premium-status" style="text-align: center; margin-top: 10px;">Timer: 0/${videoDuration} seconds</p>
+                            <p id="premium-status" style="text-align: center; margin-top: 10px;">Timer: 0/30 seconds</p>
                         </div>
                         
                         <button id="premium-activate-btn" class="btn-primary" onclick="window.activatePremium()" disabled>
-                            <i class="fas fa-lock"></i> Wait for Timer
+                            <i class="fas fa-lock"></i> Watch Full Short to Activate
                         </button>
                     </div>
                 </div>
             `;
             
-            loadPremiumTimer();
+            loadPremiumShort();
         };
 
-        function loadPremiumTimer() {
+        function loadPremiumShort() {
             const overlay = document.getElementById('premium-overlay');
             if (overlay) {
                 overlay.style.pointerEvents = 'all';
             }
             
             let timerSeconds = 0;
-            const requiredSeconds = videoDuration;
+            const requiredSeconds = 30;
+            let shortPlayer = null;
+            let skipAttempts = 0;
+            
+            // Load YouTube Short
+            setTimeout(() => {
+                shortPlayer = new YT.Player('premium-video-player', {
+                    videoId: PREMIUM_SHORTS_ID,
+                    width: '100%',
+                    height: '100%',
+                    playerVars: {
+                        autoplay: 1,
+                        controls: 0,
+                        disablekb: 1,
+                        fs: 0,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0,
+                        iv_load_policy: 3,
+                        playsinline: 1,
+                        loop: 1,
+                        playlist: PREMIUM_SHORTS_ID,
+                        enablejsapi: 1
+                    },
+                    events: {
+                        'onReady': (event) => {
+                            event.target.mute();
+                            event.target.playVideo();
+                        },
+                        'onStateChange': (event) => {
+                            if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                                setTimeout(() => {
+                                    if (shortPlayer && timerSeconds < requiredSeconds) {
+                                        shortPlayer.playVideo();
+                                    }
+                                }, 100);
+                            }
+                        }
+                    }
+                });
+            }, 100);
             
             const timerInterval = setInterval(() => {
                 if (!antiSkipActive || hasWatchedFullVideo) {
@@ -2962,10 +2854,9 @@
                 if (progressBar) progressBar.style.width = progress + '%';
                 if (timerProgress) timerProgress.style.width = progress + '%';
                 
-                const minutes = Math.floor(timerSeconds / 60);
                 const seconds = timerSeconds % 60;
                 if (timerDisplay) {
-                    timerDisplay.innerHTML = `${minutes}:${seconds.toString().padStart(2,'0')} / 7:22`;
+                    timerDisplay.innerHTML = `0:${seconds.toString().padStart(2,'0')} / 0:30`;
                 }
                 
                 if (status) {
@@ -3120,23 +3011,6 @@
         };
 
         // ============ UTILITY FUNCTIONS ============
-        function getStepIcon(type) {
-            const icons = {
-                follow: 'fa-user-plus',
-                like: 'fa-heart',
-                comment: 'fa-comment',
-                watch: 'fa-eye',
-                subscribe: 'fa-bell',
-                retweet: 'fa-retweet',
-                reply: 'fa-reply',
-                join: 'fa-door-open',
-                verify: 'fa-check-circle',
-                react: 'fa-smile',
-                custom: 'fa-link'
-            };
-            return icons[type] || 'fa-link';
-        }
-
         function getTemplateColor(name) {
             const colors = {
                 TikTok: '#000000',
@@ -3147,18 +3021,6 @@
                 Twitch: '#9146FF'
             };
             return colors[name] || '#6366f1';
-        }
-
-        function getTemplateIcon(template) {
-            const icons = {
-                TikTok: 'fa-tiktok',
-                YouTube: 'fa-youtube',
-                Instagram: 'fa-instagram',
-                'X': 'fa-twitter',
-                Discord: 'fa-discord',
-                Twitch: 'fa-twitch'
-            };
-            return icons[template] || 'fa-cube';
         }
 
         // ============ INITIALIZE ============
@@ -3178,4 +3040,4 @@
         };
     </script>
 </body>
-    </html>
+</html>
