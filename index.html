@@ -3,17 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>VertexHub 3.0 · plastealme2's Unlocker Studio</title>
+    <title>VertexHub 3.0 · Local Storage Version</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- YouTube IFrame API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <!-- Anime.js for animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <!-- Chart.js for analytics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
         /* ============ ROOT VARIABLES & DARK THEME ============ */
@@ -134,17 +128,6 @@
             animation: pulseGlow 15s infinite;
         }
         
-        .auth-container::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="%236366f1" stroke-width="0.5" opacity="0.1"/></svg>');
-            background-size: 60px 60px;
-            opacity: 0.1;
-            pointer-events: none;
-        }
-        
         .auth-card {
             background: rgba(18, 22, 33, 0.95);
             backdrop-filter: blur(10px);
@@ -158,34 +141,6 @@
             position: relative;
             z-index: 2;
             animation: slideUp 0.6s ease;
-        }
-        
-        .auth-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 32px;
-            background: rgba(0,0,0,0.2);
-            padding: 8px;
-            border-radius: 100px;
-        }
-        
-        .auth-tab {
-            flex: 1;
-            padding: 12px 24px;
-            background: transparent;
-            border: none;
-            color: var(--text-dim);
-            font-weight: 600;
-            border-radius: 100px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: clamp(14px, 1.8vw, 16px);
-        }
-        
-        .auth-tab.active {
-            background: var(--gradient-primary);
-            color: white;
-            box-shadow: var(--shadow-glow);
         }
         
         /* ============ DASHBOARD LAYOUT ============ */
@@ -268,11 +223,6 @@
             margin-bottom: 32px;
             border: 1px solid var(--border);
             transition: all 0.3s ease;
-        }
-        
-        .user-card:hover {
-            border-color: var(--border-active);
-            box-shadow: var(--shadow-glow);
         }
         
         .badge-premium {
@@ -370,16 +320,6 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 24px -8px rgba(99,102,241,0.5);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-        
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
         }
         
         .auth-input, .step-url-input, .step-select, .share-input {
@@ -621,234 +561,67 @@
             transform: scale(0.98);
         }
         
-        /* ============ UPLOAD AREA ============ */
-        .upload-area {
-            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
-            border: 2px dashed var(--border-light);
-            border-radius: 24px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 32px;
-            position: relative;
-            overflow: hidden;
+        /* ============ UNLOCKER VIEW ============ */
+        .unlocker-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
         }
         
-        .upload-area:hover {
-            border-color: var(--primary);
-            background: rgba(99,102,241,0.15);
-        }
-        
-        .upload-icon {
-            font-size: clamp(48px, 8vw, 64px);
-            color: var(--primary);
-            margin-bottom: 16px;
-        }
-        
-        .skip-thumbnail {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(0,0,0,0.5);
-            padding: 8px 16px;
-            border-radius: 100px;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: white;
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
+        .unlock-step {
+            background: var(--dark-card);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
             transition: all 0.3s ease;
         }
         
-        .skip-thumbnail:hover {
-            background: var(--danger);
-            border-color: var(--danger);
+        .unlock-step.completed {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
         }
         
-        /* ============ PREMIUM FEATURES ============ */
-        .premium-features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-            gap: clamp(20px, 2.5vw, 28px);
-            margin-bottom: 48px;
-        }
-        
-        .premium-feature-card {
-            background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.05));
-            border-radius: 24px;
-            padding: 32px 24px;
-            text-align: center;
-            border: 1px solid rgba(245,158,11,0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .premium-feature-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-4px);
-            box-shadow: 0 0 30px rgba(245,158,11,0.2);
-        }
-        
-        /* ============ FORCED TIMER COMPONENTS ============ */
-        .forced-timer-container {
-            background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
-            border-radius: 28px;
-            padding: clamp(24px, 3vw, 32px);
-            margin: 24px 0;
-            border: 1px solid var(--primary);
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .forced-timer-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(99,102,241,0.1), transparent 70%);
+        .unlock-step.locked {
+            opacity: 0.5;
             pointer-events: none;
         }
         
-        .timer-circle {
-            width: clamp(70px, 12vw, 90px);
-            height: clamp(70px, 12vw, 90px);
-            border-radius: 50%;
-            background: var(--gradient-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(24px, 4vw, 32px);
-            font-weight: 800;
-            color: white;
-            position: relative;
-            box-shadow: 0 0 30px rgba(99,102,241,0.5);
+        .unlock-step.active {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+            transform: scale(1.02);
         }
         
-        .timer-circle::before {
-            content: '';
-            position: absolute;
-            width: 115%;
-            height: 115%;
-            border-radius: 50%;
-            border: 2px solid var(--primary);
-            animation: pulseRing 2s infinite;
-        }
-        
-        .timer-progress {
-            flex: 1;
-            min-width: 250px;
-        }
-        
-        .timer-progress-bar {
-            width: 100%;
-            height: 12px;
-            background: var(--dark-input);
-            border-radius: 100px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-        
-        .timer-progress-fill {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: 100px;
-            width: 0%;
-            transition: width 0.3s linear;
-        }
-        
-        .timer-warning {
+        .step-timer-display {
+            font-size: 24px;
+            font-weight: 700;
             color: var(--accent);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(245,158,11,0.1);
-            padding: 12px 24px;
+            margin: 16px 0;
+        }
+        
+        .unlock-button {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 16px 32px;
             border-radius: 100px;
-            border: 1px solid var(--accent);
-            animation: pulse 2s infinite;
-        }
-        
-        /* ============ VIDEO CONTAINER ============ */
-        .video-container {
-            position: relative;
-            width: 100%;
-            border-radius: 28px;
-            overflow: hidden;
-            margin: 32px 0;
-            box-shadow: 0 0 0 1px rgba(99,102,241,0.3), 0 20px 40px -12px black;
-            aspect-ratio: 16 / 9;
-            background: black;
-        }
-        
-        #youtube-player {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* ============ ANALYTICS CARDS ============ */
-        .analytics-dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
-            gap: 28px;
-            margin-bottom: 40px;
-        }
-        
-        .analytics-card {
-            background: var(--dark-card);
-            border-radius: 24px;
-            padding: 28px;
-            border: 1px solid var(--border);
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 250px;
-            width: 100%;
-        }
-        
-        /* ============ ADMIN TABLE ============ */
-        .admin-panel {
-            background: var(--dark-card);
-            border-radius: 28px;
-            padding: 32px;
-            margin-top: 48px;
-            border: 1px solid var(--border);
-        }
-        
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .admin-table th {
-            text-align: left;
-            padding: 16px;
-            background: rgba(99,102,241,0.1);
-            color: var(--text-dim);
             font-weight: 600;
-            font-size: 13px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 24px;
+            transition: all 0.3s ease;
         }
         
-        .admin-table td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
+        .unlock-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
-        .admin-table tr:hover td {
-            background: rgba(255,255,255,0.02);
+        .unlock-button:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
         }
         
         /* ============ COPY TO CLIPBOARD BUTTON ============ */
@@ -879,10 +652,6 @@
             background: var(--success);
             border-color: var(--success);
             animation: pulse 0.5s ease;
-        }
-        
-        .copy-btn i {
-            font-size: 16px;
         }
         
         .copy-feedback {
@@ -920,34 +689,10 @@
             font-size: 13px;
         }
         
-        /* ============ ANTI-SKIP OVERLAY ============ */
-        .anti-skip-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 20px;
-            text-align: center;
-        }
-        
         /* ============ ANIMATIONS ============ */
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.3; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.2); }
-        }
-        
-        @keyframes pulseRing {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.5); opacity: 0; }
         }
         
         @keyframes pulse {
@@ -970,30 +715,6 @@
             to { opacity: 1; transform: translate(-50%, 0); }
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        
-        .shake {
-            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .fa-spin-custom {
-            animation: spin 1s linear infinite;
-        }
-        
         /* ============ LOADING SPINNER ============ */
         .spinner {
             width: 40px;
@@ -1003,6 +724,11 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         
         /* ============ PROGRESS BAR ============ */
@@ -1023,44 +749,6 @@
             transition: width 0.3s ease;
         }
         
-        /* ============ TOUCH OPTIMIZATIONS ============ */
-        @media (hover: none) and (pointer: coarse) {
-            .nav-item, .btn-primary, .template-card, .upload-area, .add-step-btn, .copy-btn {
-                cursor: default;
-                -webkit-tap-highlight-color: rgba(99,102,241,0.3);
-            }
-            
-            .nav-item:active, .btn-primary:active, .template-card:active, .copy-btn:active {
-                transform: scale(0.98);
-            }
-        }
-        
-        /* ============ GITHUB PAGES SPECIFIC ============ */
-        .github-corner {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--dark-card);
-            border-radius: 100px;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-            z-index: 999;
-            font-size: 14px;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        
-        .github-corner:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow);
-        }
-        
         /* ============ UTILITY CLASSES ============ */
         .text-gradient {
             background: var(--gradient-primary);
@@ -1078,22 +766,6 @@
         .gap-2 { gap: 8px; }
         .gap-3 { gap: 16px; }
         .gap-4 { gap: 24px; }
-        
-        .alert {
-            padding: 16px 24px;
-            border-radius: 100px;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid var(--danger);
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert-success {
-            background: rgba(16,185,129,0.1);
-            border-color: var(--success);
-        }
     </style>
 </head>
 <body>
@@ -1106,82 +778,286 @@
         <i class="fas fa-external-link-alt" style="font-size: 12px; opacity: 0.7;"></i>
     </a>
 
-    <script type="module">
-        // ============ FIREBASE IMPORTS ============
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword,
-            signInWithEmailAndPassword,
-            signOut,
-            updateProfile,
-            onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            doc, 
-            setDoc, 
-            getDoc,
-            getDocs, 
-            addDoc,
-            updateDoc,
-            deleteDoc,
-            query, 
-            where, 
-            orderBy, 
-            limit,
-            serverTimestamp,
-            increment,
-            onSnapshot
-        } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
-        import { 
-            getStorage, 
-            ref, 
-            uploadBytes, 
-            getDownloadURL 
-        } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js";
-
-        // ============ YOUR FIREBASE CONFIG ============
-        const firebaseConfig = {
-            apiKey: "AIzaSyA5q4wHLFsc7bZrFalQmH8GxoFozCzNc3s",
-            authDomain: "vertexhub-5db74.firebaseapp.com",
-            projectId: "vertexhub-5db74",
-            storageBucket: "vertexhub-5db74.firebasestorage.app",
-            messagingSenderId: "983622033163",
-            appId: "1:983622033163:web:ae8fd3cc9ac60c0bc5cc0e"
-        };
-
-        // ============ INITIALIZE FIREBASE ============
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-
+    <script>
         // ============ APP STATE ============
         let currentUser = null;
         let isPremium = false;
         let currentScripts = [];
-        let youtubePlayer = null;
-        let hasWatchedFullVideo = false;
         let activeStepTimers = {};
         let currentTemplate = null;
-        let charts = {};
-        let forcedTimerInterval = null;
-        let forcedTimerSeconds = 1076; // 17:56 = 1076 seconds
-        let antiSkipActive = true;
-        let lastKnownTime = 0;
-        let skipAttempts = 0;
         
         // GitHub Pages base URL
-        const GITHUB_PAGES_URL = "https://defnot67kid-beep.github.io/VertexHub";
+        const GITHUB_PAGES_URL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+        
+        // ============ LOCAL STORAGE KEYS ============
+        const STORAGE_KEYS = {
+            USERS: 'vertexhub_users',
+            SCRIPTS: 'vertexhub_scripts',
+            CURRENT_USER: 'vertexhub_current_user',
+            SCRIPT_VIEWS: 'vertexhub_script_views',
+            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks'
+        };
 
-        // ============ ADVANCED COPY TO CLIPBOARD WITH VISUAL FEEDBACK ============
+        // ============ INITIALIZE STORAGE ============
+        function initStorage() {
+            if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.SCRIPTS)) {
+                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify([]));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) {
+                localStorage.setItem(STORAGE_KEYS.SCRIPT_VIEWS, JSON.stringify({}));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) {
+                localStorage.setItem(STORAGE_KEYS.SCRIPT_UNLOCKS, JSON.stringify({}));
+            }
+            
+            // Check for logged in user
+            const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                isPremium = currentUser.isPremium || false;
+            }
+        }
+
+        // ============ URL ROUTING ============
+        function handleRouting() {
+            const path = window.location.pathname;
+            const hash = window.location.hash;
+            
+            // Check if we're viewing a script
+            if (path.includes('/script/') || hash.includes('#script-')) {
+                let scriptId;
+                if (path.includes('/script/')) {
+                    scriptId = path.split('/script/')[1];
+                } else {
+                    scriptId = hash.replace('#script-', '');
+                }
+                
+                if (scriptId) {
+                    loadScriptView(scriptId);
+                    return true;
+                }
+            }
+            
+            // Check if we're in the creator
+            if (hash === '#creator' || hash === '#dashboard') {
+                if (currentUser) {
+                    renderDashboard();
+                } else {
+                    renderAuth();
+                }
+                return true;
+            }
+            
+            return false;
+        }
+
+        // ============ LOAD SCRIPT VIEW ============
+        function loadScriptView(scriptId) {
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const script = scripts.find(s => s.scriptId === scriptId);
+            
+            if (!script) {
+                document.getElementById('app').innerHTML = `
+                    <div class="auth-container">
+                        <div class="auth-card text-center">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
+                            <h2 style="margin-bottom: 16px;">Script Not Found</h2>
+                            <p style="color: var(--text-dim); margin-bottom: 24px;">The unlocker you're looking for doesn't exist or has been deleted.</p>
+                            <button class="btn-primary" onclick="window.location.hash='#creator'">
+                                <i class="fas fa-plus-circle"></i> Create Your Own
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Increment view count
+            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS));
+            views[scriptId] = (views[scriptId] || 0) + 1;
+            localStorage.setItem(STORAGE_KEYS.SCRIPT_VIEWS, JSON.stringify(views));
+            
+            renderUnlocker(script);
+        }
+
+        // ============ RENDER UNLOCKER ============
+        function renderUnlocker(script) {
+            const app = document.getElementById('app');
+            
+            app.innerHTML = `
+                <div class="unlocker-container">
+                    <div style="text-align: center; margin-bottom: 32px;">
+                        <i class="fas fa-cube" style="font-size: 48px; color: #6366f1; margin-bottom: 16px;"></i>
+                        <h1 style="font-size: 32px; margin-bottom: 8px;">${script.title || 'Content Unlocker'}</h1>
+                        <p style="color: var(--text-dim);">Complete all steps to unlock your content</p>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" id="unlock-progress" style="width: 0%;"></div>
+                    </div>
+                    
+                    <div id="unlock-steps"></div>
+                    
+                    <button class="unlock-button" id="final-unlock-btn" disabled onclick="window.finalUnlock()">
+                        <i class="fas fa-lock"></i> Complete Steps to Unlock
+                    </button>
+                    
+                    <div style="margin-top: 32px; text-align: center; color: var(--text-dim); font-size: 14px;">
+                        <i class="fas fa-shield-alt"></i> Powered by VertexHub
+                    </div>
+                </div>
+            `;
+            
+            // Initialize unlocker state
+            window.currentUnlockScript = script;
+            window.unlockState = {
+                currentStep: 0,
+                completedSteps: [],
+                activeTimer: null
+            };
+            
+            renderUnlockSteps(script);
+        }
+
+        // ============ RENDER UNLOCK STEPS ============
+        function renderUnlockSteps(script) {
+            const container = document.getElementById('unlock-steps');
+            if (!container) return;
+            
+            let stepsHTML = '';
+            script.steps.forEach((step, index) => {
+                const isCompleted = window.unlockState.completedSteps.includes(index);
+                const isLocked = script.sequentialRequired && index > window.unlockState.currentStep;
+                const isActive = index === window.unlockState.currentStep && !isCompleted;
+                
+                stepsHTML += `
+                    <div class="unlock-step ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''} ${isActive ? 'active' : ''}" data-step="${index}">
+                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                            <div style="width: 40px; height: 40px; background: ${isCompleted ? '#10b981' : (isActive ? '#6366f1' : 'var(--dark-input)')}; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas ${isCompleted ? 'fa-check' : (index + 1)}" style="color: white;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="margin-bottom: 4px;">${step.label || `Step ${index + 1}`}</h3>
+                                <p style="color: var(--text-dim); font-size: 14px;">${step.type} · ${step.waitTime}s wait</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step-url-container" style="margin-bottom: 16px;">
+                            <input type="url" id="step-url-${index}" class="step-url-input" value="${step.url}" readonly>
+                            <a href="${step.url}" target="_blank" class="copy-btn" style="text-decoration: none;" onclick="window.trackStepClick(${index})">
+                                <i class="fas fa-external-link-alt"></i> Visit Link
+                            </a>
+                        </div>
+                        
+                        ${!isCompleted && isActive ? `
+                            <div class="step-timer-display" id="timer-${index}">
+                                <i class="fas fa-hourglass-half"></i> <span id="timer-value-${index}">${step.waitTime}</span>s remaining
+                            </div>
+                            <button class="btn-primary" onclick="window.completeStep(${index})" id="complete-btn-${index}" disabled>
+                                <i class="fas fa-hourglass-half"></i> Waiting...
+                            </button>
+                        ` : ''}
+                        
+                        ${isCompleted ? `
+                            <div style="color: #10b981; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = stepsHTML;
+            
+            // Start first step timer if needed
+            if (script.steps.length > 0 && window.unlockState.currentStep === 0) {
+                startStepTimer(0, script.steps[0].waitTime);
+            }
+        }
+
+        // ============ STEP TIMER ============
+        function startStepTimer(stepIndex, duration) {
+            if (window.unlockState.activeTimer) {
+                clearInterval(window.unlockState.activeTimer);
+            }
+            
+            let timeLeft = duration;
+            const timerDisplay = document.getElementById(`timer-value-${stepIndex}`);
+            const completeBtn = document.getElementById(`complete-btn-${stepIndex}`);
+            
+            window.unlockState.activeTimer = setInterval(() => {
+                timeLeft--;
+                if (timerDisplay) timerDisplay.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(window.unlockState.activeTimer);
+                    if (completeBtn) {
+                        completeBtn.disabled = false;
+                        completeBtn.innerHTML = '<i class="fas fa-check"></i> Mark as Completed';
+                    }
+                }
+            }, 1000);
+        }
+
+        // ============ COMPLETE STEP ============
+        window.completeStep = function(stepIndex) {
+            const script = window.currentUnlockScript;
+            if (!script) return;
+            
+            // Mark step as completed
+            window.unlockState.completedSteps.push(stepIndex);
+            
+            // Update progress
+            const progress = (window.unlockState.completedSteps.length / script.steps.length) * 100;
+            document.getElementById('unlock-progress').style.width = progress + '%';
+            
+            // Move to next step
+            if (stepIndex + 1 < script.steps.length) {
+                window.unlockState.currentStep = stepIndex + 1;
+                startStepTimer(stepIndex + 1, script.steps[stepIndex + 1].waitTime);
+            }
+            
+            // Check if all steps are completed
+            if (window.unlockState.completedSteps.length === script.steps.length) {
+                const unlockBtn = document.getElementById('final-unlock-btn');
+                if (unlockBtn) {
+                    unlockBtn.disabled = false;
+                    unlockBtn.innerHTML = '<i class="fas fa-unlock"></i> Unlock Content Now';
+                }
+            }
+            
+            // Re-render steps
+            renderUnlockSteps(script);
+        };
+
+        // ============ TRACK STEP CLICK ============
+        window.trackStepClick = function(stepIndex) {
+            // Track that user clicked the link
+            console.log(`Step ${stepIndex + 1} clicked`);
+        };
+
+        // ============ FINAL UNLOCK ============
+        window.finalUnlock = function() {
+            const script = window.currentUnlockScript;
+            if (!script) return;
+            
+            // Increment unlock count
+            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS));
+            unlocks[script.scriptId] = (unlocks[script.scriptId] || 0) + 1;
+            localStorage.setItem(STORAGE_KEYS.SCRIPT_UNLOCKS, JSON.stringify(unlocks));
+            
+            // Redirect to unlock URL
+            window.location.href = script.unlockUrl;
+        };
+
+        // ============ ADVANCED COPY TO CLIPBOARD ============
         window.copyToClipboard = async function(text, element = null) {
             try {
                 await navigator.clipboard.writeText(text);
                 
-                // Visual feedback on button if element provided
                 if (element) {
                     const originalHTML = element.innerHTML;
                     element.classList.add('copied');
@@ -1193,14 +1069,10 @@
                     }, 2000);
                 }
                 
-                // Show floating notification
-                showCopyNotification(text);
-                
+                showNotification('Link copied to clipboard!');
                 return true;
             } catch (err) {
-                console.error('Copy failed:', err);
-                
-                // Fallback for older browsers
+                // Fallback
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
@@ -1208,25 +1080,21 @@
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
                 
-                showCopyNotification(text, true);
+                showNotification('Link copied (basic method)', true);
                 return false;
             }
         };
         
-        // ============ SHOW COPY NOTIFICATION ============
-        function showCopyNotification(text, isFallback = false) {
-            // Remove existing notification
+        // ============ SHOW NOTIFICATION ============
+        function showNotification(message, isWarning = false) {
             const existing = document.querySelector('.copy-feedback');
             if (existing) existing.remove();
             
             const notification = document.createElement('div');
             notification.className = 'copy-feedback';
             notification.innerHTML = `
-                <i class="fas ${isFallback ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i>
-                <span>${isFallback ? 'Link copied (basic method)' : 'Link copied to clipboard!'}</span>
-                <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 100px; font-size: 12px; margin-left: 12px;">
-                    ${text.substring(0, 30)}...
-                </span>
+                <i class="fas ${isWarning ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i>
+                <span>${message}</span>
             `;
             
             document.body.appendChild(notification);
@@ -1237,33 +1105,131 @@
             }, 3000);
         }
 
-        // ============ AUTH STATE OBSERVER ============
-        onAuthStateChanged(auth, async (user) => {
-            currentUser = user;
-            if (user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    isPremium = userDoc.data().isPremium || false;
-                }
-                
-                if (user.email === "plastealme2@vertexhub.com") {
-                    isPremium = true;
-                    await updateDoc(doc(db, "users", user.uid), {
-                        isPremium: true,
-                        role: "admin"
-                    });
-                }
-                
-                renderDashboard();
-                loadUserScripts();
-                
-                if (user.email === "plastealme2@vertexhub.com") {
-                    setTimeout(() => loadAdminPanel(), 1000);
-                }
-            } else {
-                renderAuth();
+        // ============ AUTH FUNCTIONS ============
+        window.showLogin = function() {
+            document.getElementById('auth-form').innerHTML = `
+                <input type="email" id="login-email" class="auth-input" placeholder="Email" autocomplete="email">
+                <input type="password" id="login-password" class="auth-input" placeholder="Password" autocomplete="current-password">
+                <button class="btn-primary" onclick="window.handleLogin()">
+                    <i class="fas fa-sign-in-alt"></i> Login to VertexHub
+                </button>
+            `;
+            
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.auth-tab')[0]?.classList.add('active');
+        };
+
+        window.showSignup = function() {
+            document.getElementById('auth-form').innerHTML = `
+                <input type="text" id="signup-username" class="auth-input" placeholder="Username" autocomplete="username">
+                <input type="email" id="signup-email" class="auth-input" placeholder="Email" autocomplete="email">
+                <input type="password" id="signup-password" class="auth-input" placeholder="Password" autocomplete="new-password">
+                <button class="btn-primary" onclick="window.handleSignup()">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            `;
+            
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.auth-tab')[1]?.classList.add('active');
+        };
+
+        window.handleLogin = function() {
+            const email = document.getElementById('login-email')?.value;
+            const password = document.getElementById('login-password')?.value;
+            
+            if (!email || !password) {
+                showNotification('⚠️ Please fill in all fields', true);
+                return;
             }
-        });
+            
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const user = users.find(u => u.email === email && u.password === btoa(password));
+            
+            if (user) {
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    isPremium: user.isPremium || false,
+                    createdAt: user.createdAt
+                };
+                
+                isPremium = currentUser.isPremium;
+                
+                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+                showNotification('✅ Login successful!');
+                
+                window.location.hash = '#dashboard';
+                renderDashboard();
+            } else {
+                showNotification('❌ Invalid email or password', true);
+            }
+        };
+
+        window.handleSignup = function() {
+            const username = document.getElementById('signup-username')?.value;
+            const email = document.getElementById('signup-email')?.value;
+            const password = document.getElementById('signup-password')?.value;
+            
+            if (!username || !email || !password) {
+                showNotification('⚠️ Please fill in all fields', true);
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            
+            if (users.some(u => u.email === email)) {
+                showNotification('❌ Email already exists', true);
+                return;
+            }
+            
+            const isOwner = email === "plastealme2@vertexhub.com";
+            
+            const newUser = {
+                uid: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
+                username: username,
+                email: email,
+                displayName: username,
+                password: btoa(password),
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+                isPremium: isOwner ? true : false,
+                totalScripts: 0,
+                totalViews: 0,
+                totalUnlocks: 0,
+                role: isOwner ? "admin" : "user",
+                premiumSince: isOwner ? new Date().toISOString() : null
+            };
+            
+            users.push(newUser);
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+            
+            currentUser = {
+                uid: newUser.uid,
+                email: newUser.email,
+                displayName: newUser.displayName,
+                isPremium: newUser.isPremium,
+                createdAt: newUser.createdAt
+            };
+            
+            isPremium = currentUser.isPremium;
+            
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+            showNotification(isOwner ? '👑 Owner premium activated!' : '✅ Account created successfully!');
+            
+            window.location.hash = '#dashboard';
+            renderDashboard();
+        };
+
+        window.handleLogout = function() {
+            Object.keys(activeStepTimers).forEach(key => clearInterval(activeStepTimers[key]));
+            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+            currentUser = null;
+            isPremium = false;
+            showNotification('👋 Logged out successfully');
+            window.location.hash = '';
+            renderAuth();
+        };
 
         // ============ RENDER AUTH ============
         function renderAuth() {
@@ -1274,7 +1240,7 @@
                             <i class="fas fa-cube" style="font-size: 48px; color: #6366f1; margin-bottom: 16px;"></i>
                             <h1 style="font-size: 36px; margin-bottom: 8px;">VertexHub</h1>
                             <span style="background: rgba(99,102,241,0.2); padding: 8px 20px; border-radius: 100px; font-size: 14px;">
-                                <i class="fas fa-crown" style="color: #f59e0b;"></i> plastealme2's Studio
+                                <i class="fas fa-crown" style="color: #f59e0b;"></i> Local Storage Version
                             </span>
                         </div>
                         
@@ -1293,133 +1259,24 @@
                         
                         <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center;">
                             <p style="color: var(--text-dim); font-size: 13px;">
-                                <i class="fas fa-shield-alt"></i> Secure authentication by Firebase
+                                <i class="fas fa-shield-alt"></i> Local storage authentication
                             </p>
                             <p style="color: var(--text-dimmer); font-size: 12px; margin-top: 8px;">
-                                Hosted on GitHub Pages · ${GITHUB_PAGES_URL}
+                                Hosted on GitHub Pages · Scripts stored locally
                             </p>
                         </div>
                     </div>
                 </div>
             `;
-            
-            initMobileMenu();
         }
-
-        // ============ INIT MOBILE MENU ============
-        function initMobileMenu() {
-            const app = document.getElementById('app');
-            if (!document.querySelector('.mobile-menu-toggle')) {
-                const toggle = document.createElement('button');
-                toggle.className = 'mobile-menu-toggle';
-                toggle.innerHTML = '<i class="fas fa-bars"></i>';
-                toggle.style.cssText = 'display:none; position:fixed; top:16px; left:16px; z-index:1001; background:var(--primary); border:none; color:white; width:48px; height:48px; border-radius:12px; font-size:24px; cursor:pointer; box-shadow:0 4px 12px rgba(99,102,241,0.3);';
-                toggle.onclick = function() {
-                    document.querySelector('.sidebar')?.classList.toggle('active');
-                };
-                app.appendChild(toggle);
-            }
-        }
-
-        // ============ AUTH FUNCTIONS ============
-        window.showLogin = function() {
-            const form = document.getElementById('auth-form');
-            if (form) {
-                form.innerHTML = `
-                    <input type="email" id="login-email" class="auth-input" placeholder="Email" autocomplete="email">
-                    <input type="password" id="login-password" class="auth-input" placeholder="Password" autocomplete="current-password">
-                    <button class="btn-primary" onclick="window.handleLogin()">
-                        <i class="fas fa-sign-in-alt"></i> Login to VertexHub
-                    </button>
-                `;
-            }
-            
-            // Update active tab
-            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.auth-tab')[0]?.classList.add('active');
-        };
-
-        window.showSignup = function() {
-            const form = document.getElementById('auth-form');
-            if (form) {
-                form.innerHTML = `
-                    <input type="text" id="signup-username" class="auth-input" placeholder="Username" autocomplete="username">
-                    <input type="email" id="signup-email" class="auth-input" placeholder="Email" autocomplete="email">
-                    <input type="password" id="signup-password" class="auth-input" placeholder="Password" autocomplete="new-password">
-                    <button class="btn-primary" onclick="window.handleSignup()">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </button>
-                `;
-            }
-            
-            // Update active tab
-            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.auth-tab')[1]?.classList.add('active');
-        };
-
-        window.handleLogin = async function() {
-            const email = document.getElementById('login-email')?.value;
-            const password = document.getElementById('login-password')?.value;
-            
-            if (!email || !password) {
-                showCopyNotification('⚠️ Please fill in all fields', true);
-                return;
-            }
-            
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                showCopyNotification('❌ Login failed: ' + error.message, true);
-            }
-        };
-
-        window.handleSignup = async function() {
-            const username = document.getElementById('signup-username')?.value;
-            const email = document.getElementById('signup-email')?.value;
-            const password = document.getElementById('signup-password')?.value;
-            
-            if (!username || !email || !password) {
-                showCopyNotification('⚠️ Please fill in all fields', true);
-                return;
-            }
-            
-            try {
-                const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(userCred.user, { displayName: username });
-                
-                const isOwner = email === "plastealme2@vertexhub.com";
-                
-                await setDoc(doc(db, "users", userCred.user.uid), {
-                    uid: userCred.user.uid,
-                    username: username,
-                    email: email,
-                    displayName: username,
-                    createdAt: serverTimestamp(),
-                    lastLogin: serverTimestamp(),
-                    isPremium: isOwner ? true : false,
-                    totalScripts: 0,
-                    totalViews: 0,
-                    totalUnlocks: 0,
-                    role: isOwner ? "admin" : "user",
-                    premiumSince: isOwner ? serverTimestamp() : null
-                });
-                
-                showCopyNotification(isOwner ? '👑 Owner premium activated!' : '✅ Account created successfully!', false);
-            } catch (error) {
-                showCopyNotification('❌ Signup failed: ' + error.message, true);
-            }
-        };
-
-        window.handleLogout = function() {
-            Object.keys(activeStepTimers).forEach(key => clearInterval(activeStepTimers[key]));
-            if (forcedTimerInterval) clearInterval(forcedTimerInterval);
-            signOut(auth);
-            showCopyNotification('👋 Logged out successfully', false);
-        };
 
         // ============ RENDER DASHBOARD ============
         function renderDashboard() {
             const app = document.getElementById('app');
+            
+            // Load user's scripts
+            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            currentScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
             
             app.innerHTML = `
                 <div class="dashboard">
@@ -1463,9 +1320,6 @@
                         <div class="nav-item" onclick="window.showMyScripts(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-code"></i> My Scripts
                         </div>
-                        <div class="nav-item" onclick="window.showAnalytics(); document.querySelector('.sidebar')?.classList.remove('active');">
-                            <i class="fas fa-chart-line"></i> Analytics
-                        </div>
                         <div class="nav-item" onclick="window.showTemplates(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-layer-group"></i> Templates
                         </div>
@@ -1488,275 +1342,6 @@
             
             window.showCreator();
         }
-
-        // ============ TEMPLATES GALLERY ============
-        window.showTemplates = function() {
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            const templates = [
-                { id: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', desc: 'Follow, Like, Comment, Watch', color: '#000000', steps: ['follow', 'like', 'comment', 'watch'] },
-                { id: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', desc: 'Subscribe, Like, Comment, Watch', color: '#FF0000', steps: ['subscribe', 'like', 'comment', 'watch'] },
-                { id: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', desc: 'Follow, Like, Comment, Watch Story', color: '#E4405F', steps: ['follow', 'like', 'comment', 'watch'] },
-                { id: 'twitter', name: 'X', icon: 'fab fa-twitter', desc: 'Follow, Like, Retweet, Reply', color: '#1DA1F2', steps: ['follow', 'like', 'retweet', 'reply'] },
-                { id: 'discord', name: 'Discord', icon: 'fab fa-discord', desc: 'Join Server, Verify, React', color: '#5865F2', steps: ['join', 'verify', 'react'] },
-                { id: 'twitch', name: 'Twitch', icon: 'fab fa-twitch', desc: 'Follow, Subscribe, Watch', color: '#9146FF', steps: ['follow', 'subscribe', 'watch'] },
-                { id: 'telegram', name: 'Telegram', icon: 'fab fa-telegram', desc: 'Join Channel, React', color: '#26A5E4', steps: ['join', 'react'] },
-                { id: 'spotify', name: 'Spotify', icon: 'fab fa-spotify', desc: 'Follow, Like, Play', color: '#1DB954', steps: ['follow', 'like', 'play'] },
-                { id: 'reddit', name: 'Reddit', icon: 'fab fa-reddit', desc: 'Join, Upvote, Comment', color: '#FF4500', steps: ['join', 'upvote', 'comment'] },
-                { id: 'pinterest', name: 'Pinterest', icon: 'fab fa-pinterest', desc: 'Follow, Save, Comment', color: '#E60023', steps: ['follow', 'save', 'comment'] }
-            ];
-            
-            let templatesHTML = '';
-            templates.forEach(template => {
-                templatesHTML += `
-                    <div class="template-card" onclick="window.applyTemplate('${template.id}')">
-                        <div class="template-badge">${template.steps.length} Steps</div>
-                        <i class="${template.icon}" style="font-size: 48px; margin-bottom: 16px; color: ${template.color};"></i>
-                        <div class="template-name">${template.name}</div>
-                        <div class="template-desc">${template.desc}</div>
-                        <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-                            ${template.steps.map(step => {
-                                const icons = {
-                                    follow: 'fa-user-plus', like: 'fa-heart', comment: 'fa-comment', watch: 'fa-eye',
-                                    subscribe: 'fa-bell', retweet: 'fa-retweet', reply: 'fa-reply', join: 'fa-door-open',
-                                    verify: 'fa-check-circle', react: 'fa-smile', play: 'fa-play', upvote: 'fa-arrow-up',
-                                    save: 'fa-bookmark'
-                                };
-                                return `<i class="fas ${icons[step] || 'fa-link'}" style="color: var(--text-dim);"></i>`;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = `
-                <div class="creator-container">
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 32px;">
-                        <h1 class="section-title" style="margin-bottom: 0;">
-                            <i class="fas fa-layer-group" style="color: #6366f1;"></i>
-                            Template Gallery
-                        </h1>
-                        ${isPremium ? '<span class="badge-premium"><i class="fas fa-crown"></i> All Templates Unlocked</span>' : ''}
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 20px; padding: 24px; margin-bottom: 32px;">
-                        <p style="color: var(--text-dim); margin-bottom: 0; font-size: clamp(14px, 2vw, 16px);">
-                            <i class="fas fa-info-circle" style="color: #6366f1;"></i> 
-                            Choose a template to automatically generate steps with 20-second timers.
-                            ${!isPremium ? '<span style="color: #f59e0b; display: block; margin-top: 12px;">⚠️ Premium required for TikTok, YouTube, Instagram, and Discord templates.</span>' : ''}
-                        </p>
-                    </div>
-                    
-                    <div class="templates-grid">
-                        ${templatesHTML}
-                    </div>
-                </div>
-            `;
-        };
-
-        // ============ APPLY TEMPLATE ============
-        window.applyTemplate = function(templateId) {
-            const premiumTemplates = ['tiktok', 'youtube', 'instagram', 'discord', 'twitch'];
-            if (premiumTemplates.includes(templateId) && !isPremium && currentUser?.email !== "plastealme2@vertexhub.com") {
-                showCopyNotification('⚠️ This template requires Premium! Watch the FULL 17:56 ad to unlock all templates.', true);
-                window.showUpgrade();
-                return;
-            }
-            
-            const templates = {
-                tiktok: {
-                    name: 'TikTok',
-                    steps: [
-                        { type: 'follow', label: 'Follow TikTok Channel', url: 'https://tiktok.com/@', wait: 20 },
-                        { type: 'like', label: 'Like TikTok Video', url: 'https://tiktok.com/', wait: 20 },
-                        { type: 'comment', label: 'Comment on TikTok', url: 'https://tiktok.com/', wait: 20 },
-                        { type: 'watch', label: 'Watch TikTok Video (30s)', url: 'https://tiktok.com/', wait: 30 }
-                    ]
-                },
-                youtube: {
-                    name: 'YouTube',
-                    steps: [
-                        { type: 'subscribe', label: 'Subscribe to Channel', url: 'https://youtube.com/@', wait: 20 },
-                        { type: 'like', label: 'Like Video', url: 'https://youtube.com/watch', wait: 20 },
-                        { type: 'comment', label: 'Post Comment', url: 'https://youtube.com/watch', wait: 20 },
-                        { type: 'watch', label: 'Watch Video (20s)', url: 'https://youtube.com/watch', wait: 20 }
-                    ]
-                },
-                instagram: {
-                    name: 'Instagram',
-                    steps: [
-                        { type: 'follow', label: 'Follow Instagram Profile', url: 'https://instagram.com/', wait: 20 },
-                        { type: 'like', label: 'Like Post', url: 'https://instagram.com/p/', wait: 20 },
-                        { type: 'comment', label: 'Comment on Post', url: 'https://instagram.com/p/', wait: 20 },
-                        { type: 'watch', label: 'Watch Story', url: 'https://instagram.com/stories/', wait: 20 }
-                    ]
-                },
-                twitter: {
-                    name: 'X',
-                    steps: [
-                        { type: 'follow', label: 'Follow X Account', url: 'https://twitter.com/', wait: 20 },
-                        { type: 'like', label: 'Like Post', url: 'https://twitter.com/', wait: 20 },
-                        { type: 'retweet', label: 'Retweet', url: 'https://twitter.com/', wait: 20 },
-                        { type: 'reply', label: 'Reply to Post', url: 'https://twitter.com/', wait: 20 }
-                    ]
-                },
-                discord: {
-                    name: 'Discord',
-                    steps: [
-                        { type: 'join', label: 'Join Discord Server', url: 'https://discord.gg/', wait: 20 },
-                        { type: 'verify', label: 'Verify Account', url: 'https://discord.com/', wait: 20 },
-                        { type: 'react', label: 'React to Message', url: 'https://discord.com/', wait: 20 }
-                    ]
-                },
-                twitch: {
-                    name: 'Twitch',
-                    steps: [
-                        { type: 'follow', label: 'Follow Twitch Channel', url: 'https://twitch.tv/', wait: 20 },
-                        { type: 'subscribe', label: 'Subscribe (Free)', url: 'https://twitch.tv/', wait: 20 },
-                        { type: 'watch', label: 'Watch Stream (30s)', url: 'https://twitch.tv/', wait: 30 }
-                    ]
-                }
-            };
-            
-            const template = templates[templateId];
-            if (!template) return;
-            
-            currentTemplate = template;
-            window.showCreatorWithTemplate(template);
-        };
-
-        // ============ SHOW CREATOR WITH TEMPLATE ============
-        window.showCreatorWithTemplate = function(template) {
-            const stepsContainer = document.getElementById('main-content');
-            if (!stepsContainer) return;
-            
-            let stepsHTML = '';
-            template.steps.forEach((step, index) => {
-                stepsHTML += `
-                    <div class="step-card" data-step-index="${index}">
-                        <div class="step-header">
-                            <span class="step-badge">
-                                <i class="fas ${getStepIcon(step.type)}"></i> 
-                                Step ${index + 1}: ${step.label}
-                            </span>
-                            <span class="step-timer">
-                                <i class="fas fa-hourglass-half"></i> 
-                                <span id="timer-${index}">${step.wait}s</span> wait
-                            </span>
-                        </div>
-                        <div class="step-url-container">
-                            <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter ${template.name} URL" value="${step.url}" required>
-                            ${index > 0 ? '<div class="step-lock"><i class="fas fa-lock"></i> Complete step ' + index + ' first</div>' : ''}
-                        </div>
-                        <input type="hidden" class="step-type" value="${step.type}">
-                        <input type="hidden" class="step-wait" value="${step.wait}">
-                    </div>
-                `;
-            });
-            
-            stepsContainer.innerHTML = `
-                <div class="creator-container">
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: ${(template.steps.length / (isPremium ? 20 : 8)) * 100}%;"></div>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 32px;">
-                        <h1 class="section-title" style="margin-bottom: 0;">
-                            <i class="fab fa-${template.name.toLowerCase()}" style="color: ${getTemplateColor(template.name)}; margin-right: 12px;"></i>
-                            Create ${template.name} Unlocker
-                        </h1>
-                        <span class="badge-premium"><i class="fas fa-clock"></i> ${template.steps.length} Steps</span>
-                    </div>
-                    
-                    <!-- Upload Area -->
-                    <div class="upload-area" onclick="document.getElementById('media-upload').click()">
-                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                        <h3 style="margin-bottom: 8px;">Upload Thumbnail (Optional)</h3>
-                        <p style="color: var(--text-dim); margin-bottom: 16px;">Click to upload image or video - Skip to continue without thumbnail</p>
-                        <span style="background: rgba(99,102,241,0.2); padding: 8px 20px; border-radius: 100px; color: var(--primary-light); font-size: 14px;">
-                            <i class="fas fa-database"></i> Optional - Can skip
-                        </span>
-                        <div class="skip-thumbnail" onclick="event.stopPropagation(); window.skipThumbnail()">
-                            <i class="fas fa-forward"></i> Skip & Continue
-                        </div>
-                    </div>
-                    <input type="file" id="media-upload" accept="image/*,video/*" style="display: none;" onchange="window.handleMediaUpload(this.files[0])">
-                    <div id="upload-preview" style="margin-bottom: 32px;"></div>
-                    
-                    <!-- Steps Section -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                        <h2 style="font-size: 22px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-list-check" style="color: #6366f1;"></i>
-                            Required Steps
-                        </h2>
-                        <span style="background: var(--dark-input); padding: 8px 16px; border-radius: 100px; font-size: 14px;">
-                            <i class="fas fa-sort-amount-down"></i> Complete in order
-                        </span>
-                    </div>
-                    
-                    <div id="steps-container">
-                        ${stepsHTML}
-                    </div>
-                    
-                    <!-- Add Step Button -->
-                    <div class="add-step-btn" onclick="window.addManualStep()">
-                        <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
-                        <h3 style="margin-bottom: 4px;">Add Custom Step</h3>
-                        <p style="color: var(--text-dim); font-size: 14px;">Manually add another step (Max: ${isPremium ? 20 : 8})</p>
-                    </div>
-                    
-                    <!-- Unlock Settings -->
-                    <div style="margin-top: 32px;">
-                        <h2 style="font-size: 22px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-unlock-alt" style="color: #6366f1;"></i>
-                            Unlock Destination
-                        </h2>
-                        <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-download-link.com" style="margin-bottom: 16px;" required>
-                        
-                        <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 32px; flex-wrap: wrap;">
-                            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-dim);">
-                                <input type="checkbox" id="shorten-link" style="width: 18px; height: 18px; accent-color: #6366f1;">
-                                <i class="fas fa-link"></i> Generate short link
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-dim);">
-                                <input type="checkbox" id="private-script" style="width: 18px; height: 18px; accent-color: #6366f1;">
-                                <i class="fas fa-lock"></i> Private script
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-dim);">
-                                <input type="checkbox" id="sequential-steps" style="width: 18px; height: 18px; accent-color: #6366f1;" checked>
-                                <i class="fas fa-sort-amount-down"></i> Require sequential completion
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- Create Button -->
-                    <button class="btn-primary" style="padding: 20px; font-size: 18px;" onclick="window.createScript()">
-                        <i class="fas fa-bolt"></i> Generate ${template.name} Unlocker
-                    </button>
-                </div>
-            `;
-        };
-
-        // ============ SKIP THUMBNAIL ============
-        window.skipThumbnail = function() {
-            const preview = document.getElementById('upload-preview');
-            if (preview) {
-                preview.innerHTML = `
-                    <div style="background: rgba(16, 185, 129, 0.1); border-radius: 16px; padding: 20px; margin-top: 20px; border: 1px solid #10b981;">
-                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-                            <i class="fas fa-check-circle" style="color: #10b981; font-size: 32px;"></i>
-                            <div style="flex: 1; min-width: 200px;">
-                                <p style="font-weight: 600; margin-bottom: 4px;">Thumbnail skipped</p>
-                                <p style="color: var(--text-dim); font-size: 14px;">Script will use default preview</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            window.currentMediaURL = null;
-            showCopyNotification('✅ Thumbnail skipped, continuing without media', false);
-        };
 
         // ============ SHOW CREATOR ============
         window.showCreator = function() {
@@ -1789,21 +1374,6 @@
                             <i class="fas fa-pencil" style="color: #6366f1;"></i>
                             Manual Creation
                         </h2>
-                        
-                        <!-- Upload Area -->
-                        <div class="upload-area" onclick="document.getElementById('media-upload').click()">
-                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                            <h3 style="margin-bottom: 8px;">Upload Thumbnail (Optional)</h3>
-                            <p style="color: var(--text-dim); margin-bottom: 16px;">Click to upload image or video - Skip to continue without thumbnail</p>
-                            <span style="background: rgba(99,102,241,0.2); padding: 8px 20px; border-radius: 100px; color: var(--primary-light); font-size: 14px;">
-                                <i class="fas fa-database"></i> Optional - Can skip
-                            </span>
-                            <div class="skip-thumbnail" onclick="event.stopPropagation(); window.skipThumbnail()">
-                                <i class="fas fa-forward"></i> Skip & Continue
-                            </div>
-                        </div>
-                        <input type="file" id="media-upload" accept="image/*,video/*" style="display: none;" onchange="window.handleMediaUpload(this.files[0])">
-                        <div id="upload-preview" style="margin-bottom: 32px;"></div>
                         
                         <!-- Steps Container -->
                         <div id="steps-container"></div>
@@ -1848,6 +1418,231 @@
             `;
         };
 
+        // ============ TEMPLATES GALLERY ============
+        window.showTemplates = function() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            
+            const templates = [
+                { id: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', desc: 'Follow, Like, Comment, Watch', color: '#000000', steps: ['follow', 'like', 'comment', 'watch'] },
+                { id: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', desc: 'Subscribe, Like, Comment, Watch', color: '#FF0000', steps: ['subscribe', 'like', 'comment', 'watch'] },
+                { id: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', desc: 'Follow, Like, Comment, Watch Story', color: '#E4405F', steps: ['follow', 'like', 'comment', 'watch'] },
+                { id: 'twitter', name: 'X', icon: 'fab fa-twitter', desc: 'Follow, Like, Retweet, Reply', color: '#1DA1F2', steps: ['follow', 'like', 'retweet', 'reply'] },
+                { id: 'discord', name: 'Discord', icon: 'fab fa-discord', desc: 'Join Server, Verify, React', color: '#5865F2', steps: ['join', 'verify', 'react'] },
+                { id: 'twitch', name: 'Twitch', icon: 'fab fa-twitch', desc: 'Follow, Subscribe, Watch', color: '#9146FF', steps: ['follow', 'subscribe', 'watch'] }
+            ];
+            
+            let templatesHTML = '';
+            templates.forEach(template => {
+                templatesHTML += `
+                    <div class="template-card" onclick="window.applyTemplate('${template.id}')">
+                        <div class="template-badge">${template.steps.length} Steps</div>
+                        <i class="${template.icon}" style="font-size: 48px; margin-bottom: 16px; color: ${template.color};"></i>
+                        <div class="template-name">${template.name}</div>
+                        <div class="template-desc">${template.desc}</div>
+                        <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                            ${template.steps.map(step => {
+                                const icons = {
+                                    follow: 'fa-user-plus', like: 'fa-heart', comment: 'fa-comment', watch: 'fa-eye',
+                                    subscribe: 'fa-bell', retweet: 'fa-retweet', reply: 'fa-reply', join: 'fa-door-open',
+                                    verify: 'fa-check-circle', react: 'fa-smile'
+                                };
+                                return `<i class="fas ${icons[step] || 'fa-link'}" style="color: var(--text-dim);"></i>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = `
+                <div class="creator-container">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 32px;">
+                        <h1 class="section-title" style="margin-bottom: 0;">
+                            <i class="fas fa-layer-group" style="color: #6366f1;"></i>
+                            Template Gallery
+                        </h1>
+                        ${isPremium ? '<span class="badge-premium"><i class="fas fa-crown"></i> All Templates Unlocked</span>' : ''}
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 20px; padding: 24px; margin-bottom: 32px;">
+                        <p style="color: var(--text-dim); margin-bottom: 0; font-size: clamp(14px, 2vw, 16px);">
+                            <i class="fas fa-info-circle" style="color: #6366f1;"></i> 
+                            Choose a template to automatically generate steps with 20-second timers.
+                            ${!isPremium ? '<span style="color: #f59e0b; display: block; margin-top: 12px;">⚠️ Premium required for TikTok, YouTube, Instagram, and Discord templates.</span>' : ''}
+                        </p>
+                    </div>
+                    
+                    <div class="templates-grid">
+                        ${templatesHTML}
+                    </div>
+                </div>
+            `;
+        };
+
+        // ============ APPLY TEMPLATE ============
+        window.applyTemplate = function(templateId) {
+            const premiumTemplates = ['tiktok', 'youtube', 'instagram', 'discord', 'twitch'];
+            if (premiumTemplates.includes(templateId) && !isPremium && currentUser?.email !== "plastealme2@vertexhub.com") {
+                showNotification('⚠️ This template requires Premium!', true);
+                window.showUpgrade();
+                return;
+            }
+            
+            const templates = {
+                tiktok: {
+                    name: 'TikTok',
+                    steps: [
+                        { type: 'follow', label: 'Follow TikTok Channel', url: 'https://tiktok.com/@', waitTime: 20 },
+                        { type: 'like', label: 'Like TikTok Video', url: 'https://tiktok.com/', waitTime: 20 },
+                        { type: 'comment', label: 'Comment on TikTok', url: 'https://tiktok.com/', waitTime: 20 },
+                        { type: 'watch', label: 'Watch TikTok Video (30s)', url: 'https://tiktok.com/', waitTime: 30 }
+                    ]
+                },
+                youtube: {
+                    name: 'YouTube',
+                    steps: [
+                        { type: 'subscribe', label: 'Subscribe to Channel', url: 'https://youtube.com/@', waitTime: 20 },
+                        { type: 'like', label: 'Like Video', url: 'https://youtube.com/watch', waitTime: 20 },
+                        { type: 'comment', label: 'Post Comment', url: 'https://youtube.com/watch', waitTime: 20 },
+                        { type: 'watch', label: 'Watch Video (20s)', url: 'https://youtube.com/watch', waitTime: 20 }
+                    ]
+                },
+                instagram: {
+                    name: 'Instagram',
+                    steps: [
+                        { type: 'follow', label: 'Follow Instagram Profile', url: 'https://instagram.com/', waitTime: 20 },
+                        { type: 'like', label: 'Like Post', url: 'https://instagram.com/p/', waitTime: 20 },
+                        { type: 'comment', label: 'Comment on Post', url: 'https://instagram.com/p/', waitTime: 20 },
+                        { type: 'watch', label: 'Watch Story', url: 'https://instagram.com/stories/', waitTime: 20 }
+                    ]
+                },
+                twitter: {
+                    name: 'X',
+                    steps: [
+                        { type: 'follow', label: 'Follow X Account', url: 'https://twitter.com/', waitTime: 20 },
+                        { type: 'like', label: 'Like Post', url: 'https://twitter.com/', waitTime: 20 },
+                        { type: 'retweet', label: 'Retweet', url: 'https://twitter.com/', waitTime: 20 },
+                        { type: 'reply', label: 'Reply to Post', url: 'https://twitter.com/', waitTime: 20 }
+                    ]
+                },
+                discord: {
+                    name: 'Discord',
+                    steps: [
+                        { type: 'join', label: 'Join Discord Server', url: 'https://discord.gg/', waitTime: 20 },
+                        { type: 'verify', label: 'Verify Account', url: 'https://discord.com/', waitTime: 20 },
+                        { type: 'react', label: 'React to Message', url: 'https://discord.com/', waitTime: 20 }
+                    ]
+                },
+                twitch: {
+                    name: 'Twitch',
+                    steps: [
+                        { type: 'follow', label: 'Follow Twitch Channel', url: 'https://twitch.tv/', waitTime: 20 },
+                        { type: 'subscribe', label: 'Subscribe (Free)', url: 'https://twitch.tv/', waitTime: 20 },
+                        { type: 'watch', label: 'Watch Stream (30s)', url: 'https://twitch.tv/', waitTime: 30 }
+                    ]
+                }
+            };
+            
+            const template = templates[templateId];
+            if (!template) return;
+            
+            currentTemplate = template;
+            window.showCreatorWithTemplate(template);
+        };
+
+        // ============ SHOW CREATOR WITH TEMPLATE ============
+        window.showCreatorWithTemplate = function(template) {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            
+            let stepsHTML = '';
+            template.steps.forEach((step, index) => {
+                stepsHTML += `
+                    <div class="step-card" data-step-index="${index}">
+                        <div class="step-header">
+                            <span class="step-badge">
+                                <i class="fas ${getStepIcon(step.type)}"></i> 
+                                Step ${index + 1}: ${step.label}
+                            </span>
+                            <span class="step-timer">
+                                <i class="fas fa-hourglass-half"></i> 
+                                <span id="timer-${index}">${step.waitTime}s</span> wait
+                            </span>
+                        </div>
+                        <div class="step-url-container">
+                            <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter ${template.name} URL" value="${step.url}" required>
+                            ${index > 0 ? '<div class="step-lock"><i class="fas fa-lock"></i> Complete step ' + index + ' first</div>' : ''}
+                        </div>
+                        <input type="hidden" class="step-type" value="${step.type}">
+                        <input type="hidden" class="step-wait" value="${step.waitTime}">
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = `
+                <div class="creator-container">
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${(template.steps.length / (isPremium ? 20 : 8)) * 100}%;"></div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 32px;">
+                        <h1 class="section-title" style="margin-bottom: 0;">
+                            <i class="fab fa-${template.name.toLowerCase()}" style="color: ${getTemplateColor(template.name)}; margin-right: 12px;"></i>
+                            Create ${template.name} Unlocker
+                        </h1>
+                        <span class="badge-premium"><i class="fas fa-clock"></i> ${template.steps.length} Steps</span>
+                    </div>
+                    
+                    <!-- Steps Section -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <h2 style="font-size: 22px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-list-check" style="color: #6366f1;"></i>
+                            Required Steps
+                        </h2>
+                        <span style="background: var(--dark-input); padding: 8px 16px; border-radius: 100px; font-size: 14px;">
+                            <i class="fas fa-sort-amount-down"></i> Complete in order
+                        </span>
+                    </div>
+                    
+                    <div id="steps-container">
+                        ${stepsHTML}
+                    </div>
+                    
+                    <!-- Add Step Button -->
+                    <div class="add-step-btn" onclick="window.addManualStep()">
+                        <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
+                        <h3 style="margin-bottom: 4px;">Add Custom Step</h3>
+                        <p style="color: var(--text-dim); font-size: 14px;">Manually add another step (Max: ${isPremium ? 20 : 8})</p>
+                    </div>
+                    
+                    <!-- Unlock Settings -->
+                    <div style="margin-top: 32px;">
+                        <h2 style="font-size: 22px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-unlock-alt" style="color: #6366f1;"></i>
+                            Unlock Destination
+                        </h2>
+                        <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-download-link.com" style="margin-bottom: 16px;" required>
+                        
+                        <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 32px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-dim);">
+                                <input type="checkbox" id="private-script" style="width: 18px; height: 18px; accent-color: #6366f1;">
+                                <i class="fas fa-lock"></i> Private script
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; color: var(--text-dim);">
+                                <input type="checkbox" id="sequential-steps" style="width: 18px; height: 18px; accent-color: #6366f1;" checked>
+                                <i class="fas fa-sort-amount-down"></i> Require sequential completion
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Create Button -->
+                    <button class="btn-primary" style="padding: 20px; font-size: 18px;" onclick="window.createScript()">
+                        <i class="fas fa-bolt"></i> Generate ${template.name} Unlocker
+                    </button>
+                </div>
+            `;
+        };
+
         // ============ ADD MANUAL STEP ============
         window.addManualStep = function() {
             const stepsContainer = document.getElementById('steps-container');
@@ -1857,7 +1652,7 @@
             const maxSteps = isPremium ? 20 : 8;
             
             if (stepCount >= maxSteps) {
-                showCopyNotification(`⚠️ Maximum ${maxSteps} steps reached${!isPremium ? ' - Upgrade to Premium for more!' : ''}`, true);
+                showNotification(`⚠️ Maximum ${maxSteps} steps reached${!isPremium ? ' - Upgrade to Premium for more!' : ''}`, true);
                 return;
             }
             
@@ -1894,7 +1689,7 @@
             
             stepsContainer.insertAdjacentHTML('beforeend', stepHTML);
             updateProgressBar();
-            showCopyNotification(`✅ Step ${stepCount + 1} added`, false);
+            showNotification(`✅ Step ${stepCount + 1} added`);
         };
 
         // ============ UPDATE STEP TYPE ============
@@ -1939,60 +1734,10 @@
             }
         }
 
-        // ============ MEDIA UPLOAD ============
-        window.handleMediaUpload = async function(file) {
-            if (!file || !currentUser) return;
-            
-            const preview = document.getElementById('upload-preview');
-            preview.innerHTML = `<div style="text-align: center; padding: 20px;"><div class="spinner"></div><p style="margin-top: 16px;">Uploading to Firebase...</p></div>`;
-            
-            try {
-                let uploadFile = file;
-                if (file.size > 1024 * 1024 && file.type.startsWith('image/')) {
-                    const img = await createImageBitmap(file);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = Math.min(img.width, 1200);
-                    canvas.height = Math.min(img.height, 1200);
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-                    uploadFile = new File([blob], file.name, { type: 'image/jpeg' });
-                }
-                
-                const storageRef = ref(storage, `thumbnails/${currentUser.uid}/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(storageRef, uploadFile);
-                const downloadURL = await getDownloadURL(snapshot.ref);
-                
-                preview.innerHTML = `
-                    <div style="background: rgba(99,102,241,0.1); border-radius: 16px; padding: 20px; margin-top: 20px; border: 1px solid #6366f1;">
-                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-                            <i class="fas fa-check-circle" style="color: #10b981; font-size: 32px;"></i>
-                            <div style="flex: 1; min-width: 200px;">
-                                <p style="font-weight: 600; margin-bottom: 4px;">Upload successful!</p>
-                                <p style="color: var(--text-dim); font-size: 14px;">Stored in Firebase Storage</p>
-                            </div>
-                            ${file.type.startsWith('image/') ? 
-                                `<img src="${downloadURL}" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover;">` : 
-                                `<video src="${downloadURL}" style="width: 120px; height: 80px; border-radius: 12px; object-fit: cover;"></video>`
-                            }
-                        </div>
-                    </div>
-                `;
-                
-                window.currentMediaURL = downloadURL;
-                showCopyNotification('✅ Thumbnail uploaded successfully!', false);
-                
-            } catch (error) {
-                preview.innerHTML = `<div class="alert" style="margin-top: 20px;"><i class="fas fa-exclamation-triangle"></i> Upload failed: ${error.message}</div>`;
-                console.error(error);
-            }
-        };
-
         // ============ CREATE SCRIPT ============
-        window.createScript = async function() {
+        window.createScript = function() {
             if (!currentUser) {
-                showCopyNotification('⚠️ Please login first', true);
+                showNotification('⚠️ Please login first', true);
                 return;
             }
             
@@ -2018,455 +1763,76 @@
             });
             
             if (steps.length === 0) {
-                showCopyNotification('⚠️ Please add at least one step', true);
+                showNotification('⚠️ Please add at least one step', true);
                 return;
             }
             
             const unlockUrl = document.getElementById('unlock-url')?.value;
             if (!unlockUrl) {
-                showCopyNotification('⚠️ Please enter an unlock URL', true);
+                showNotification('⚠️ Please enter an unlock URL', true);
                 return;
             }
             
-            try {
-                const scriptId = 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-                const templateName = currentTemplate?.name || 'Manual';
-                
-                const scriptData = {
-                    scriptId: scriptId,
-                    ownerId: currentUser.uid,
-                    ownerName: currentUser.displayName || 'Anonymous',
-                    title: `${templateName} Unlocker ${new Date().toLocaleDateString()}`,
-                    template: templateName,
-                    thumbnail: window.currentMediaURL || '',
-                    steps: steps,
-                    unlockUrl: unlockUrl,
-                    shortenEnabled: document.getElementById('shorten-link')?.checked || false,
-                    isPrivate: document.getElementById('private-script')?.checked || false,
-                    sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
-                    createdAt: serverTimestamp(),
-                    views: 0,
-                    unlocks: 0,
-                    uniqueVisitors: [],
-                    status: 'active',
-                    isPremium: isPremium || false
-                };
-                
-                const docRef = await addDoc(collection(db, "scripts"), scriptData);
-                
-                const userRef = doc(db, "users", currentUser.uid);
-                await updateDoc(userRef, {
-                    totalScripts: increment(1)
-                });
-                
-                const shareableLink = `${GITHUB_PAGES_URL}/script/${scriptId}`;
-                
-                showCopyNotification(`✅ Script created successfully! ${steps.length} steps with timers`, false);
-                
-                window.currentMediaURL = null;
-                window.currentTemplate = null;
-                
-                await loadUserScripts();
-                window.showMyScripts();
-                
-            } catch (error) {
-                showCopyNotification('❌ Error creating script: ' + error.message, true);
-                console.error(error);
-            }
-        };
-
-        // ============ SHOW UPGRADE ============
-        window.showUpgrade = function() {
-            const container = document.getElementById('main-content');
-            if (!container) return;
+            const scriptId = 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            const templateName = currentTemplate?.name || 'Manual';
             
-            hasWatchedFullVideo = false;
-            forcedTimerSeconds = 1076;
-            antiSkipActive = true;
-            skipAttempts = 0;
-            
-            container.innerHTML = `
-                <div class="premium-container">
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 32px;">
-                        <h1 class="section-title" style="margin-bottom: 0;">
-                            <i class="fas fa-crown" style="color: #f59e0b;"></i>
-                            Upgrade to Premium
-                        </h1>
-                        <span class="badge-premium" style="background: #ef4444;"><i class="fas fa-shield"></i> ANTI-SKIP ENABLED</span>
-                    </div>
-                    
-                    <div class="premium-features-grid">
-                        <div class="premium-feature-card">
-                            <i class="fas fa-infinity" style="font-size: 32px; color: #f59e0b; margin-bottom: 16px;"></i>
-                            <h3 style="margin-bottom: 12px;">20 Steps Max</h3>
-                            <p style="color: var(--text-dim);">Create complex unlockers with up to 20 verification steps</p>
-                        </div>
-                        <div class="premium-feature-card">
-                            <i class="fas fa-chart-pie" style="font-size: 32px; color: #f59e0b; margin-bottom: 16px;"></i>
-                            <h3 style="margin-bottom: 12px;">Advanced Analytics</h3>
-                            <p style="color: var(--text-dim);">Real-time tracking, geo-location, device data</p>
-                        </div>
-                        <div class="premium-feature-card">
-                            <i class="fas fa-layer-group" style="font-size: 32px; color: #f59e0b; margin-bottom: 16px;"></i>
-                            <h3 style="margin-bottom: 12px;">All Templates</h3>
-                            <p style="color: var(--text-dim);">Access TikTok, YouTube, Instagram, Discord, Twitch</p>
-                        </div>
-                        <div class="premium-feature-card">
-                            <i class="fas fa-palette" style="font-size: 32px; color: #f59e0b; margin-bottom: 16px;"></i>
-                            <h3 style="margin-bottom: 12px;">Custom Branding</h3>
-                            <p style="color: var(--text-dim);">Remove VertexHub branding, add your own logo</p>
-                        </div>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.1)); border-radius: 32px; padding: clamp(24px, 4vw, 40px); margin-bottom: 32px;">
-                        <h2 style="font-size: clamp(24px, 4vw, 32px); margin-bottom: 16px; color: #f59e0b;">⚠️ FORCED 17:56 TIMER - NO SKIPPING</h2>
-                        <p style="color: var(--text-dim); margin-bottom: 24px;">You MUST watch the ENTIRE video. Skipping will reset the timer and may result in a ban.</p>
-                        
-                        <!-- Forced Timer Display -->
-                        <div class="forced-timer-container">
-                            <div class="forced-timer-display">
-                                <div class="timer-circle" id="timer-circle">17:56</div>
-                                <div style="text-align: left;">
-                                    <h3 style="margin-bottom: 4px;">⏳ Time Remaining</h3>
-                                    <p style="color: var(--text-dim);" id="timer-subtext">Must watch full 17 minutes 56 seconds</p>
-                                </div>
-                            </div>
-                            <div class="timer-progress">
-                                <div class="timer-progress-bar">
-                                    <div class="timer-progress-fill" id="timer-progress-fill" style="width: 0%;"></div>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-                                    <span style="color: var(--text-dim);">0:00</span>
-                                    <span style="color: #f59e0b; font-weight: 600;" id="timer-percent">0%</span>
-                                    <span style="color: var(--text-dim);">17:56</span>
-                                </div>
-                            </div>
-                            <div class="timer-warning" id="timer-warning">
-                                <i class="fas fa-exclamation-triangle"></i> Do not skip or seek!
-                            </div>
-                        </div>
-                        
-                        <div class="video-container" id="youtube-player-container">
-                            <div id="youtube-player" style="width: 100%; height: 100%;"></div>
-                        </div>
-                        
-                        <div id="watch-status" style="margin: 24px 0; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 16px; border: 1px solid rgba(245,158,11,0.3);">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-clock" style="color: #f59e0b;"></i>
-                                <span id="watch-status-text">Watching... Timer active (0/1076 seconds)</span>
-                            </div>
-                        </div>
-                        
-                        <div id="countdown-container" style="display: none; text-align: center; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 16px; margin-top: 24px;">
-                            <div class="countdown-timer" style="font-size: 48px; font-weight: 800; color: #10b981; margin-bottom: 12px;" id="countdown">20</div>
-                            <p style="color: var(--text-dim);">Verifying completion...</p>
-                        </div>
-                        
-                        <button id="premium-activate-btn" class="btn-primary" style="width: 100%; padding: 16px; margin-top: 24px; font-size: 18px;" onclick="window.activatePremium()" disabled>
-                            <i class="fas fa-lock"></i> Watch FULL 17:56 to Unlock Premium
-                        </button>
-                        
-                        <div class="alert" style="margin-top: 24px;">
-                            <i class="fas fa-shield"></i>
-                            Anti-skip protection active • Seeking detected = timer reset • 3 skip attempts = temporary lock
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            window.loadYouTubePlayerWithAntiSkip();
-        };
-
-        // ============ YOUTUBE PLAYER WITH ANTI-SKIP ============
-        window.loadYouTubePlayerWithAntiSkip = function() {
-            window.onYouTubeIframeAPIReady = function() {
-                youtubePlayer = new YT.Player('youtube-player', {
-                    videoId: 'u0jrlB7hAk0',
-                    width: '100%',
-                    height: '100%',
-                    playerVars: {
-                        autoplay: 1,
-                        controls: 1,
-                        rel: 0,
-                        fs: 1,
-                        modestbranding: 1,
-                        disablekb: 1,
-                        iv_load_policy: 3,
-                        playsinline: 1
-                    },
-                    events: {
-                        'onReady': onPlayerReadyAntiSkip,
-                        'onStateChange': onPlayerStateChangeAntiSkip,
-                        'onError': onPlayerError
-                    }
-                });
+            const scriptData = {
+                scriptId: scriptId,
+                ownerId: currentUser.uid,
+                ownerName: currentUser.displayName || 'Anonymous',
+                title: `${templateName} Unlocker ${new Date().toLocaleDateString()}`,
+                template: templateName,
+                thumbnail: '',
+                steps: steps,
+                unlockUrl: unlockUrl,
+                isPrivate: document.getElementById('private-script')?.checked || false,
+                sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
+                createdAt: new Date().toISOString(),
+                status: 'active',
+                isPremium: isPremium || false
             };
             
-            if (window.YT && window.YT.Player) {
-                window.onYouTubeIframeAPIReady();
-            }
-        };
-
-        // ============ ANTI-SKIP PLAYER READY ============
-        function onPlayerReadyAntiSkip(event) {
-            startForcedTimer();
+            // Save to localStorage
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            scripts.push(scriptData);
+            localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(scripts));
             
-            setInterval(() => {
-                if (youtubePlayer && antiSkipActive) {
-                    const currentTime = youtubePlayer.getCurrentTime();
-                    
-                    if (lastKnownTime > 0 && currentTime > lastKnownTime + 2) {
-                        handleSkipAttempt(currentTime - lastKnownTime);
-                    }
-                    
-                    lastKnownTime = currentTime;
+            // Update user script count
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const userIndex = users.findIndex(u => u.uid === currentUser.uid);
+            if (userIndex !== -1) {
+                users[userIndex].totalScripts = (users[userIndex].totalScripts || 0) + 1;
+                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+            }
+            
+            const shareableLink = `${GITHUB_PAGES_URL}#script-${scriptId}`;
+            
+            showNotification(`✅ Script created successfully! ${steps.length} steps with timers`);
+            
+            currentTemplate = null;
+            
+            window.showMyScripts();
+            
+            // Show share link
+            setTimeout(() => {
+                if (confirm('Script created! Copy share link?')) {
+                    window.copyToClipboard(shareableLink);
                 }
             }, 500);
-            
-            window.addEventListener('keydown', function(e) {
-                if (antiSkipActive && [32, 37, 38, 39, 40].includes(e.keyCode)) {
-                    e.preventDefault();
-                    showCopyNotification('⚠️ Keyboard seeking is disabled', true);
-                    return false;
-                }
-            });
-        }
-
-        // ============ HANDLE SKIP ATTEMPT ============
-        function handleSkipAttempt(skipAmount) {
-            skipAttempts++;
-            
-            if (youtubePlayer) {
-                youtubePlayer.seekTo(lastKnownTime, true);
-            }
-            
-            const warningEl = document.getElementById('timer-warning');
-            if (warningEl) {
-                warningEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ⚠️ SKIP DETECTED! (Attempt ${skipAttempts}/3) - Timer reset to 17:56`;
-                warningEl.style.background = 'rgba(239,68,68,0.2)';
-                warningEl.style.borderColor = '#ef4444';
-                warningEl.classList.add('shake');
-                
-                setTimeout(() => warningEl.classList.remove('shake'), 500);
-            }
-            
-            forcedTimerSeconds = 1076;
-            updateForcedTimerDisplay();
-            showCopyNotification(`⚠️ Skip detected! Attempt ${skipAttempts}/3 - Timer reset`, true);
-            
-            if (skipAttempts >= 3) {
-                antiSkipActive = false;
-                if (youtubePlayer) youtubePlayer.pauseVideo();
-                
-                const watchStatus = document.getElementById('watch-status');
-                if (watchStatus) {
-                    watchStatus.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-ban" style="color: #ef4444;"></i>
-                            ⚠️ TOO MANY SKIP ATTEMPTS - Please refresh the page and watch without skipping
-                        </div>
-                    `;
-                    watchStatus.style.background = 'rgba(239,68,68,0.2)';
-                    watchStatus.style.borderColor = '#ef4444';
-                }
-                
-                const activateBtn = document.getElementById('premium-activate-btn');
-                if (activateBtn) {
-                    activateBtn.disabled = true;
-                    activateBtn.innerHTML = '<i class="fas fa-ban"></i> Too Many Skips - Refresh Page';
-                }
-            }
-        }
-
-        // ============ PLAYER STATE CHANGE ============
-        function onPlayerStateChangeAntiSkip(event) {
-            if (!antiSkipActive) return;
-            
-            if (event.data === YT.PlayerState.ENDED) {
-                if (forcedTimerSeconds <= 0) {
-                    hasWatchedFullVideo = true;
-                    document.getElementById('watch-status').innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                            ✅ Video complete! Premium activation available in 20 seconds...
-                        </div>
-                    `;
-                    startPremiumCountdown();
-                }
-            }
-            
-            if (event.data === YT.PlayerState.PLAYING && !forcedTimerInterval) {
-                startForcedTimer();
-            }
-            
-            if (event.data === YT.PlayerState.PAUSED) {
-                setTimeout(() => {
-                    if (youtubePlayer && antiSkipActive) {
-                        const state = youtubePlayer.getPlayerState();
-                        if (state === YT.PlayerState.PAUSED) {
-                            youtubePlayer.playVideo();
-                        }
-                    }
-                }, 5000);
-            }
-        }
-
-        // ============ FORCED TIMER ============
-        function startForcedTimer() {
-            if (forcedTimerInterval) clearInterval(forcedTimerInterval);
-            
-            forcedTimerInterval = setInterval(() => {
-                if (!antiSkipActive) return;
-                
-                if (youtubePlayer && youtubePlayer.getPlayerState && 
-                    youtubePlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-                    forcedTimerSeconds--;
-                    if (forcedTimerSeconds < 0) forcedTimerSeconds = 0;
-                    
-                    updateForcedTimerDisplay();
-                    
-                    if (forcedTimerSeconds <= 0) {
-                        forcedTimerSeconds = 0;
-                        hasWatchedFullVideo = true;
-                        
-                        const watchStatus = document.getElementById('watch-status');
-                        if (watchStatus) {
-                            watchStatus.innerHTML = `
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                                    ✅ Video complete! Premium activation available in 20 seconds...
-                                </div>
-                            `;
-                        }
-                        
-                        startPremiumCountdown();
-                        clearInterval(forcedTimerInterval);
-                        forcedTimerInterval = null;
-                    }
-                }
-            }, 1000);
-        }
-
-        // ============ UPDATE FORCED TIMER DISPLAY ============
-        function updateForcedTimerDisplay() {
-            const minutes = Math.floor(forcedTimerSeconds / 60);
-            const seconds = forcedTimerSeconds % 60;
-            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            const timerCircle = document.getElementById('timer-circle');
-            if (timerCircle) timerCircle.textContent = timeString;
-            
-            const progressFill = document.getElementById('timer-progress-fill');
-            if (progressFill) {
-                const progress = ((1076 - forcedTimerSeconds) / 1076) * 100;
-                progressFill.style.width = progress + '%';
-            }
-            
-            const timerPercent = document.getElementById('timer-percent');
-            if (timerPercent) {
-                const percent = Math.floor(((1076 - forcedTimerSeconds) / 1076) * 100);
-                timerPercent.textContent = percent + '%';
-            }
-            
-            const watchStatusText = document.getElementById('watch-status-text');
-            if (watchStatusText) {
-                watchStatusText.textContent = `Watching... ${timeString} remaining / 17:56 total`;
-            }
-        }
-
-        // ============ PREMIUM COUNTDOWN ============
-        function startPremiumCountdown() {
-            const countdownContainer = document.getElementById('countdown-container');
-            const countdownEl = document.getElementById('countdown');
-            const activateBtn = document.getElementById('premium-activate-btn');
-            
-            if (countdownContainer) countdownContainer.style.display = 'block';
-            
-            let seconds = 20;
-            const timer = setInterval(() => {
-                seconds--;
-                if (countdownEl) countdownEl.textContent = seconds;
-                
-                if (seconds <= 0) {
-                    clearInterval(timer);
-                    if (activateBtn) {
-                        activateBtn.disabled = false;
-                        activateBtn.innerHTML = '<i class="fas fa-crown"></i> Activate Premium Now';
-                        activateBtn.onclick = window.activatePremium;
-                    }
-                    if (countdownContainer) {
-                        countdownContainer.innerHTML = '<div style="text-align: center; padding: 20px;"><p style="color: #10b981;"><i class="fas fa-check-circle"></i> Ready! Click the button to activate premium.</p></div>';
-                    }
-                }
-            }, 1000);
-        }
-
-        // ============ ACTIVATE PREMIUM ============
-        window.activatePremium = async function() {
-            if (!hasWatchedFullVideo && forcedTimerSeconds > 0) {
-                showCopyNotification('⚠️ You must watch the ENTIRE 17:56 video! No skipping allowed!', true);
-                return;
-            }
-            
-            if (!currentUser) {
-                showCopyNotification('⚠️ Please login first', true);
-                return;
-            }
-            
-            if (currentUser.email === "plastealme2@vertexhub.com") {
-                showCopyNotification('👑 Owner - premium is always active!', false);
-                isPremium = true;
-                renderDashboard();
-                return;
-            }
-            
-            try {
-                const userRef = doc(db, "users", currentUser.uid);
-                await updateDoc(userRef, {
-                    isPremium: true,
-                    premiumSince: serverTimestamp(),
-                    premiumExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                });
-                
-                isPremium = true;
-                showCopyNotification('🎉 PREMIUM ACTIVATED! All features unlocked!', false);
-                renderDashboard();
-                window.showCreator();
-                
-            } catch (error) {
-                showCopyNotification('❌ Error activating premium: ' + error.message, true);
-            }
         };
 
-        // ============ LOAD USER SCRIPTS ============
-        async function loadUserScripts() {
-            if (!currentUser) return;
-            
-            try {
-                const q = query(
-                    collection(db, "scripts"),
-                    where("ownerId", "==", currentUser.uid),
-                    orderBy("createdAt", "desc"),
-                    limit(50)
-                );
-                
-                const querySnapshot = await getDocs(q);
-                currentScripts = [];
-                querySnapshot.forEach((doc) => {
-                    currentScripts.push({ id: doc.id, ...doc.data() });
-                });
-                
-            } catch (error) {
-                console.error('Error loading scripts:', error);
-            }
-        }
-
         // ============ SHOW MY SCRIPTS ============
-        window.showMyScripts = async function() {
-            await loadUserScripts();
-            
+        window.showMyScripts = function() {
             const container = document.getElementById('main-content');
             if (!container) return;
+            
+            // Load user's scripts
+            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            currentScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
+            
+            // Load stats
+            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS));
+            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS));
             
             if (currentScripts.length === 0) {
                 container.innerHTML = `
@@ -2489,27 +1855,25 @@
             
             let scriptsHTML = '';
             currentScripts.forEach(script => {
-                const thumbnailExists = script.thumbnail && script.thumbnail !== '';
-                const shareableLink = `${GITHUB_PAGES_URL}/script/${script.scriptId}`;
+                const shareableLink = `${GITHUB_PAGES_URL}#script-${script.scriptId}`;
+                const scriptViews = views[script.scriptId] || 0;
+                const scriptUnlocks = unlocks[script.scriptId] || 0;
                 
                 scriptsHTML += `
                     <div class="script-card">
                         <div class="script-preview">
-                            ${thumbnailExists ? 
-                                `<img src="${script.thumbnail}" alt="Thumbnail">` : 
-                                `<div class="script-no-thumbnail">
-                                    <i class="fas ${getTemplateIcon(script.template)}" style="font-size: 48px; color: var(--primary);"></i>
-                                </div>`
-                            }
+                            <div class="script-no-thumbnail">
+                                <i class="fas ${getTemplateIcon(script.template)}" style="font-size: 48px; color: var(--primary);"></i>
+                            </div>
                             ${script.template ? `<span style="position: absolute; top: 12px; left: 12px; background: var(--gradient-primary); padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600;"><i class="fas fa-layer-group"></i> ${script.template}</span>` : ''}
                         </div>
                         <div class="script-stats">
                             <div class="stat-item">
-                                <div class="stat-value">${script.views || 0}</div>
+                                <div class="stat-value">${scriptViews}</div>
                                 <div class="stat-label">Views</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">${script.unlocks || 0}</div>
+                                <div class="stat-value">${scriptUnlocks}</div>
                                 <div class="stat-label">Unlocks</div>
                             </div>
                             <div class="stat-item">
@@ -2522,15 +1886,15 @@
                                 <button onclick="window.toggleShareLink('${script.scriptId}')" class="copy-btn" style="flex: 1 1 120px; background: var(--dark-input);">
                                     <i class="fas fa-share-alt"></i> Share
                                 </button>
-                                <button onclick="window.viewScriptAnalytics('${script.id}')" class="copy-btn" style="flex: 1 1 120px; background: var(--gradient-primary);">
-                                    <i class="fas fa-chart-bar"></i> Stats
+                                <button onclick="window.testScript('${script.scriptId}')" class="copy-btn" style="flex: 1 1 120px; background: var(--gradient-primary);">
+                                    <i class="fas fa-play"></i> Test
                                 </button>
                             </div>
                             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1 1 120px; background: transparent; border-color: rgba(99,102,241,0.3);">
+                                <button onclick="window.duplicateScript('${script.scriptId}')" class="copy-btn" style="flex: 1 1 120px; background: transparent; border-color: rgba(99,102,241,0.3);">
                                     <i class="fas fa-copy"></i> Duplicate
                                 </button>
-                                <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1 1 120px; background: transparent; border-color: rgba(239,68,68,0.3); color: #ef4444;">
+                                <button onclick="window.deleteScript('${script.scriptId}')" class="copy-btn" style="flex: 1 1 120px; background: transparent; border-color: rgba(239,68,68,0.3); color: #ef4444;">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
@@ -2575,6 +1939,12 @@
             `;
         };
 
+        // ============ TEST SCRIPT ============
+        window.testScript = function(scriptId) {
+            window.location.hash = `#script-${scriptId}`;
+            loadScriptView(scriptId);
+        };
+
         // ============ TOGGLE SHARE LINK ============
         window.toggleShareLink = function(scriptId) {
             const shareDiv = document.getElementById(`share-${scriptId}`);
@@ -2582,7 +1952,6 @@
                 const isHidden = shareDiv.style.display === 'none';
                 shareDiv.style.display = isHidden ? 'flex' : 'none';
                 
-                // Auto-copy when showing
                 if (isHidden) {
                     const linkInput = shareDiv.querySelector('.share-input');
                     if (linkInput) {
@@ -2594,259 +1963,169 @@
             }
         };
 
-        // ============ SHOW ANALYTICS ============
-        window.showAnalytics = async function() {
+        // ============ DUPLICATE SCRIPT ============
+        window.duplicateScript = function(scriptId) {
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const original = scripts.find(s => s.scriptId === scriptId);
+            
+            if (original) {
+                const newScript = {
+                    ...original,
+                    scriptId: 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
+                    title: original.title + ' (Copy)',
+                    createdAt: new Date().toISOString()
+                };
+                
+                scripts.push(newScript);
+                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(scripts));
+                
+                showNotification('✅ Script duplicated successfully');
+                window.showMyScripts();
+            }
+        };
+
+        // ============ DELETE SCRIPT ============
+        window.deleteScript = function(scriptId) {
+            if (confirm('Are you sure you want to delete this script? This cannot be undone.')) {
+                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+                const filtered = scripts.filter(s => s.scriptId !== scriptId);
+                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(filtered));
+                
+                showNotification('✅ Script deleted successfully');
+                window.showMyScripts();
+            }
+        };
+
+        // ============ EXPORT SCRIPTS ============
+        window.exportScripts = function() {
+            const data = JSON.stringify(currentScripts, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vertexhub-scripts-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('📦 Scripts exported successfully!');
+        };
+
+        // ============ SHOW UPGRADE ============
+        window.showUpgrade = function() {
             const container = document.getElementById('main-content');
             if (!container) return;
             
-            await loadUserScripts();
-            
-            const totalViews = currentScripts.reduce((sum, s) => sum + (s.views || 0), 0);
-            const totalUnlocks = currentScripts.reduce((sum, s) => sum + (s.unlocks || 0), 0);
-            const conversionRate = totalViews > 0 ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0;
-            
             container.innerHTML = `
-                <div>
+                <div class="premium-container">
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 32px;">
                         <h1 class="section-title" style="margin-bottom: 0;">
-                            <i class="fas fa-chart-line" style="color: #6366f1;"></i>
-                            Analytics Dashboard
+                            <i class="fas fa-crown" style="color: #f59e0b;"></i>
+                            Upgrade to Premium
                         </h1>
-                        ${!isPremium ? '<span class="badge-premium" style="background: #ef4444;"><i class="fas fa-lock"></i> Premium Feature</span>' : ''}
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 20px; margin-bottom: 32px;">
-                        <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 24px; border-radius: 20px;">
-                            <i class="fas fa-eye" style="font-size: 32px; margin-bottom: 12px;"></i>
-                            <h3 style="font-size: 36px; margin-bottom: 4px;">${totalViews}</h3>
-                            <p style="opacity: 0.9;">Total Views</p>
+                    <div class="premium-features-grid">
+                        <div class="premium-feature-card">
+                            <i class="fas fa-infinity" style="font-size: 32px; color: #f59e0b; margin-bottom: 16px;"></i>
+                            <h3 style="margin-bottom: 12px;">20 Steps Max</h3>
+                            <p style="color: var(--text-dim);">Create complex unlockers with up to 20 verification steps</p>
                         </div>
-                        <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 24px; border-radius: 20px;">
-                            <i class="fas fa-unlock" style="font-size: 32px; margin-bottom: 12px;"></i>
-                            <h3 style="font-size: 36px; margin-bottom: 4px;">${totalUnlocks}</h3>
-                            <p style="opacity: 0.9;">Total Unlocks</p>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 24px; border-radius: 20px;">
-                            <i class="fas fa-percent" style="font-size: 32px; margin-bottom: 12px;"></i>
-                            <h3 style="font-size: 36px; margin-bottom: 4px;">${conversionRate}%</h3>
-                            <p style="opacity: 0.9;">Conversion Rate</p>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #ec4899, #db2777); padding: 24px; border-radius: 20px;">
-                            <i class="fas fa-code" style="font-size: 32px; margin-bottom: 12px;"></i>
-                            <h3 style="font-size: 36px; margin-bottom: 4px;">${currentScripts.length}</h3>
-                            <p style="opacity: 0.9;">Active Scripts</p>
+                        <div class="premium-feature-card">
+                            <i class="fas fa-layer-group" style="font-size: 32px; color: #f59e0b; margin-bottom: 16px;"></i>
+                            <h3 style="margin-bottom: 12px;">All Templates</h3>
+                            <p style="color: var(--text-dim);">Access TikTok, YouTube, Instagram, Discord, Twitch</p>
                         </div>
                     </div>
                     
-                    <div class="analytics-dashboard">
-                        <div class="analytics-card">
-                            <h3 style="margin-bottom: 20px;">Performance Overview</h3>
-                            <div class="chart-container">
-                                <canvas id="viewsChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="analytics-card">
-                            <h3 style="margin-bottom: 20px;">Top Performing Scripts</h3>
-                            <div style="margin-bottom: 20px;">
-                                ${currentScripts.sort((a,b) => (b.views || 0) - (a.views || 0)).slice(0, 5).map(script => `
-                                    <div style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap;">
-                                        <span><i class="fas fa-code"></i> ${script.title || 'Unlocker'}</span>
-                                        <span style="color: #6366f1; font-weight: 600;">${script.views || 0} views</span>
-                                    </div>
-                                `).join('')}
-                            </div>
+                    <div style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.1)); border-radius: 32px; padding: clamp(24px, 4vw, 40px); margin-bottom: 32px; text-align: center;">
+                        <h2 style="font-size: clamp(24px, 4vw, 32px); margin-bottom: 16px; color: #f59e0b;">Local Storage Version</h2>
+                        <p style="color: var(--text-dim); margin-bottom: 24px;">Since we're using local storage, premium is automatically enabled for the owner account.</p>
+                        
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 20px; margin-top: 24px;">
+                            <p><i class="fas fa-info-circle"></i> Use email: <strong>plastealme2@vertexhub.com</strong> for automatic premium access</p>
                         </div>
                     </div>
-                    
-                    ${!isPremium ? `
-                    <div style="text-align: center; padding: 40px; background: var(--dark-card); border-radius: 24px; margin-top: 32px;">
-                        <i class="fas fa-lock" style="font-size: 48px; color: #f59e0b; margin-bottom: 16px;"></i>
-                        <h3 style="margin-bottom: 8px;">Advanced Analytics Locked</h3>
-                        <p style="color: var(--text-dim); margin-bottom: 24px;">Upgrade to Premium for real-time tracking, geo-location data, and device analytics</p>
-                        <button class="btn-primary" style="width: auto; padding: 12px 32px;" onclick="window.showUpgrade()">
-                            <i class="fas fa-crown"></i> Watch Ad to Unlock
-                        </button>
-                        <p style="color: #ef4444; margin-top: 16px; font-size: 12px;">⚠️ Must watch FULL 17:56 - No skipping allowed</p>
-                    </div>
-                    ` : ''}
                 </div>
             `;
-            
-            // Initialize chart for premium users
-            if (isPremium) {
-                setTimeout(() => {
-                    const ctx = document.getElementById('viewsChart')?.getContext('2d');
-                    if (ctx) {
-                        new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                                datasets: [{
-                                    label: 'Views',
-                                    data: [65, 59, 80, 81, 56, 55, 40],
-                                    borderColor: '#6366f1',
-                                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                    tension: 0.4,
-                                    fill: true
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        labels: { color: 'white' }
-                                    }
-                                },
-                                scales: {
-                                    y: { 
-                                        grid: { color: 'rgba(255,255,255,0.1)' }, 
-                                        ticks: { color: 'white' } 
-                                    },
-                                    x: { 
-                                        grid: { color: 'rgba(255,255,255,0.1)' }, 
-                                        ticks: { color: 'white' } 
-                                    }
-                                }
-                            }
-                        });
-                    }
-                }, 100);
-            }
         };
 
-        // ============ ADMIN PANEL ============
-        async function loadAdminPanel() {
-            if (!currentUser || currentUser.email !== "plastealme2@vertexhub.com") return;
+        // ============ SHOW SETTINGS ============
+        window.showSettings = function() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
             
-            try {
-                const scriptsQuery = query(
-                    collection(db, "scripts"),
-                    orderBy("createdAt", "desc"),
-                    limit(100)
-                );
-                
-                const usersQuery = query(
-                    collection(db, "users"),
-                    orderBy("createdAt", "desc"),
-                    limit(50)
-                );
-                
-                const [scriptsSnapshot, usersSnapshot] = await Promise.all([
-                    getDocs(scriptsQuery),
-                    getDocs(usersQuery)
-                ]);
-                
-                let allScripts = [];
-                let totalViews = 0;
-                let totalUnlocks = 0;
-                
-                scriptsSnapshot.forEach((doc) => {
-                    const script = { id: doc.id, ...doc.data() };
-                    allScripts.push(script);
-                    totalViews += script.views || 0;
-                    totalUnlocks += script.unlocks || 0;
-                });
-                
-                const totalUsers = usersSnapshot.size;
-                const premiumUsers = usersSnapshot.docs.filter(doc => doc.data().isPremium).length;
-                
-                const mainContent = document.getElementById('main-content');
-                if (!mainContent) return;
-                
-                const adminHTML = `
-                    <div class="admin-panel">
-                        <h2 style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
-                            <i class="fas fa-shield-alt" style="color: #6366f1;"></i>
-                            Admin Dashboard · plastealme2
-                            <span style="background: #6366f1; padding: 4px 12px; border-radius: 100px; font-size: 14px;">Owner</span>
-                            <span style="background: #f59e0b; padding: 4px 12px; border-radius: 100px; font-size: 14px;"><i class="fas fa-crown"></i> Premium Always Active</span>
-                        </h2>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 20px; margin-bottom: 32px;">
-                            <div style="background: rgba(99,102,241,0.1); padding: 24px; border-radius: 16px; border: 1px solid rgba(99,102,241,0.3);">
-                                <i class="fas fa-code" style="font-size: 32px; color: #6366f1; margin-bottom: 12px;"></i>
-                                <h3 style="font-size: 32px; margin-bottom: 4px;">${allScripts.length}</h3>
-                                <p style="color: var(--text-dim);">Total Scripts</p>
-                            </div>
-                            <div style="background: rgba(99,102,241,0.1); padding: 24px; border-radius: 16px; border: 1px solid rgba(99,102,241,0.3);">
-                                <i class="fas fa-eye" style="font-size: 32px; color: #6366f1; margin-bottom: 12px;"></i>
-                                <h3 style="font-size: 32px; margin-bottom: 4px;">${totalViews}</h3>
-                                <p style="color: var(--text-dim);">Total Views</p>
-                            </div>
-                            <div style="background: rgba(99,102,241,0.1); padding: 24px; border-radius: 16px; border: 1px solid rgba(99,102,241,0.3);">
-                                <i class="fas fa-unlock" style="font-size: 32px; color: #6366f1; margin-bottom: 12px;"></i>
-                                <h3 style="font-size: 32px; margin-bottom: 4px;">${totalUnlocks}</h3>
-                                <p style="color: var(--text-dim);">Total Unlocks</p>
-                            </div>
-                            <div style="background: rgba(99,102,241,0.1); padding: 24px; border-radius: 16px; border: 1px solid rgba(99,102,241,0.3);">
-                                <i class="fas fa-users" style="font-size: 32px; color: #6366f1; margin-bottom: 12px;"></i>
-                                <h3 style="font-size: 32px; margin-bottom: 4px;">${totalUsers}</h3>
-                                <p style="color: var(--text-dim);">Total Users (${premiumUsers} Premium)</p>
-                            </div>
+            container.innerHTML = `
+                <div style="max-width: 600px;">
+                    <h1 class="section-title" style="margin-bottom: 32px;">
+                        <i class="fas fa-cog" style="color: #6366f1;"></i>
+                        Settings
+                    </h1>
+                    
+                    <div style="background: var(--dark-card); border-radius: 24px; padding: clamp(24px, 4vw, 32px); border: 1px solid var(--border);">
+                        <div style="margin-bottom: 32px;">
+                            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-user-circle"></i>
+                                Profile Settings
+                            </h3>
+                            <input type="text" class="auth-input" placeholder="Display Name" value="${currentUser?.displayName || ''}" id="settings-name">
+                            <input type="email" class="auth-input" placeholder="Email" value="${currentUser?.email || ''}" disabled>
+                            <button class="btn-primary" style="margin-top: 16px;" onclick="window.updateProfile()">Update Profile</button>
                         </div>
                         
-                        <h3 style="margin-bottom: 20px;">Recent Scripts</h3>
-                        <div style="overflow-x: auto;">
-                            <table class="admin-table">
-                                <thead>
-                                    <tr>
-                                        <th>Owner</th>
-                                        <th>Script ID</th>
-                                        <th>Template</th>
-                                        <th>Steps</th>
-                                        <th>Views</th>
-                                        <th>Unlocks</th>
-                                        <th>Created</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${allScripts.slice(0, 10).map(script => `
-                                        <tr>
-                                            <td style="display: flex; align-items: center; gap: 8px;">
-                                                <div style="width: 32px; height: 32px; background: #6366f1; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="fas fa-user" style="font-size: 14px;"></i>
-                                                </div>
-                                                ${script.ownerName || 'Anonymous'}
-                                            </td>
-                                            <td><code style="background: var(--dark-input); padding: 4px 8px; border-radius: 6px;">${script.scriptId || 'N/A'}</code></td>
-                                            <td>${script.template || 'Manual'}</td>
-                                            <td>${script.steps?.length || 0}</td>
-                                            <td><span style="color: #6366f1; font-weight: 600;">${script.views || 0}</span></td>
-                                            <td><span style="color: #10b981; font-weight: 600;">${script.unlocks || 0}</span></td>
-                                            <td>${script.createdAt?.toDate?.().toLocaleDateString() || 'Recent'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
+                        <div style="margin-bottom: 32px;">
+                            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-sliders-h"></i>
+                                Default Script Settings
+                            </h3>
+                            <label style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--dark-input); border-radius: 12px;">
+                                <input type="checkbox" id="setting-sequential" checked style="width: 18px; height: 18px; accent-color: #6366f1;">
+                                <span>Always require sequential steps (20s timers)</span>
+                            </label>
                         </div>
                         
-                        <div style="margin-top: 32px; display: flex; gap: 16px; justify-content: flex-end; flex-wrap: wrap;">
-                            <button onclick="window.exportAllData()" class="copy-btn" style="background: rgba(99,102,241,0.2);">
-                                <i class="fas fa-database"></i> Export Database
-                            </button>
-                            <button onclick="window.clearCache()" class="copy-btn" style="background: rgba(239,68,68,0.2); color: #ef4444;">
-                                <i class="fas fa-trash"></i> Clear Cache
+                        <div>
+                            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: #ef4444;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Danger Zone
+                            </h3>
+                            <button style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px 24px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px;" onclick="window.clearAllData()">
+                                <i class="fas fa-trash"></i> Clear All Data
                             </button>
                         </div>
                     </div>
-                `;
-                
-                mainContent.innerHTML += adminHTML;
-                
-            } catch (error) {
-                console.error('Error loading admin panel:', error);
-            }
-        }
-
-        // ============ ADMIN FUNCTIONS ============
-        window.exportAllData = function() {
-            showCopyNotification('📊 Database export started...', false);
-            // Implement actual export logic here
+                </div>
+            `;
         };
 
-        window.clearCache = function() {
-            showCopyNotification('🧹 Cache cleared successfully', false);
+        // ============ UPDATE PROFILE ============
+        window.updateProfile = function() {
+            const newName = document.getElementById('settings-name')?.value;
+            if (newName && currentUser) {
+                currentUser.displayName = newName;
+                
+                // Update in users list
+                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+                const userIndex = users.findIndex(u => u.uid === currentUser.uid);
+                if (userIndex !== -1) {
+                    users[userIndex].displayName = newName;
+                    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+                }
+                
+                // Update current user
+                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+                
+                showNotification('✅ Profile updated successfully');
+                
+                // Refresh dashboard
+                renderDashboard();
+            }
+        };
+
+        // ============ CLEAR ALL DATA ============
+        window.clearAllData = function() {
+            if (confirm('⚠️ This will delete ALL data! Are you absolutely sure?')) {
+                localStorage.clear();
+                window.location.reload();
+            }
         };
 
         // ============ UTILITY FUNCTIONS ============
@@ -2893,110 +2172,26 @@
             return icons[template] || 'fa-cube';
         }
 
-        window.viewScriptAnalytics = function(scriptId) {
-            showCopyNotification('📊 Detailed analytics coming soon in Premium!', false);
-        };
-
-        window.duplicateScript = async function(scriptId) {
-            showCopyNotification('🔄 Duplicate feature coming soon!', false);
-        };
-
-        window.deleteScript = async function(scriptId) {
-            if (confirm('Are you sure you want to delete this script? This cannot be undone.')) {
-                try {
-                    await deleteDoc(doc(db, "scripts", scriptId));
-                    showCopyNotification('✅ Script deleted successfully', false);
-                    loadUserScripts();
-                    window.showMyScripts();
-                } catch (error) {
-                    showCopyNotification('❌ Error deleting script: ' + error.message, true);
-                }
-            }
-        };
-
-        window.exportScripts = function() {
-            const data = JSON.stringify(currentScripts, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `vertexhub-scripts-${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showCopyNotification('📦 Scripts exported successfully!', false);
-        };
-
-        window.showSettings = function() {
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            container.innerHTML = `
-                <div style="max-width: 600px;">
-                    <h1 class="section-title" style="margin-bottom: 32px;">
-                        <i class="fas fa-cog" style="color: #6366f1;"></i>
-                        Settings
-                    </h1>
-                    
-                    <div style="background: var(--dark-card); border-radius: 24px; padding: clamp(24px, 4vw, 32px); border: 1px solid var(--border);">
-                        <div style="margin-bottom: 32px;">
-                            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-user-circle"></i>
-                                Profile Settings
-                            </h3>
-                            <input type="text" class="auth-input" placeholder="Display Name" value="${currentUser?.displayName || ''}">
-                            <input type="email" class="auth-input" placeholder="Email" value="${currentUser?.email || ''}" disabled>
-                            <button class="btn-primary" style="margin-top: 16px;" onclick="showCopyNotification('Profile updated (demo)')">Update Profile</button>
-                        </div>
-                        
-                        <div style="margin-bottom: 32px;">
-                            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
-                                <i class="fas fa-sliders-h"></i>
-                                Default Script Settings
-                            </h3>
-                            <label style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--dark-input); border-radius: 12px;">
-                                <input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #6366f1;">
-                                <span>Always require sequential steps (20s timers)</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--dark-input); border-radius: 12px;">
-                                <input type="checkbox" style="width: 18px; height: 18px; accent-color: #6366f1;">
-                                <span>Auto-generate short links</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--dark-input); border-radius: 12px;">
-                                <input type="checkbox" style="width: 18px; height: 18px; accent-color: #6366f1;">
-                                <span>Private by default</span>
-                            </label>
-                        </div>
-                        
-                        <div>
-                            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px; color: #ef4444;">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Danger Zone
-                            </h3>
-                            <button style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px 24px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px;" onclick="showCopyNotification('Account deletion (demo)')">
-                                <i class="fas fa-trash"></i> Delete Account
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 32px; padding: 24px; background: var(--dark-card); border-radius: 24px; border: 1px solid var(--border); text-align: center;">
-                        <i class="fas fa-github" style="font-size: 32px; color: var(--text-dim); margin-bottom: 12px;"></i>
-                        <p style="color: var(--text-dim);">Hosted on GitHub Pages</p>
-                        <p style="color: var(--primary); font-size: 14px; margin-top: 8px;">${GITHUB_PAGES_URL}</p>
-                    </div>
-                </div>
-            `;
-        };
-
-        // ============ PLAYER ERROR ============
-        function onPlayerError(event) {
-            console.error('YouTube player error:', event.data);
-            showCopyNotification('❌ Player error - refresh page', true);
-        }
-
         // ============ INITIALIZE ============
         window.onload = function() {
-            renderAuth();
+            initStorage();
             
+            // Check if we're viewing a script
+            if (!handleRouting()) {
+                if (currentUser) {
+                    window.location.hash = '#dashboard';
+                    renderDashboard();
+                } else {
+                    renderAuth();
+                }
+            }
+            
+            // Handle hash changes
+            window.addEventListener('hashchange', function() {
+                handleRouting();
+            });
+            
+            // Mobile menu handling
             window.addEventListener('resize', function() {
                 if (window.innerWidth > 768) {
                     document.querySelector('.sidebar')?.classList.remove('active');
@@ -3022,26 +2217,21 @@
         window.showMyScripts = window.showMyScripts;
         window.showTemplates = window.showTemplates;
         window.showUpgrade = window.showUpgrade;
-        window.showAnalytics = window.showAnalytics;
         window.showSettings = window.showSettings;
         window.createScript = window.createScript;
-        window.handleMediaUpload = window.handleMediaUpload;
         window.handleLogout = window.handleLogout;
-        window.activatePremium = window.activatePremium;
-        window.viewScriptAnalytics = window.viewScriptAnalytics;
-        window.duplicateScript = window.duplicateScript;
-        window.deleteScript = window.deleteScript;
-        window.exportScripts = window.exportScripts;
-        window.skipThumbnail = window.skipThumbnail;
         window.addManualStep = window.addManualStep;
         window.applyTemplate = window.applyTemplate;
         window.updateStepType = window.updateStepType;
         window.showCreatorWithTemplate = window.showCreatorWithTemplate;
-        window.loadYouTubePlayerWithAntiSkip = window.loadYouTubePlayerWithAntiSkip;
         window.copyToClipboard = window.copyToClipboard;
         window.toggleShareLink = window.toggleShareLink;
-        window.exportAllData = window.exportAllData;
-        window.clearCache = window.clearCache;
+        window.duplicateScript = window.duplicateScript;
+        window.deleteScript = window.deleteScript;
+        window.exportScripts = window.exportScripts;
+        window.testScript = window.testScript;
+        window.updateProfile = window.updateProfile;
+        window.clearAllData = window.clearAllData;
     </script>
 </body>
-    </html>
+</html>
