@@ -1196,6 +1196,91 @@
             background: var(--danger);
             transform: scale(1.1);
         }
+
+        .filter-section {
+            background: var(--dark-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-select {
+            background: var(--dark-input);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 12px 24px;
+            color: white;
+            font-size: 14px;
+            min-width: 180px;
+        }
+
+        .search-input {
+            background: var(--dark-input);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 12px 24px;
+            color: white;
+            font-size: 14px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .already-unlocked-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .already-viewed-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .per-device-stats {
+            font-size: 12px;
+            color: var(--text-dim);
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .locked-unlocker {
+            opacity: 0.7;
+            filter: grayscale(0.5);
+            cursor: not-allowed;
+        }
+
+        .locked-unlocker .dashboard-script-card:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: var(--border);
+        }
     </style>
 </head>
 <body>
@@ -1236,9 +1321,11 @@
         let skipAttempts = 0;
         let activeStepStates = {};
         let viewedScripts = {};
+        let unlockedScripts = {};
         let deviceId = null;
         let allScripts = [];
         let currentVideoModal = null;
+        let deviceInteractions = {};
         
         // Premium video ID
         const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs';
@@ -1256,6 +1343,12 @@
             if (!deviceId) {
                 deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 localStorage.setItem('vertexhub_device_id', deviceId);
+            }
+
+            // Load device interactions from localStorage
+            const storedInteractions = localStorage.getItem('vertexhub_interactions');
+            if (storedInteractions) {
+                deviceInteractions = JSON.parse(storedInteractions);
             }
 
             auth.onAuthStateChanged(async (user) => {
@@ -1296,11 +1389,16 @@
                         
                         isPremium = currentUser.isPremium;
                         
+                        // Load viewed scripts from Firestore
                         const viewedDoc = await db.collection('userViews').doc(user.uid).get();
-                        viewedScripts = viewedDoc.data() || {};
+                        viewedScripts = viewedDoc.exists ? viewedDoc.data() : {};
                         
-                        // Load public scripts for dashboard (not private)
-                        await loadPublicScripts();
+                        // Load unlocked scripts from Firestore
+                        const unlockedDoc = await db.collection('userUnlocks').doc(user.uid).get();
+                        unlockedScripts = unlockedDoc.exists ? unlockedDoc.data() : {};
+                        
+                        // Load all scripts for dashboard
+                        await loadAllScripts();
                         
                         handleRouting();
                     } catch (error) {
@@ -1310,22 +1408,24 @@
                 } else {
                     currentUser = null;
                     isPremium = false;
-                    viewedScripts = {};
                     
-                    // Load public scripts even when not logged in
-                    await loadPublicScripts();
+                    // Load device-based viewed scripts from localStorage
+                    viewedScripts = deviceInteractions.viewedScripts || {};
+                    unlockedScripts = deviceInteractions.unlockedScripts || {};
+                    
+                    // Load all scripts for dashboard
+                    await loadAllScripts();
                     
                     handleRouting();
                 }
             });
         }
 
-        // ============ LOAD PUBLIC SCRIPTS FOR DASHBOARD ============
-        async function loadPublicScripts() {
+        // ============ LOAD ALL SCRIPTS FOR DASHBOARD (WITH PERMISSIONS) ============
+        async function loadAllScripts() {
             try {
-                // Only load public scripts (not private) for the dashboard
+                // Get all scripts
                 const scriptsSnapshot = await db.collection('scripts')
-                    .where('isPrivate', '==', false)
                     .orderBy('createdAt', 'desc')
                     .get();
                 
@@ -1334,9 +1434,9 @@
                     ...doc.data()
                 }));
                 
-                console.log('Loaded', allScripts.length, 'public scripts for dashboard');
+                console.log('Loaded', allScripts.length, 'total scripts');
             } catch (error) {
-                console.error('Error loading public scripts:', error);
+                console.error('Error loading scripts:', error);
                 allScripts = [];
             }
         }
@@ -1344,8 +1444,7 @@
         // ============ LOAD SINGLE SCRIPT BY ID (WITH ACCESS CONTROL) ============
         async function loadScriptById(scriptId) {
             try {
-                // Try to get the script directly - this bypasses collection queries
-                // and should work regardless of Firestore rules if the document is readable
+                // Try to get the script directly
                 const scriptDoc = await db.collection('scripts').doc(scriptId).get();
                 
                 if (!scriptDoc.exists) {
@@ -1362,18 +1461,88 @@
                     }
                 }
                 
-                // Public or unlisted scripts are accessible to everyone
+                // Check if this device has already unlocked this script
+                const hasUnlocked = await hasDeviceUnlocked(scriptId);
+                if (hasUnlocked) {
+                    return { error: 'already_unlocked', script };
+                }
+                
+                // Public or unlisted scripts are accessible to everyone who hasn't unlocked
                 return { success: true, script };
                 
             } catch (error) {
                 console.error('Error loading script:', error);
                 
-                // Check if it's a permission error
                 if (error.code === 'permission-denied' || error.message?.includes('permission')) {
                     return { error: 'permission_denied' };
                 }
                 
                 return { error: 'unknown', message: error.message };
+            }
+        }
+
+        // ============ CHECK IF DEVICE HAS UNLOCKED SCRIPT ============
+        async function hasDeviceUnlocked(scriptId) {
+            // Check if logged in user has unlocked
+            if (currentUser) {
+                if (unlockedScripts[scriptId] === true) {
+                    return true;
+                }
+                
+                // Also check in Firestore
+                try {
+                    const unlockDoc = await db.collection('scriptUnlocks')
+                        .doc(`${scriptId}_${currentUser.uid}`)
+                        .get();
+                    
+                    if (unlockDoc.exists) {
+                        unlockedScripts[scriptId] = true;
+                        await saveUserUnlocks();
+                        return true;
+                    }
+                } catch (e) {}
+            }
+            
+            // Check device-based unlocks
+            if (deviceInteractions.unlockedScripts && deviceInteractions.unlockedScripts[scriptId]) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        // ============ CHECK IF DEVICE HAS VIEWED SCRIPT ============
+        function hasDeviceViewed(scriptId) {
+            if (currentUser) {
+                return viewedScripts[scriptId] === true;
+            }
+            return deviceInteractions.viewedScripts && deviceInteractions.viewedScripts[scriptId] === true;
+        }
+
+        // ============ SAVE DEVICE INTERACTIONS ============
+        function saveDeviceInteractions() {
+            localStorage.setItem('vertexhub_interactions', JSON.stringify(deviceInteractions));
+        }
+
+        // ============ SAVE USER VIEWS ============
+        async function saveUserViews() {
+            if (currentUser) {
+                try {
+                    await db.collection('userViews').doc(currentUser.uid).set(viewedScripts);
+                } catch (error) {
+                    console.error('Error saving user views:', error);
+                }
+            }
+        }
+
+        // ============ SAVE USER UNLOCKS ============
+        async function saveUserUnlocks() {
+            if (currentUser) {
+                try {
+                    await db.collection('userUnlocks').doc(currentUser.uid).set(unlockedScripts);
+                } catch (error) {
+                    console.error('Error saving user unlocks:', error);
+                }
             }
         }
 
@@ -1424,10 +1593,10 @@
             const result = await loadScriptById(scriptId);
             
             if (!result.success) {
-                // Handle different error types
                 let errorTitle = 'Error Loading Script';
                 let errorMessage = 'An unknown error occurred';
                 let showBackButton = true;
+                let additionalAction = null;
                 
                 if (result.error === 'not_found') {
                     errorTitle = 'Script Not Found';
@@ -1438,6 +1607,14 @@
                 } else if (result.error === 'permission_denied') {
                     errorTitle = 'Access Denied';
                     errorMessage = 'You don\'t have permission to view this script.';
+                } else if (result.error === 'already_unlocked') {
+                    errorTitle = 'Already Unlocked';
+                    errorMessage = 'You have already unlocked this content!';
+                    additionalAction = `
+                        <a href="${result.script.unlockUrl}" target="_blank" class="btn-primary" style="margin-top: 16px; text-decoration: none;">
+                            <i class="fas fa-external-link-alt"></i> Access Content
+                        </a>
+                    `;
                 } else {
                     errorMessage = result.message || 'Failed to load the script. Please try again.';
                 }
@@ -1451,6 +1628,7 @@
                             <button class="btn-primary" onclick="window.location.hash='#dashboard'">
                                 <i class="fas fa-home"></i> Back to Dashboard
                             </button>
+                            ${additionalAction || ''}
                             ${!currentUser ? `
                                 <button class="btn-primary" style="margin-top: 10px; background: var(--gradient-premium);" onclick="window.location.hash=''">
                                     <i class="fas fa-sign-in-alt"></i> Login
@@ -1464,23 +1642,38 @@
             
             const script = result.script;
             
-            // Track view (only for successful loads)
-            try {
-                await db.collection('analytics').add({
-                    scriptId: scriptId,
-                    type: 'view',
-                    userId: currentUser?.uid || 'anonymous',
-                    deviceId: deviceId,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // Increment view count
-                await db.collection('scripts').doc(scriptId).update({
-                    'views.total': firebase.firestore.FieldValue.increment(1)
-                });
-            } catch (error) {
-                console.error('Error tracking view:', error);
-                // Don't fail if tracking fails
+            // Check if this device has already viewed this script (for analytics)
+            const hasViewed = hasDeviceViewed(scriptId);
+            
+            if (!hasViewed) {
+                // Track view (only once per device)
+                try {
+                    await db.collection('analytics').add({
+                        scriptId: scriptId,
+                        type: 'view',
+                        userId: currentUser?.uid || 'anonymous',
+                        deviceId: deviceId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // Update view count
+                    await db.collection('scripts').doc(scriptId).update({
+                        'views.total': firebase.firestore.FieldValue.increment(1),
+                        'views.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
+                    });
+                    
+                    // Mark as viewed for this device
+                    if (currentUser) {
+                        viewedScripts[scriptId] = true;
+                        await saveUserViews();
+                    } else {
+                        if (!deviceInteractions.viewedScripts) deviceInteractions.viewedScripts = {};
+                        deviceInteractions.viewedScripts[scriptId] = true;
+                        saveDeviceInteractions();
+                    }
+                } catch (error) {
+                    console.error('Error tracking view:', error);
+                }
             }
             
             renderUnlocker(script);
@@ -2117,7 +2310,16 @@
                 return;
             }
             
+            // Check again if already unlocked (prevent double unlocks)
+            const alreadyUnlocked = await hasDeviceUnlocked(scriptId);
+            if (alreadyUnlocked) {
+                showCopyNotification('⚠️ You already unlocked this!', true);
+                window.location.href = script.unlockUrl;
+                return;
+            }
+            
             try {
+                // Track unlock
                 await db.collection('analytics').add({
                     scriptId: scriptId,
                     type: 'unlock',
@@ -2126,19 +2328,46 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
+                // Update script unlock count
                 await db.collection('scripts').doc(scriptId).update({
-                    'unlocks': firebase.firestore.FieldValue.increment(1)
+                    unlocks: firebase.firestore.FieldValue.increment(1),
+                    'unlocks.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
                 });
+                
+                // Record this unlock for the user/device
+                if (currentUser) {
+                    unlockedScripts[scriptId] = true;
+                    await saveUserUnlocks();
+                    
+                    // Also store in scriptUnlocks collection
+                    await db.collection('scriptUnlocks').doc(`${scriptId}_${currentUser.uid}`).set({
+                        scriptId: scriptId,
+                        userId: currentUser.uid,
+                        deviceId: deviceId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    if (!deviceInteractions.unlockedScripts) deviceInteractions.unlockedScripts = {};
+                    deviceInteractions.unlockedScripts[scriptId] = true;
+                    saveDeviceInteractions();
+                }
+                
+                showCopyNotification('✅ Content unlocked! Redirecting...', false);
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = script.unlockUrl;
+                }, 1500);
+                
             } catch (error) {
-                console.error('Error tracking unlock:', error);
+                console.error('Error during unlock:', error);
+                showCopyNotification('❌ Error unlocking: ' + error.message, true);
             }
-            
-            window.location.href = script.unlockUrl;
         };
 
         // ============ RENDER DASHBOARD ============
-        async function renderDashboard() {
-            await loadPublicScripts();
+        async function renderDashboard(filterType = 'all', searchTerm = '') {
+            await loadAllScripts();
             
             const app = document.getElementById('app');
             
@@ -2181,26 +2410,63 @@
                                 <div><i class="fas fa-eye"></i> ${script.views?.total || 0}</div>
                                 <div><i class="fas fa-unlock"></i> ${script.unlocks || 0}</div>
                             </div>
+                            <div class="per-device-stats">
+                                <span><i class="fas fa-mobile-alt"></i> Unique: ${script.views?.unique?.length || 0}</span>
+                                <span><i class="fas fa-check-circle"></i> Unlocked: ${script.unlocks?.unique?.length || 0}</span>
+                            </div>
                         </div>
                     `;
                 });
             }
             
-            // Generate public scripts HTML (excluding user's own if logged in)
-            allScripts.forEach(script => {
+            // Filter public scripts
+            let filteredScripts = allScripts.filter(script => {
                 // Skip if this is user's own script (they're already shown above)
-                if (currentUser && script.ownerId === currentUser.uid) return;
+                if (currentUser && script.ownerId === currentUser.uid) return false;
                 
+                // Filter by visibility
+                if (filterType === 'public' && script.isPrivate) return false;
+                if (filterType === 'unlisted' && !script.isUnlisted) return false;
+                if (filterType === 'private' && !script.isPrivate) return false;
+                
+                // Search filter
+                if (searchTerm) {
+                    const term = searchTerm.toLowerCase();
+                    return (script.title?.toLowerCase().includes(term) || 
+                            script.ownerName?.toLowerCase().includes(term));
+                }
+                
+                return true;
+            });
+            
+            // Generate public scripts HTML
+            filteredScripts.forEach(script => {
                 const createdDate = script.createdAt ? new Date(script.createdAt.seconds * 1000).toLocaleDateString() : 'Recent';
                 const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
                 const visibilityIcon = script.isPrivate ? 'fa-lock' : (script.isUnlisted ? 'fa-eye-slash' : 'fa-globe');
                 const visibilityText = script.isPrivate ? 'Private' : (script.isUnlisted ? 'Unlisted' : 'Public');
                 
+                // Check if this device has already unlocked this script
+                const hasUnlocked = unlockedScripts[script.id] || 
+                                   (deviceInteractions.unlockedScripts && deviceInteractions.unlockedScripts[script.id]);
+                const hasViewed = viewedScripts[script.id] || 
+                                 (deviceInteractions.viewedScripts && deviceInteractions.viewedScripts[script.id]);
+                
                 publicScriptsHTML += `
-                    <div class="dashboard-script-card" onclick="window.location.hash='#script-${script.id}'">
+                    <div class="dashboard-script-card ${hasUnlocked ? 'locked-unlocker' : ''}" 
+                         onclick="${hasUnlocked ? 'return false;' : `window.location.hash='#script-${script.id}'`}">
                         <div class="visibility-badge ${visibilityClass}">
                             <i class="fas ${visibilityIcon}"></i> ${visibilityText}
                         </div>
+                        ${hasUnlocked ? `
+                        <div class="already-unlocked-badge" style="position: absolute; top: 15px; left: 15px;">
+                            <i class="fas fa-check-circle"></i> Already Unlocked
+                        </div>
+                        ` : hasViewed ? `
+                        <div class="already-viewed-badge" style="position: absolute; top: 15px; left: 15px;">
+                            <i class="fas fa-eye"></i> Viewed
+                        </div>
+                        ` : ''}
                         <div class="dashboard-script-title">
                             <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
                             ${script.title || 'Unlocker'}
@@ -2213,6 +2479,10 @@
                         <div class="dashboard-script-stats">
                             <div><i class="fas fa-eye"></i> ${script.views?.total || 0}</div>
                             <div><i class="fas fa-unlock"></i> ${script.unlocks || 0}</div>
+                        </div>
+                        <div class="per-device-stats">
+                            <span><i class="fas fa-mobile-alt"></i> Unique: ${script.views?.unique?.length || 0}</span>
+                            <span><i class="fas fa-check-circle"></i> Unlocked: ${script.unlocks?.unique?.length || 0}</span>
                         </div>
                     </div>
                 `;
@@ -2252,24 +2522,22 @@
                                 </span>
                                 ` : ''}
                                 <span style="background: rgba(245,158,11,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
-                                    <i class="fas fa-globe"></i> ${allScripts.length} Public
+                                    <i class="fas fa-globe"></i> ${allScripts.length} Total
                                 </span>
                             </div>
-                            ${currentUser ? `
-                            <div class="time-limits" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
-                                <div style="color: var(--accent); font-size: 13px;">
-                                    <i class="fas fa-clock"></i> Time Limits:
+                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                                <div style="color: var(--accent); font-size: 13px; margin-bottom: 8px;">
+                                    <i class="fas fa-chart-pie"></i> Your Activity:
                                 </div>
-                                <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                     <span style="background: rgba(99,102,241,0.1); padding: 4px 8px; border-radius: 8px; font-size: 12px;">
-                                        Wait: 0-${timeLimits.max}s
+                                        <i class="fas fa-eye"></i> Viewed: ${Object.keys(viewedScripts).length}
                                     </span>
-                                    <span style="background: rgba(245,158,11,0.1); padding: 4px 8px; border-radius: 8px; font-size: 12px;">
-                                        Watch: ${timeLimits.max}s max
+                                    <span style="background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: 8px; font-size: 12px;">
+                                        <i class="fas fa-unlock"></i> Unlocked: ${Object.keys(unlockedScripts).length}
                                     </span>
                                 </div>
                             </div>
-                            ` : ''}
                             <div class="device-info">
                                 <i class="fas fa-globe"></i> Device: ${deviceId.substring(0, 8)}...
                             </div>
@@ -2324,9 +2592,27 @@
                         <h1 class="section-title">
                             <i class="fas fa-home"></i> Dashboard
                             <span style="font-size: 14px; margin-left: 15px; color: var(--text-dim);">
-                                ${allScripts.length} Public Unlockers
+                                ${filteredScripts.length} Available Unlockers
                             </span>
                         </h1>
+                        
+                        <div class="filter-section">
+                            <select class="filter-select" id="filter-select" onchange="window.applyFilters()">
+                                <option value="all" ${filterType === 'all' ? 'selected' : ''}>All Scripts</option>
+                                <option value="public" ${filterType === 'public' ? 'selected' : ''}>Public Only</option>
+                                <option value="unlisted" ${filterType === 'unlisted' ? 'selected' : ''}>Unlisted Only</option>
+                                <option value="private" ${filterType === 'private' ? 'selected' : ''}>Private Only</option>
+                            </select>
+                            
+                            <input type="text" class="search-input" id="search-input" 
+                                   placeholder="Search by title or creator..." 
+                                   value="${searchTerm}"
+                                   onkeyup="if(event.key === 'Enter') window.applyFilters()">
+                            
+                            <button class="copy-btn" onclick="window.applyFilters()">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
                         
                         ${currentUser && currentScripts.length > 0 ? `
                         <h2 style="margin: 30px 0 15px;">My Unlockers</h2>
@@ -2338,7 +2624,7 @@
                         ` : ''}
                         
                         <div class="dashboard-grid">
-                            ${publicScriptsHTML || '<p style="color: var(--text-dim); text-align: center; grid-column: 1/-1;">No public scripts available yet.</p>'}
+                            ${publicScriptsHTML || '<p style="color: var(--text-dim); text-align: center; grid-column: 1/-1;">No scripts available matching your filters.</p>'}
                         </div>
                         
                         ${currentUser ? `
@@ -2355,6 +2641,12 @@
 
         window.showDashboard = function() {
             renderDashboard();
+        };
+
+        window.applyFilters = function() {
+            const filterType = document.getElementById('filter-select')?.value || 'all';
+            const searchTerm = document.getElementById('search-input')?.value || '';
+            renderDashboard(filterType, searchTerm);
         };
 
         // ============ SHOW ADMIN PANEL ============
@@ -2383,11 +2675,17 @@
             const analyticsSnapshot = await db.collection('analytics').get();
             const analytics = analyticsSnapshot.docs.map(doc => doc.data());
             
+            // Calculate unique devices across all analytics
+            const uniqueDevices = [...new Set(analytics.map(a => a.deviceId))].length;
+            
+            // Calculate total unique views (sum of unique arrays)
+            const totalUniqueViews = scripts.reduce((sum, script) => sum + (script.views?.unique?.length || 0), 0);
+            const totalUniqueUnlocks = scripts.reduce((sum, script) => sum + (script.unlocks?.unique?.length || 0), 0);
+            
             const totalUsers = users.length;
             const totalScripts = scripts.length;
             const totalViews = analytics.filter(a => a.type === 'view').length;
             const totalUnlocks = analytics.filter(a => a.type === 'unlock').length;
-            const uniqueDevices = [...new Set(analytics.map(a => a.deviceId))].length;
             
             let userOptions = '';
             users.forEach(user => {
@@ -2413,12 +2711,20 @@
                                 <div>Total Scripts</div>
                             </div>
                             <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalViews}</div>
-                                <div>Total Views</div>
-                            </div>
-                            <div class="admin-stat-item">
                                 <div class="admin-stat-value">${uniqueDevices}</div>
                                 <div>Unique Devices</div>
+                            </div>
+                            <div class="admin-stat-item">
+                                <div class="admin-stat-value">${totalUniqueViews}</div>
+                                <div>Unique Views</div>
+                            </div>
+                            <div class="admin-stat-item">
+                                <div class="admin-stat-value">${totalUniqueUnlocks}</div>
+                                <div>Unique Unlocks</div>
+                            </div>
+                            <div class="admin-stat-item">
+                                <div class="admin-stat-value">${totalViews}</div>
+                                <div>Total Views</div>
                             </div>
                             <div class="admin-stat-item">
                                 <div class="admin-stat-value">${totalUnlocks}</div>
@@ -2579,7 +2885,7 @@
             scriptsSnapshot.docs.forEach(async (doc) => {
                 await doc.ref.update({
                     views: { total: 0, unique: [] },
-                    unlocks: 0
+                    unlocks: { total: 0, unique: [] }
                 });
             });
             
@@ -2590,7 +2896,7 @@
         window.clearAllData = async function() {
             if (!confirm('⚠️ Delete ALL data for ALL users? This cannot be undone!')) return;
             
-            const collections = ['users', 'scripts', 'analytics', 'userViews'];
+            const collections = ['users', 'scripts', 'analytics', 'userViews', 'userUnlocks', 'scriptUnlocks'];
             
             for (const collectionName of collections) {
                 const snapshot = await db.collection(collectionName).get();
@@ -2621,6 +2927,8 @@
             
             let totalViews = 0;
             let totalUnlocks = 0;
+            let totalUniqueViews = 0;
+            let totalUniqueUnlocks = 0;
             let scriptsAnalyticsHTML = '';
             
             for (const script of myScripts) {
@@ -2632,17 +2940,18 @@
                 const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
                 const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
                 const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                const uniqueViews = script.views?.unique?.length || 0;
+                const uniqueUnlocks = script.unlocks?.unique?.length || 0;
                 
                 totalViews += scriptViews;
                 totalUnlocks += scriptUnlocks;
+                totalUniqueViews += uniqueViews;
+                totalUniqueUnlocks += uniqueUnlocks;
                 
                 const scriptConversion = scriptViews > 0 ? ((scriptUnlocks / scriptViews) * 100).toFixed(1) : 0;
                 
                 scriptsAnalyticsHTML += `
                     <div style="background: var(--dark-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; position: relative;">
-                        <div class="unique-view-badge">
-                            <i class="fas fa-users"></i> ${uniqueDevices} unique
-                        </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                             <div>
                                 <h3 style="margin-bottom: 4px;">${script.title}</h3>
@@ -2650,25 +2959,34 @@
                             </div>
                             <span class="badge-premium" style="background: var(--gradient-primary);">${scriptConversion}% conv</span>
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 16px;">
                             <div>
-                                <div style="font-size: 24px; font-weight: 700;">${scriptViews}</div>
-                                <div style="color: var(--text-dim);">Total Views</div>
+                                <div style="font-size: 20px; font-weight: 700;">${scriptViews}</div>
+                                <div style="color: var(--text-dim); font-size: 12px;">Total Views</div>
                             </div>
                             <div>
-                                <div style="font-size: 24px; font-weight: 700;">${uniqueDevices}</div>
-                                <div style="color: var(--text-dim);">Unique Devices</div>
+                                <div style="font-size: 20px; font-weight: 700;">${uniqueViews}</div>
+                                <div style="color: var(--text-dim); font-size: 12px;">Unique Views</div>
                             </div>
                             <div>
-                                <div style="font-size: 24px; font-weight: 700;">${scriptUnlocks}</div>
-                                <div style="color: var(--text-dim);">Unlocks</div>
+                                <div style="font-size: 20px; font-weight: 700;">${scriptUnlocks}</div>
+                                <div style="color: var(--text-dim); font-size: 12px;">Total Unlocks</div>
                             </div>
+                            <div>
+                                <div style="font-size: 20px; font-weight: 700;">${uniqueUnlocks}</div>
+                                <div style="color: var(--text-dim); font-size: 12px;">Unique Unlocks</div>
+                            </div>
+                        </div>
+                        <div class="per-device-stats" style="margin-top: 8px;">
+                            <span><i class="fas fa-chart-line"></i> Unique Rate: ${scriptViews ? ((uniqueViews/scriptViews)*100).toFixed(1) : 0}%</span>
+                            <span><i class="fas fa-check-circle"></i> Unlock Rate: ${uniqueViews ? ((uniqueUnlocks/uniqueViews)*100).toFixed(1) : 0}%</span>
                         </div>
                     </div>
                 `;
             }
             
             const conversionRate = totalViews > 0 ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0;
+            const uniqueConversionRate = totalUniqueViews > 0 ? ((totalUniqueUnlocks / totalUniqueViews) * 100).toFixed(1) : 0;
             
             container.innerHTML = `
                 <div>
@@ -2683,16 +3001,24 @@
                             <p>Total Views</p>
                         </div>
                         <div class="stat-card">
+                            <h3>${totalUniqueViews}</h3>
+                            <p>Unique Views</p>
+                        </div>
+                        <div class="stat-card">
                             <h3>${totalUnlocks}</h3>
                             <p>Total Unlocks</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${totalUniqueUnlocks}</h3>
+                            <p>Unique Unlocks</p>
                         </div>
                         <div class="stat-card">
                             <h3>${conversionRate}%</h3>
                             <p>Conversion Rate</p>
                         </div>
                         <div class="stat-card">
-                            <h3>${myScripts.length}</h3>
-                            <p>Scripts Created</p>
+                            <h3>${uniqueConversionRate}%</h3>
+                            <p>Unique Conv. Rate</p>
                         </div>
                     </div>
                     
@@ -2702,7 +3028,118 @@
             `;
         };
 
-        // ============ TEMPLATES GALLERY ============
+        // ============ SHOW MY SCRIPTS ============
+        window.showMyScripts = async function() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            
+            const scriptsSnapshot = await db.collection('scripts')
+                .where('ownerId', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            currentScripts = scriptsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            
+            if (currentScripts.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 80px 20px;">
+                        <i class="fas fa-code" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
+                        <h2 style="margin: 20px 0;">No scripts yet</h2>
+                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
+                            <i class="fas fa-layer-group"></i> Use Template
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let scriptsHTML = '';
+            for (const script of currentScripts) {
+                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
+                
+                const analyticsSnapshot = await db.collection('analytics')
+                    .where('scriptId', '==', script.id)
+                    .get();
+                
+                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
+                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
+                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
+                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                
+                const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
+                const visibilityIcon = script.isPrivate ? 'fa-lock' : (script.isUnlisted ? 'fa-eye-slash' : 'fa-globe');
+                const visibilityText = script.isPrivate ? 'Private' : (script.isUnlisted ? 'Unlisted' : 'Public');
+                
+                scriptsHTML += `
+                    <div class="script-card">
+                        <div class="script-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${scriptViews}</div>
+                                <div class="stat-label">Views</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${uniqueDevices}</div>
+                                <div class="stat-label">Unique</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${scriptUnlocks}</div>
+                                <div class="stat-label">Unlocks</div>
+                            </div>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                <span class="${visibilityClass}" style="padding: 4px 12px; border-radius: 100px; font-size: 11px;">
+                                    <i class="fas ${visibilityIcon}"></i> ${visibilityText}
+                                </span>
+                            </div>
+                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
+                                    <i class="fas fa-share-alt"></i> Share
+                                </button>
+                                <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
+                                    <i class="fas fa-play"></i> Test
+                                </button>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                ${isOwner ? `
+                                <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1;">
+                                    <i class="fas fa-copy"></i> Duplicate
+                                </button>
+                                ` : ''}
+                                <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                            <div class="share-link" id="share-${script.id}" style="display: none;">
+                                <input type="text" class="share-input" value="${shareableLink}" readonly>
+                                <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = `
+                <div>
+                    <h1 class="section-title">My Unlockers</h1>
+                    <div style="margin: 20px 0;">
+                        <button class="btn-primary" style="width: auto;" onclick="window.showTemplates()">
+                            <i class="fas fa-plus-circle"></i> Create New
+                        </button>
+                    </div>
+                    <div class="scripts-grid">${scriptsHTML}</div>
+                </div>
+            `;
+        };
+
+        // ============ SHOW TEMPLATES ============
         window.showTemplates = function() {
             const container = document.getElementById('main-content');
             if (!container) return;
@@ -3234,7 +3671,10 @@
                     total: 0,
                     unique: []
                 },
-                unlocks: 0
+                unlocks: {
+                    total: 0,
+                    unique: []
+                }
             };
             
             try {
@@ -3254,7 +3694,7 @@
                 showCopyNotification(visibilityMessage);
                 
                 currentTemplate = null;
-                await loadPublicScripts();
+                await loadAllScripts();
                 renderDashboard();
                 
                 setTimeout(() => {
@@ -3266,117 +3706,6 @@
                 console.error('Error creating script:', error);
                 showCopyNotification('❌ Error creating script: ' + error.message, true);
             }
-        };
-
-        // ============ SHOW MY SCRIPTS ============
-        window.showMyScripts = async function() {
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            const scriptsSnapshot = await db.collection('scripts')
-                .where('ownerId', '==', currentUser.uid)
-                .orderBy('createdAt', 'desc')
-                .get();
-            
-            currentScripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            
-            if (currentScripts.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 80px 20px;">
-                        <i class="fas fa-code" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
-                        <h2 style="margin: 20px 0;">No scripts yet</h2>
-                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
-                            <i class="fas fa-layer-group"></i> Use Template
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-            
-            let scriptsHTML = '';
-            for (const script of currentScripts) {
-                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
-                
-                const analyticsSnapshot = await db.collection('analytics')
-                    .where('scriptId', '==', script.id)
-                    .get();
-                
-                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
-                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
-                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
-                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
-                
-                const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
-                const visibilityIcon = script.isPrivate ? 'fa-lock' : (script.isUnlisted ? 'fa-eye-slash' : 'fa-globe');
-                const visibilityText = script.isPrivate ? 'Private' : (script.isUnlisted ? 'Unlisted' : 'Public');
-                
-                scriptsHTML += `
-                    <div class="script-card">
-                        <div class="script-stats">
-                            <div class="stat-item">
-                                <div class="stat-value">${scriptViews}</div>
-                                <div class="stat-label">Views</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${uniqueDevices}</div>
-                                <div class="stat-label">Unique</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${scriptUnlocks}</div>
-                                <div class="stat-label">Unlocks</div>
-                            </div>
-                        </div>
-                        <div style="padding: 20px;">
-                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                                <span class="${visibilityClass}" style="padding: 4px 12px; border-radius: 100px; font-size: 11px;">
-                                    <i class="fas ${visibilityIcon}"></i> ${visibilityText}
-                                </span>
-                            </div>
-                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                                <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
-                                    <i class="fas fa-share-alt"></i> Share
-                                </button>
-                                <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
-                                    <i class="fas fa-play"></i> Test
-                                </button>
-                            </div>
-                            <div style="display: flex; gap: 12px;">
-                                ${isOwner ? `
-                                <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1;">
-                                    <i class="fas fa-copy"></i> Duplicate
-                                </button>
-                                ` : ''}
-                                <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </div>
-                            <div class="share-link" id="share-${script.id}" style="display: none;">
-                                <input type="text" class="share-input" value="${shareableLink}" readonly>
-                                <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
-                                    <i class="fas fa-copy"></i> Copy
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title">My Unlockers</h1>
-                    <div style="margin: 20px 0;">
-                        <button class="btn-primary" style="width: auto;" onclick="window.showTemplates()">
-                            <i class="fas fa-plus-circle"></i> Create New
-                        </button>
-                    </div>
-                    <div class="scripts-grid">${scriptsHTML}</div>
-                </div>
-            `;
         };
 
         // ============ SHOW UPGRADE ============
@@ -3577,6 +3906,8 @@
                         <h3 style="margin: 32px 0 20px;">Device Info</h3>
                         <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px;">
                             <p><i class="fas fa-globe"></i> Device ID: ${deviceId}</p>
+                            <p><i class="fas fa-eye"></i> Scripts Viewed: ${Object.keys(viewedScripts).length}</p>
+                            <p><i class="fas fa-unlock"></i> Scripts Unlocked: ${Object.keys(unlockedScripts).length}</p>
                         </div>
                         
                         <h3 style="margin: 32px 0 20px; color: #ef4444;">Danger Zone</h3>
@@ -3628,6 +3959,10 @@
                 });
                 await analyticsBatch.commit();
                 
+                // Clear local storage for this user
+                viewedScripts = {};
+                unlockedScripts = {};
+                
                 showCopyNotification('✅ Your data cleared');
                 renderDashboard();
             }
@@ -3660,7 +3995,10 @@
                         total: 0,
                         unique: []
                     },
-                    unlocks: 0
+                    unlocks: {
+                        total: 0,
+                        unique: []
+                    }
                 };
                 
                 await db.collection('scripts').add(newScript);
@@ -3853,6 +4191,11 @@
 
         window.handleLogout = async function() {
             await auth.signOut();
+            
+            // Clear session data but keep device ID
+            viewedScripts = {};
+            unlockedScripts = {};
+            
             showCopyNotification('👋 Logged out successfully');
             window.location.hash = '';
         };
