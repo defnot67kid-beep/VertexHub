@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VertexHub 8.0 · Advanced Timer System · plastealme2</title>
+    <title>VertexHub 8.5 · Advanced Timer System · plastealme2</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -562,6 +562,11 @@
             box-shadow: var(--shadow-glow);
         }
 
+        .visit-link-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .step-status {
             display: flex;
             align-items: center;
@@ -988,6 +993,18 @@
             color: var(--accent);
         }
 
+        .owner-warning {
+            background: rgba(245,158,11,0.2);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         @keyframes pulseRing {
             0% { transform: scale(1); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
@@ -1052,16 +1069,10 @@
             margin-bottom: 16px;
         }
 
-        .owner-warning {
-            background: rgba(245,158,11,0.2);
-            border: 1px solid var(--accent);
-            border-radius: 12px;
-            padding: 16px;
-            margin: 16px 0;
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .device-info {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -1082,28 +1093,31 @@
         let activeStepStates = {};
         let redirectTimer = null;
         let pendingRedirect = null;
-        let viewedScripts = {}; // Track unique views per user
+        let viewedScripts = {};
+        let deviceId = null;
         
         // Premium video ID (YouTube Short)
-        const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs'; // https://youtube.com/shorts/C1eQlFWX0Cs
+        const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs';
         
         // GitHub Pages base URL
         const GITHUB_PAGES_URL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
         
         // ============ LOCAL STORAGE KEYS ============
         const STORAGE_KEYS = {
-            USERS: 'vertexhub_users_v8',
-            SCRIPTS: 'vertexhub_scripts_v8',
-            CURRENT_USER: 'vertexhub_current_user_v8',
-            SCRIPT_VIEWS: 'vertexhub_script_views_v8',
-            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks_v8',
-            USER_ANALYTICS: 'vertexhub_user_analytics_v8',
-            UNIQUE_VIEWS: 'vertexhub_unique_views_v8',
-            VIEWED_SCRIPTS: 'vertexhub_viewed_scripts_v8'
+            USERS: 'vertexhub_users_v9',
+            SCRIPTS: 'vertexhub_scripts_v9',
+            CURRENT_USER: 'vertexhub_current_user_v9',
+            SCRIPT_VIEWS: 'vertexhub_script_views_v9',
+            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks_v9',
+            USER_ANALYTICS: 'vertexhub_user_analytics_v9',
+            UNIQUE_VIEWS: 'vertexhub_unique_views_v9',
+            VIEWED_SCRIPTS: 'vertexhub_viewed_scripts_v9',
+            DEVICE_ID: 'vertexhub_device_id_v9'
         };
 
         // ============ INITIALIZE STORAGE ============
         function initStorage() {
+            // Initialize all storage objects
             if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
                 localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
             }
@@ -1126,14 +1140,26 @@
                 localStorage.setItem(STORAGE_KEYS.VIEWED_SCRIPTS, JSON.stringify({}));
             }
             
+            // Generate or get device ID for unique tracking
+            deviceId = localStorage.getItem(STORAGE_KEYS.DEVICE_ID);
+            if (!deviceId) {
+                deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
+            }
+            
             const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
             if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                isPremium = currentUser.isPremium || false;
-                
-                // Load viewed scripts for this user
-                const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS));
-                viewedScripts = viewedData[currentUser?.uid] || {};
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    isPremium = currentUser.isPremium || false;
+                    
+                    // Load viewed scripts for this user
+                    const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS));
+                    viewedScripts = viewedData[currentUser?.uid] || {};
+                } catch (e) {
+                    console.error('Error loading user:', e);
+                    currentUser = null;
+                }
             }
         }
 
@@ -1182,10 +1208,10 @@
                 return;
             }
             
-            // Open video player and redirect back after completion
+            // Open video player
             setTimeout(() => {
                 const step = script.steps[parseInt(stepIndex)];
-                openVideoPlayer(step.url, parseInt(stepIndex), step.waitTime, scriptId);
+                openVideoPlayer(step.url, parseInt(stepIndex), scriptId);
             }, 500);
         }
 
@@ -1211,20 +1237,21 @@
             }
             
             // Track unique views
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS));
-            const uniqueViews = JSON.parse(localStorage.getItem(STORAGE_KEYS.UNIQUE_VIEWS));
+            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
+            const uniqueViews = JSON.parse(localStorage.getItem(STORAGE_KEYS.UNIQUE_VIEWS)) || {};
             
-            if (!views[scriptId]) views[scriptId] = { total: 0, unique: 0 };
-            if (!uniqueViews[scriptId]) uniqueViews[scriptId] = [];
+            if (!views[scriptId]) {
+                views[scriptId] = { total: 0, unique: 0 };
+            }
+            if (!uniqueViews[scriptId]) {
+                uniqueViews[scriptId] = [];
+            }
             
             // Increment total views
             views[scriptId].total = (views[scriptId].total || 0) + 1;
             
-            // Check for unique view
-            const viewerId = currentUser?.uid || 'anonymous_' + (localStorage.getItem('anonymous_id') || Math.random().toString(36).substr(2, 9));
-            if (!localStorage.getItem('anonymous_id')) {
-                localStorage.setItem('anonymous_id', viewerId);
-            }
+            // Check for unique view using device ID
+            const viewerId = currentUser?.uid || deviceId;
             
             if (!uniqueViews[scriptId].includes(viewerId)) {
                 uniqueViews[scriptId].push(viewerId);
@@ -1241,7 +1268,7 @@
                         viewedScripts[scriptId].viewCount++;
                     }
                     
-                    const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS));
+                    const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS)) || {};
                     viewedData[currentUser.uid] = viewedScripts;
                     localStorage.setItem(STORAGE_KEYS.VIEWED_SCRIPTS, JSON.stringify(viewedData));
                 }
@@ -1257,7 +1284,7 @@
 
         // ============ UPDATE USER ANALYTICS ============
         function updateUserAnalytics(userId, type) {
-            const analytics = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_ANALYTICS));
+            const analytics = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_ANALYTICS)) || {};
             
             if (!analytics[userId]) {
                 analytics[userId] = {
@@ -1284,13 +1311,14 @@
         function renderUnlocker(script) {
             const app = document.getElementById('app');
             
+            // Initialize step states
             activeStepStates = {};
             script.steps.forEach((step, index) => {
                 activeStepStates[index] = {
                     linkClicked: false,
                     timerStarted: false,
                     timerComplete: false,
-                    timeLeft: step.waitTime,
+                    timeLeft: step.waitTime || 20,
                     watchStarted: false,
                     watchComplete: false,
                     redirectPending: false,
@@ -1323,6 +1351,10 @@
                     <button class="btn-primary" id="final-unlock-btn" disabled onclick="window.finalUnlock()" style="margin-top: 32px; padding: 18px;">
                         <i class="fas fa-lock"></i> Complete All Steps to Unlock
                     </button>
+                    
+                    <div class="device-info">
+                        <i class="fas fa-globe"></i> Device ID: ${deviceId.substring(0, 8)}...
+                    </div>
                 </div>
             `;
             
@@ -1342,19 +1374,19 @@
                 const stepClass = `step-card ${state.timerComplete ? 'completed' : ''} ${!isLocked && !state.timerComplete ? 'active' : ''} ${isLocked ? 'locked' : ''}`;
                 
                 let statusIcon = 'fa-hourglass-half';
-                let statusText = 'Waiting for link click';
+                let statusText = 'Waiting for action';
                 let statusClass = 'waiting';
                 
                 if (state.timerComplete) {
                     statusIcon = 'fa-check-circle';
                     statusText = 'Completed';
                     statusClass = 'completed';
-                } else if (state.watchStarted) {
+                } else if (state.watchStarted && !state.videoCompleted) {
                     statusIcon = 'fa-eye';
-                    statusText = `Watching video (waiting for completion)`;
+                    statusText = `Watching video...`;
                     statusClass = 'watching';
-                } else if (state.videoCompleted) {
-                    statusIcon = 'fa-clock';
+                } else if (state.videoCompleted && !state.linkClicked) {
+                    statusIcon = 'fa-check-circle';
                     statusText = `Video completed! Click to start timer`;
                     statusClass = 'visited';
                 } else if (state.linkClicked) {
@@ -1370,10 +1402,12 @@
                                 <i class="fas ${getStepIcon(step.type)}"></i> 
                                 Step ${index + 1}: ${step.label || `Step ${index + 1}`}
                             </span>
+                            ${step.type === 'watch' && step.waitTime > 0 ? `
                             <span class="step-timer">
                                 <i class="fas fa-hourglass-half"></i> 
-                                <span id="timer-display-${index}">${state.timerComplete ? 'Done' : (state.linkClicked ? `${state.timeLeft}s` : `${step.waitTime}s`)}</span>
+                                <span id="timer-display-${index}">${state.timerComplete ? 'Done' : (state.linkClicked ? `${state.timeLeft}s` : `${step.waitTime}s timer`)}</span>
                             </span>
+                            ` : ''}
                         </div>
                         
                         <div class="step-url-container">
@@ -1390,14 +1424,19 @@
                             </div>
                             <div style="flex: 1;">
                                 <div style="font-weight: 600; margin-bottom: 4px;">Status: ${statusText}</div>
-                                ${state.linkClicked && !state.timerComplete ? `
+                                ${step.type === 'watch' && state.linkClicked && !state.timerComplete && step.waitTime > 0 ? `
                                     <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
                                         <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
                                     </div>
                                 ` : ''}
-                                ${state.videoCompleted && !state.linkClicked ? `
+                                ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
                                     <div style="color: #10b981; margin-top: 8px;">
                                         <i class="fas fa-check-circle"></i> Video completed! Click "Start Timer" above
+                                    </div>
+                                ` : ''}
+                                ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
+                                    <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
+                                        <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
                                     </div>
                                 ` : ''}
                             </div>
@@ -1440,7 +1479,7 @@
                     const watchId = `${script.scriptId}.${stepIndex}`;
                     const watchUrl = `${window.location.origin}${window.location.pathname}#watch-${watchId}`;
                     
-                    // Open video in new tab with watch ID
+                    // Open video in new tab
                     window.open(watchUrl, '_blank');
                     
                     state.watchStarted = true;
@@ -1450,25 +1489,41 @@
                 } else {
                     // Video completed, now start timer
                     state.linkClicked = true;
-                    state.timeLeft = step.waitTime;
-                    startStepTimer(stepIndex);
+                    state.timeLeft = step.waitTime || 0;
+                    if (step.waitTime > 0) {
+                        startStepTimer(stepIndex);
+                    } else {
+                        // If wait time is 0, complete immediately
+                        setTimeout(() => {
+                            state.timerComplete = true;
+                            window.completeStep(stepIndex);
+                        }, 500);
+                    }
                     renderUnlockSteps(script);
-                    showCopyNotification(`✅ Timer started (${state.timeLeft}s)`, false);
+                    showCopyNotification(step.waitTime > 0 ? `✅ Timer started (${step.waitTime}s)` : `✅ Step completed!`, false);
                 }
             } else {
-                // Regular link steps
+                // Regular link steps - only open link, timer starts automatically
                 window.open(step.url, '_blank');
                 state.linkClicked = true;
-                state.timeLeft = step.waitTime;
-                startStepTimer(stepIndex);
+                state.timeLeft = step.waitTime || 0;
+                if (step.waitTime > 0) {
+                    startStepTimer(stepIndex);
+                } else {
+                    // If wait time is 0, complete immediately
+                    setTimeout(() => {
+                        state.timerComplete = true;
+                        window.completeStep(stepIndex);
+                    }, 500);
+                }
                 renderUnlockSteps(script);
-                showCopyNotification(`✅ Link opened! Timer started (${state.timeLeft}s)`, false);
+                showCopyNotification(step.waitTime > 0 ? `✅ Link opened! Timer started (${step.waitTime}s)` : `✅ Step completed!`, false);
             }
         };
 
         // ============ OPEN VIDEO PLAYER ============
-        function openVideoPlayer(videoUrl, stepIndex, waitTime, scriptId) {
-            // Extract YouTube video ID (works for both regular and shorts)
+        function openVideoPlayer(videoUrl, stepIndex, scriptId) {
+            // Extract YouTube video ID
             let videoId = '';
             if (videoUrl.includes('youtube.com/shorts/')) {
                 videoId = videoUrl.split('shorts/')[1].split('?')[0].split('/')[0];
@@ -1478,10 +1533,11 @@
             } else if (videoUrl.includes('youtu.be/')) {
                 videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
             } else {
-                videoId = PREMIUM_SHORTS_ID; // Fallback to premium short
+                showCopyNotification('❌ Invalid YouTube URL', true);
+                return;
             }
             
-            const isShorts = videoUrl.includes('shorts/') || videoId === PREMIUM_SHORTS_ID;
+            const isShorts = videoUrl.includes('shorts/');
             
             // Create modal overlay
             const modal = document.createElement('div');
@@ -1521,14 +1577,11 @@
                     </div>
                     
                     <div style="margin-top: 20px; text-align: center; padding: 0 20px;">
-                        <div class="timer-progress-bar" style="width: 100%;">
-                            <div id="modal-progress" class="timer-progress-fill" style="width: 0%;"></div>
-                        </div>
+                        <p style="color: var(--accent); margin-top: 5px;" id="video-complete-message"></p>
                         <p style="color: var(--text-dim); margin-top: 10px;">
                             <i class="fas fa-shield"></i> 
-                            Must watch entire video • ${waitTime > 0 ? waitTime + 's required' : 'No timer'}
+                            Must watch the entire video
                         </p>
-                        <p style="color: var(--accent); margin-top: 5px;" id="video-complete-message"></p>
                     </div>
                 </div>
             `;
@@ -1539,8 +1592,6 @@
             const watchState = {
                 stepIndex: stepIndex,
                 scriptId: scriptId,
-                waitTime: waitTime,
-                startTime: Date.now(),
                 completed: false,
                 lastVideoTime: 0,
                 skipAttempts: 0,
@@ -1548,31 +1599,38 @@
                 videoCompleted: false
             };
             
-            // Load YouTube player with NO CONTROLS
+            // Load YouTube player
             setTimeout(() => {
-                youtubePlayer = new YT.Player('watch-youtube-player', {
-                    videoId: videoId,
-                    width: '100%',
-                    height: '100%',
-                    playerVars: {
-                        autoplay: 1,
-                        controls: 0,
-                        disablekb: 1,
-                        fs: 0,
-                        modestbranding: 1,
-                        rel: 0,
-                        showinfo: 0,
-                        iv_load_policy: 3,
-                        playsinline: 1,
-                        loop: 0, // Don't loop
-                        enablejsapi: 1
-                    },
-                    events: {
-                        'onReady': (event) => onWatchPlayerReady(event, watchState, modal, waitTime),
-                        'onStateChange': (event) => onWatchStateChange(event, watchState, modal, waitTime, scriptId, stepIndex),
-                        'onError': onVideoError
-                    }
-                });
+                try {
+                    youtubePlayer = new YT.Player('watch-youtube-player', {
+                        videoId: videoId,
+                        width: '100%',
+                        height: '100%',
+                        playerVars: {
+                            autoplay: 1,
+                            controls: 0,
+                            disablekb: 1,
+                            fs: 0,
+                            modestbranding: 1,
+                            rel: 0,
+                            showinfo: 0,
+                            iv_load_policy: 3,
+                            playsinline: 1,
+                            loop: 0,
+                            enablejsapi: 1
+                        },
+                        events: {
+                            'onReady': (event) => onWatchPlayerReady(event, watchState, modal),
+                            'onStateChange': (event) => onWatchStateChange(event, watchState, modal, scriptId, stepIndex),
+                            'onError': (e) => {
+                                console.error('YouTube error:', e);
+                                showCopyNotification('❌ Video error - please refresh', true);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error creating player:', e);
+                }
             }, 100);
         }
 
@@ -1581,32 +1639,34 @@
             if (modal) modal.remove();
             
             if (youtubePlayer) {
-                youtubePlayer.destroy();
+                try {
+                    youtubePlayer.destroy();
+                } catch (e) {}
                 youtubePlayer = null;
             }
         };
 
-        function onWatchPlayerReady(event, watchState, modal, waitTime) {
+        function onWatchPlayerReady(event, watchState, modal) {
             const player = event.target;
             
-            // Force mute to ensure autoplay
-            player.mute();
-            player.playVideo();
+            try {
+                // Force mute
+                player.mute();
+                player.playVideo();
+                
+                // Get video duration
+                setTimeout(() => {
+                    try {
+                        watchState.videoDuration = player.getDuration();
+                        const timerDisplay = document.getElementById('video-timer');
+                        if (timerDisplay) {
+                            timerDisplay.innerHTML = `0:00 / ${formatTime(watchState.videoDuration)}`;
+                        }
+                    } catch (e) {}
+                }, 1000);
+            } catch (e) {}
             
-            // Get video duration
-            setTimeout(() => {
-                try {
-                    watchState.videoDuration = player.getDuration();
-                    const timerDisplay = document.getElementById('video-timer');
-                    if (timerDisplay) {
-                        timerDisplay.innerHTML = `0:00 / ${formatTime(watchState.videoDuration)}`;
-                    }
-                } catch (e) {
-                    console.error('Error getting duration:', e);
-                }
-            }, 1000);
-            
-            // Overlay to block all interactions
+            // Overlay to block interactions
             const overlay = document.getElementById('video-overlay');
             if (overlay) {
                 overlay.style.pointerEvents = 'all';
@@ -1619,10 +1679,8 @@
             }
             
             let warningTimeout = null;
-            let lastReportedTime = 0;
-            let videoCompleted = false;
             
-            // Start timer interval
+            // Update progress interval
             const timerInterval = setInterval(() => {
                 if (watchState.completed) {
                     clearInterval(timerInterval);
@@ -1634,19 +1692,20 @@
                     const playerState = player.getPlayerState();
                     const duration = player.getDuration();
                     
+                    if (!duration) return;
+                    
                     // Force play if not playing
                     if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
                         player.playVideo();
                     }
                     
-                    // Check for skipping (if video time jumps ahead)
+                    // Check for skipping
                     if (watchState.lastVideoTime > 0 && currentTime > watchState.lastVideoTime + 2) {
                         handleWatchSkipAttempt('skip', watchState, currentTime - watchState.lastVideoTime);
                         
                         // Force video back
                         player.seekTo(watchState.lastVideoTime, true);
                         
-                        // Show warning
                         const warning = document.getElementById('video-warning');
                         if (warning) {
                             warning.style.display = 'block';
@@ -1661,22 +1720,19 @@
                     
                     // Update timer display
                     const timerDisplay = document.getElementById('video-timer');
-                    if (timerDisplay && duration) {
+                    if (timerDisplay) {
                         timerDisplay.innerHTML = `${formatTime(currentTime)} / ${formatTime(duration)}`;
                     }
                     
                     // Update progress bar
                     const progressBar = document.getElementById('video-progress-bar');
-                    const modalProgress = document.getElementById('modal-progress');
-                    if (progressBar && duration) {
+                    if (progressBar) {
                         const progressPercent = (currentTime / duration) * 100;
                         progressBar.style.width = progressPercent + '%';
-                        if (modalProgress) modalProgress.style.width = progressPercent + '%';
                     }
                     
                     // Check if video completed
-                    if (duration && currentTime >= duration - 0.5 && !videoCompleted) {
-                        videoCompleted = true;
+                    if (duration && currentTime >= duration - 0.5 && !watchState.videoCompleted) {
                         watchState.videoCompleted = true;
                         
                         const completeMessage = document.getElementById('video-complete-message');
@@ -1685,20 +1741,24 @@
                             completeMessage.style.color = '#10b981';
                         }
                         
-                        // Auto-close after 3 seconds if no timer
-                        if (waitTime === 0) {
-                            setTimeout(() => {
-                                if (modal) modal.remove();
-                                showCopyNotification('✅ Video completed! Return to unlocker', false);
-                            }, 3000);
+                        // Update step state
+                        if (window.currentUnlockScript && window.currentUnlockScript.scriptId === watchState.scriptId) {
+                            if (activeStepStates[watchState.stepIndex]) {
+                                activeStepStates[watchState.stepIndex].videoCompleted = true;
+                                activeStepStates[watchState.stepIndex].watchStarted = false;
+                            }
                         }
+                        
+                        // Auto-close after 3 seconds
+                        setTimeout(() => {
+                            if (modal) modal.remove();
+                            showCopyNotification('✅ Video completed! Return to unlocker', false);
+                        }, 3000);
                     }
-                } catch (e) {
-                    console.error('Video timer error:', e);
-                }
+                } catch (e) {}
             }, 100);
             
-            // Block all keyboard inputs
+            // Block keyboard inputs
             const keyHandler = (e) => {
                 if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
                     e.preventDefault();
@@ -1710,12 +1770,13 @@
             
             window.addEventListener('keydown', keyHandler, true);
             
-            // Remove listener when modal closes
+            // Clean up
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (!document.body.contains(modal)) {
                         window.removeEventListener('keydown', keyHandler, true);
                         observer.disconnect();
+                        clearInterval(timerInterval);
                     }
                 });
             });
@@ -1723,7 +1784,7 @@
             observer.observe(document.body, { childList: true, subtree: true });
         }
 
-        function onWatchStateChange(event, watchState, modal, waitTime, scriptId, stepIndex) {
+        function onWatchStateChange(event, watchState, modal, scriptId, stepIndex) {
             const player = event.target;
             
             if (watchState.completed) return;
@@ -1731,19 +1792,12 @@
             // Force play if paused
             if (event.data === YT.PlayerState.PAUSED) {
                 setTimeout(() => {
-                    if (player && !watchState.completed) {
-                        player.playVideo();
-                    }
+                    try {
+                        if (player && !watchState.completed) {
+                            player.playVideo();
+                        }
+                    } catch (e) {}
                 }, 500);
-            }
-            
-            // Force play if buffering
-            if (event.data === YT.PlayerState.BUFFERING) {
-                setTimeout(() => {
-                    if (player && !watchState.completed) {
-                        player.playVideo();
-                    }
-                }, 1000);
             }
             
             // Handle video ended
@@ -1756,7 +1810,7 @@
                     completeMessage.style.color = '#10b981';
                 }
                 
-                // Update step state to mark video as completed
+                // Update step state
                 if (window.currentUnlockScript && window.currentUnlockScript.scriptId === scriptId) {
                     if (activeStepStates[stepIndex]) {
                         activeStepStates[stepIndex].videoCompleted = true;
@@ -1764,19 +1818,12 @@
                     }
                 }
                 
-                // Auto-close after 3 seconds if no timer
-                if (waitTime === 0) {
-                    setTimeout(() => {
-                        if (modal) modal.remove();
-                        showCopyNotification('✅ Video completed! Return to unlocker', false);
-                    }, 3000);
-                }
+                // Auto-close after 3 seconds
+                setTimeout(() => {
+                    if (modal) modal.remove();
+                    showCopyNotification('✅ Video completed! Return to unlocker', false);
+                }, 3000);
             }
-        }
-
-        function onVideoError(event) {
-            console.error('YouTube error:', event.data);
-            showCopyNotification('❌ Video error - please refresh', true);
         }
 
         function handleWatchSkipAttempt(reason, watchState, amount = 0) {
@@ -1799,11 +1846,12 @@
             showCopyNotification(message, true);
             
             if (watchState.skipAttempts >= 3) {
-                if (youtubePlayer) youtubePlayer.pauseVideo();
+                try {
+                    if (youtubePlayer) youtubePlayer.pauseVideo();
+                } catch (e) {}
                 
                 showCopyNotification('❌ Too many skips - Refresh page', true);
                 
-                // Close modal
                 const modals = document.querySelectorAll('div[style*="position: fixed"]');
                 modals.forEach(modal => modal.remove());
             }
@@ -1813,6 +1861,7 @@
         function startStepTimer(stepIndex) {
             const script = window.currentUnlockScript;
             const state = activeStepStates[stepIndex];
+            const step = script.steps[stepIndex];
             
             if (state.interval) clearInterval(state.interval);
             
@@ -1825,7 +1874,7 @@
                     
                     const progressBar = document.getElementById(`progress-${stepIndex}`);
                     if (progressBar) {
-                        const progress = ((script.steps[stepIndex].waitTime - state.timeLeft) / script.steps[stepIndex].waitTime) * 100;
+                        const progress = ((step.waitTime - state.timeLeft) / step.waitTime) * 100;
                         progressBar.style.width = progress + '%';
                     }
                     
@@ -1893,7 +1942,7 @@
                 return;
             }
             
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS));
+            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
             unlocks[script.scriptId] = (unlocks[script.scriptId] || 0) + 1;
             localStorage.setItem(STORAGE_KEYS.SCRIPT_UNLOCKS, JSON.stringify(unlocks));
             
@@ -2014,7 +2063,7 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             const user = users.find(u => u.email === email && u.password === btoa(password));
             
             if (user) {
@@ -2031,8 +2080,7 @@
                 
                 localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
                 
-                // Load viewed scripts for this user
-                const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS));
+                const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS)) || {};
                 viewedScripts = viewedData[currentUser.uid] || {};
                 
                 showCopyNotification('✅ Login successful!');
@@ -2054,7 +2102,7 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             
             if (users.some(u => u.email === email)) {
                 showCopyNotification('❌ Email already exists', true);
@@ -2095,8 +2143,7 @@
             
             localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
             
-            // Initialize viewed scripts for new user
-            const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS));
+            const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS)) || {};
             viewedData[currentUser.uid] = {};
             localStorage.setItem(STORAGE_KEYS.VIEWED_SCRIPTS, JSON.stringify(viewedData));
             viewedScripts = {};
@@ -2145,7 +2192,7 @@
                         
                         <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center;">
                             <p style="color: var(--text-dim); font-size: 13px;">
-                                <i class="fas fa-shield-alt"></i> Local storage authentication
+                                <i class="fas fa-globe"></i> Device ID: ${deviceId.substring(0, 8)}...
                             </p>
                         </div>
                     </div>
@@ -2157,7 +2204,7 @@
         function renderDashboard() {
             const app = document.getElementById('app');
             
-            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             currentScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
             
             const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
@@ -2186,13 +2233,16 @@
                                     <div style="color: var(--text-dim); font-size: 14px;">${currentUser?.email || ''}</div>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px;">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                 <span style="background: rgba(99,102,241,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
                                     <i class="fas fa-code"></i> ${currentScripts.length} Scripts
                                 </span>
                                 <span style="background: rgba(245,158,11,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
                                     <i class="fas fa-eye"></i> ${Object.keys(viewedScripts).length} Viewed
                                 </span>
+                            </div>
+                            <div class="device-info">
+                                <i class="fas fa-globe"></i> Device: ${deviceId.substring(0, 8)}...
                             </div>
                         </div>
                         
@@ -2244,11 +2294,10 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS));
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS));
-            const uniqueViews = JSON.parse(localStorage.getItem(STORAGE_KEYS.UNIQUE_VIEWS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
+            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
+            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
             
             // Calculate totals
             const totalUsers = users.length;
@@ -2257,7 +2306,6 @@
             const totalUniqueViews = Object.values(views).reduce((sum, v) => sum + (v.unique || 0), 0);
             const totalUnlocks = Object.values(unlocks).reduce((sum, v) => sum + (v || 0), 0);
             
-            // User list for selection
             let userOptions = '';
             users.forEach(user => {
                 userOptions += `<option value="${user.uid}">${user.displayName} (${user.email}) - ${user.role || 'user'}</option>`;
@@ -2380,7 +2428,7 @@
             `;
         };
 
-        // Global variables for admin
+        // Admin panel functions
         let selectedUserId = null;
         let selectedScriptId = null;
 
@@ -2402,7 +2450,7 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             const userIndex = users.findIndex(u => u.uid === selectedUserId);
             
             if (userIndex !== -1) {
@@ -2420,7 +2468,7 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             const userIndex = users.findIndex(u => u.uid === selectedUserId);
             
             if (userIndex !== -1) {
@@ -2440,7 +2488,7 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             const userIndex = users.findIndex(u => u.uid === selectedUserId);
             
             if (userIndex !== -1) {
@@ -2460,7 +2508,7 @@
             
             if (!confirm('⚠️ Delete this user permanently?')) return;
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             const filtered = users.filter(u => u.uid !== selectedUserId);
             localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(filtered));
             
@@ -2475,7 +2523,7 @@
                 return;
             }
             
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             let modifiedCount = 0;
             
             scripts.forEach(script => {
@@ -2503,7 +2551,7 @@
                 return;
             }
             
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             const script = scripts.find(s => s.scriptId === selectedScriptId);
             
             if (!script) return;
@@ -2517,7 +2565,7 @@
                                 <strong>Step ${index + 1}:</strong> ${step.label} (${step.type})
                             </div>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="number" id="admin-step-${index}" class="wait-time-input" value="${step.waitTime}" min="0" max="999">
+                                <input type="number" id="admin-step-${index}" class="wait-time-input" value="${step.waitTime || 0}" min="0" max="999">
                                 <span>seconds</span>
                             </div>
                         </div>
@@ -2532,7 +2580,7 @@
         window.applyScriptChanges = function() {
             if (!selectedScriptId) return;
             
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             const scriptIndex = scripts.findIndex(s => s.scriptId === selectedScriptId);
             
             if (scriptIndex === -1) return;
@@ -2575,11 +2623,11 @@
             const container = document.getElementById('main-content');
             if (!container) return;
             
-            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             const myScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
             
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS));
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS));
+            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
+            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
             
             let totalViews = 0;
             let totalUniqueViews = 0;
@@ -2817,7 +2865,7 @@
                         
                         <div class="wait-time-control">
                             <span class="wait-time-badge">
-                                <i class="fas fa-clock"></i> Wait Time (0-30s)
+                                <i class="fas fa-clock"></i> Wait Time (0-${isOwner ? 999 : 30}s)
                             </span>
                             <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="${isOwner ? 999 : 30}" step="1">
                             <span style="color: var(--text-dim);">seconds</span>
@@ -3058,9 +3106,7 @@
                 const typeInput = card.querySelector('.step-type');
                 const waitInput = card.querySelector('.wait-time-input');
                 
-                const waitTime = waitInput ? parseInt(waitInput.value) || 20 : 20;
-                
-                // Ensure wait time is within limits
+                const waitTime = waitInput ? parseInt(waitInput.value) || 0 : 0;
                 const validWaitTime = Math.min(maxWaitTime, Math.max(0, waitTime));
                 
                 if (urlInput && urlInput.value) {
@@ -3107,11 +3153,11 @@
                 unlocks: 0
             };
             
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             scripts.push(scriptData);
             localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(scripts));
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             const userIndex = users.findIndex(u => u.uid === currentUser.uid);
             if (userIndex !== -1) {
                 users[userIndex].totalScripts = (users[userIndex].totalScripts || 0) + 1;
@@ -3139,11 +3185,11 @@
             const container = document.getElementById('main-content');
             if (!container) return;
             
-            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             currentScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
             
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS));
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS));
+            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
+            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
             
             if (currentScripts.length === 0) {
                 container.innerHTML = `
@@ -3293,56 +3339,56 @@
             let shortPlayer = null;
             let skipAttempts = 0;
             
-            // Load YouTube Short
             setTimeout(() => {
-                shortPlayer = new YT.Player('premium-video-player', {
-                    videoId: PREMIUM_SHORTS_ID,
-                    width: '100%',
-                    height: '100%',
-                    playerVars: {
-                        autoplay: 1,
-                        controls: 0,
-                        disablekb: 1,
-                        fs: 0,
-                        modestbranding: 1,
-                        rel: 0,
-                        showinfo: 0,
-                        iv_load_policy: 3,
-                        playsinline: 1,
-                        loop: 0,
-                        enablejsapi: 1
-                    },
-                    events: {
-                        'onReady': (event) => {
-                            event.target.mute();
-                            event.target.playVideo();
+                try {
+                    shortPlayer = new YT.Player('premium-video-player', {
+                        videoId: PREMIUM_SHORTS_ID,
+                        width: '100%',
+                        height: '100%',
+                        playerVars: {
+                            autoplay: 1,
+                            controls: 0,
+                            disablekb: 1,
+                            fs: 0,
+                            modestbranding: 1,
+                            rel: 0,
+                            showinfo: 0,
+                            iv_load_policy: 3,
+                            playsinline: 1,
+                            loop: 0,
+                            enablejsapi: 1
                         },
-                        'onStateChange': (event) => {
-                            if (event.data === YT.PlayerState.PAUSED) {
-                                setTimeout(() => {
-                                    if (shortPlayer && !videoCompleted) {
-                                        shortPlayer.playVideo();
-                                    }
-                                }, 100);
-                            }
-                            if (event.data === YT.PlayerState.ENDED) {
-                                videoCompleted = true;
-                                hasWatchedFullVideo = true;
-                                
-                                const activateBtn = document.getElementById('premium-activate-btn');
-                                if (activateBtn) {
-                                    activateBtn.disabled = false;
-                                    activateBtn.innerHTML = '<i class="fas fa-crown"></i> Activate Premium Now';
+                        events: {
+                            'onReady': (event) => {
+                                event.target.mute();
+                                event.target.playVideo();
+                            },
+                            'onStateChange': (event) => {
+                                if (event.data === YT.PlayerState.PAUSED) {
+                                    setTimeout(() => {
+                                        if (shortPlayer && !videoCompleted) {
+                                            shortPlayer.playVideo();
+                                        }
+                                    }, 100);
                                 }
-                                
-                                showCopyNotification('✅ Video completed! You can now upgrade', false);
+                                if (event.data === YT.PlayerState.ENDED) {
+                                    videoCompleted = true;
+                                    hasWatchedFullVideo = true;
+                                    
+                                    const activateBtn = document.getElementById('premium-activate-btn');
+                                    if (activateBtn) {
+                                        activateBtn.disabled = false;
+                                        activateBtn.innerHTML = '<i class="fas fa-crown"></i> Activate Premium Now';
+                                    }
+                                    
+                                    showCopyNotification('✅ Video completed! You can now upgrade', false);
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                } catch (e) {}
             }, 100);
             
-            // Update timer display
             const timerInterval = setInterval(() => {
                 if (!shortPlayer || videoCompleted) return;
                 
@@ -3363,12 +3409,9 @@
                         if (progressBar) progressBar.style.width = progress + '%';
                         if (timerProgress) timerProgress.style.width = progress + '%';
                     }
-                } catch (e) {
-                    console.error('Timer error:', e);
-                }
+                } catch (e) {}
             }, 100);
             
-            // Block interactions
             const blockHandler = (e) => {
                 if (!hasWatchedFullVideo) {
                     e.preventDefault();
@@ -3392,7 +3435,7 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
             const userIndex = users.findIndex(u => u.uid === currentUser.uid);
             
             if (userIndex !== -1) {
@@ -3422,6 +3465,11 @@
                         <input type="text" class="auth-input" value="${currentUser?.displayName || ''}" id="settings-name">
                         <button class="btn-primary" onclick="window.updateProfile()">Update</button>
                         
+                        <h3 style="margin: 32px 0 20px;">Device Info</h3>
+                        <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px;">
+                            <p><i class="fas fa-globe"></i> Device ID: ${deviceId}</p>
+                        </div>
+                        
                         <h3 style="margin: 32px 0 20px; color: #ef4444;">Danger Zone</h3>
                         <button style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px 24px; border-radius: 12px; margin-right: 12px;" onclick="window.clearMyData()">
                             <i class="fas fa-trash"></i> Clear My Data
@@ -3439,7 +3487,7 @@
             if (newName && currentUser) {
                 currentUser.displayName = newName;
                 
-                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS));
+                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
                 const userIndex = users.findIndex(u => u.uid === currentUser.uid);
                 if (userIndex !== -1) {
                     users[userIndex].displayName = newName;
@@ -3454,8 +3502,7 @@
 
         window.clearMyData = function() {
             if (confirm('⚠️ Delete ALL your scripts and data?')) {
-                // Remove user's scripts
-                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
                 const filtered = scripts.filter(s => s.ownerId !== currentUser.uid);
                 localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(filtered));
                 
@@ -3485,7 +3532,7 @@
         };
 
         window.duplicateScript = function(scriptId) {
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
             const original = scripts.find(s => s.scriptId === scriptId);
             
             if (original) {
@@ -3507,7 +3554,7 @@
 
         window.deleteScript = function(scriptId) {
             if (confirm('Delete this script?')) {
-                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
+                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
                 const filtered = scripts.filter(s => s.scriptId !== scriptId);
                 localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(filtered));
                 showCopyNotification('✅ Script deleted');
@@ -3545,4 +3592,4 @@
         };
     </script>
 </body>
-    </html>
+</html>
