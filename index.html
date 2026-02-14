@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VertexHub 8.5 · Advanced Timer System · plastealme2</title>
+    <title>VertexHub 9.0 · Firebase · plastealme2</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -387,16 +387,6 @@
             border: 1px solid var(--border);
             transition: all 0.3s ease;
             position: relative;
-        }
-
-        .script-preview {
-            height: 180px;
-            background: linear-gradient(135deg, #1e242c, #14181f);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
         }
 
         .script-stats {
@@ -1005,6 +995,19 @@
             gap: 12px;
         }
 
+        .auto-redirect-badge {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+        }
+
         @keyframes pulseRing {
             0% { transform: scale(1); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
@@ -1079,7 +1082,31 @@
 <body>
     <div id="app"></div>
 
+    <!-- Firebase SDK (Compatibility mode for easier integration) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
     <script>
+        // ============ FIREBASE CONFIGURATION ============
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBS4BaGo5r1V5rANl2qu_fYQG3RjE91gtE",
+            authDomain: "vertexhub-9f0d2.firebaseapp.com",
+            projectId: "vertexhub-9f0d2",
+            storageBucket: "vertexhub-9f0d2.firebasestorage.app",
+            messagingSenderId: "159837255599",
+            appId: "1:159837255599:web:e69bb8959e22508242a15a"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
         // ============ APP STATE ============
         let currentUser = null;
         let isPremium = false;
@@ -1089,78 +1116,89 @@
         let hasWatchedFullVideo = false;
         let antiSkipActive = true;
         let skipAttempts = 0;
-        let videoCheckInterval = null;
         let activeStepStates = {};
-        let redirectTimer = null;
-        let pendingRedirect = null;
         let viewedScripts = {};
         let deviceId = null;
+        let autoCloseTimer = null;
         
         // Premium video ID (YouTube Short)
         const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs';
         
-        // GitHub Pages base URL
-        const GITHUB_PAGES_URL = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
-        
-        // ============ LOCAL STORAGE KEYS ============
-        const STORAGE_KEYS = {
-            USERS: 'vertexhub_users_v10',
-            SCRIPTS: 'vertexhub_scripts_v10',
-            CURRENT_USER: 'vertexhub_current_user_v10',
-            SCRIPT_VIEWS: 'vertexhub_script_views_v10',
-            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks_v10',
-            USER_ANALYTICS: 'vertexhub_user_analytics_v10',
-            UNIQUE_VIEWS: 'vertexhub_unique_views_v10',
-            VIEWED_SCRIPTS: 'vertexhub_viewed_scripts_v10',
-            DEVICE_ID: 'vertexhub_device_id_v10'
+        // ============ TIME LIMITS ============
+        const TIME_LIMITS = {
+            regular: { min: 0, max: 20 },
+            premium: { min: 0, max: 50 },
+            owner: { min: 0, max: 9999 } // Infinity for owner
         };
 
-        // ============ INITIALIZE STORAGE ============
-        function initStorage() {
-            // Initialize all storage objects
-            if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
-            }
-            if (!localStorage.getItem(STORAGE_KEYS.SCRIPTS)) {
-                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify([]));
-            }
-            if (!localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) {
-                localStorage.setItem(STORAGE_KEYS.SCRIPT_VIEWS, JSON.stringify({}));
-            }
-            if (!localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) {
-                localStorage.setItem(STORAGE_KEYS.SCRIPT_UNLOCKS, JSON.stringify({}));
-            }
-            if (!localStorage.getItem(STORAGE_KEYS.USER_ANALYTICS)) {
-                localStorage.setItem(STORAGE_KEYS.USER_ANALYTICS, JSON.stringify({}));
-            }
-            if (!localStorage.getItem(STORAGE_KEYS.UNIQUE_VIEWS)) {
-                localStorage.setItem(STORAGE_KEYS.UNIQUE_VIEWS, JSON.stringify({}));
-            }
-            if (!localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS)) {
-                localStorage.setItem(STORAGE_KEYS.VIEWED_SCRIPTS, JSON.stringify({}));
-            }
-            
-            // Generate or get device ID for unique tracking
-            deviceId = localStorage.getItem(STORAGE_KEYS.DEVICE_ID);
+        // ============ INITIALIZE ============
+        function init() {
+            // Generate device ID
+            deviceId = localStorage.getItem('vertexhub_device_id');
             if (!deviceId) {
                 deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
+                localStorage.setItem('vertexhub_device_id', deviceId);
             }
-            
-            const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-            if (savedUser) {
-                try {
-                    currentUser = JSON.parse(savedUser);
-                    isPremium = currentUser.isPremium || false;
+
+            // Check auth state
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    // Get user data from Firestore
+                    const userDoc = await db.collection('users').doc(user.uid).get();
                     
-                    // Load viewed scripts for this user
-                    const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS));
-                    viewedScripts = viewedData[currentUser?.uid] || {};
-                } catch (e) {
-                    console.error('Error loading user:', e);
+                    if (!userDoc.exists) {
+                        // Create user document if it doesn't exist
+                        const isOwner = user.email === "plastealme2@vertexhub.com";
+                        await db.collection('users').doc(user.uid).set({
+                            displayName: user.email.split('@')[0],
+                            email: user.email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            isPremium: isOwner ? true : false,
+                            role: isOwner ? "admin" : "user",
+                            totalScripts: 0
+                        });
+                        
+                        const userData = {
+                            displayName: user.email.split('@')[0],
+                            email: user.email,
+                            isPremium: isOwner,
+                            role: isOwner ? "admin" : "user"
+                        };
+                        
+                        currentUser = {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: userData.displayName,
+                            isPremium: userData.isPremium,
+                            role: userData.role,
+                            createdAt: new Date().toISOString()
+                        };
+                    } else {
+                        const userData = userDoc.data();
+                        currentUser = {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: userData.displayName || user.email.split('@')[0],
+                            isPremium: userData.isPremium || false,
+                            role: userData.role || 'user',
+                            createdAt: userData.createdAt
+                        };
+                    }
+                    
+                    isPremium = currentUser.isPremium;
+                    
+                    // Load viewed scripts
+                    const viewedDoc = await db.collection('userViews').doc(user.uid).get();
+                    viewedScripts = viewedDoc.data() || {};
+                    
+                    handleRouting();
+                } else {
                     currentUser = null;
+                    isPremium = false;
+                    viewedScripts = {};
+                    handleRouting();
                 }
-            }
+            });
         }
 
         // ============ URL ROUTING ============
@@ -1188,11 +1226,17 @@
                 return true;
             }
             
+            if (!currentUser) {
+                renderAuth();
+            } else {
+                window.location.hash = '#dashboard';
+                renderDashboard();
+            }
             return false;
         }
 
         // ============ HANDLE WATCH REDIRECT ============
-        function handleWatchRedirect(watchId) {
+        async function handleWatchRedirect(watchId) {
             const [scriptId, stepIndex] = watchId.split('.');
             
             if (!scriptId || stepIndex === undefined) {
@@ -1200,27 +1244,32 @@
                 return;
             }
             
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
-            const script = scripts.find(s => s.scriptId === scriptId);
+            const scriptDoc = await db.collection('scripts').doc(scriptId).get();
+            
+            if (!scriptDoc.exists) {
+                window.location.hash = '#dashboard';
+                return;
+            }
+            
+            const script = { id: scriptDoc.id, ...scriptDoc.data() };
             
             if (!script || !script.steps[parseInt(stepIndex)]) {
                 window.location.hash = '#dashboard';
                 return;
             }
             
-            // Open video player
+            // Open video player with auto-return
             setTimeout(() => {
                 const step = script.steps[parseInt(stepIndex)];
-                openVideoPlayer(step.url, parseInt(stepIndex), scriptId);
+                openVideoPlayer(step.url, parseInt(stepIndex), scriptId, step.watchTime || 20);
             }, 500);
         }
 
         // ============ LOAD SCRIPT VIEW ============
-        function loadScriptView(scriptId) {
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS));
-            const script = scripts.find(s => s.scriptId === scriptId);
+        async function loadScriptView(scriptId) {
+            const scriptDoc = await db.collection('scripts').doc(scriptId).get();
             
-            if (!script) {
+            if (!scriptDoc.exists) {
                 document.getElementById('app').innerHTML = `
                     <div class="auth-container">
                         <div class="auth-card text-center">
@@ -1236,75 +1285,25 @@
                 return;
             }
             
-            // Track unique views
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
-            const uniqueViews = JSON.parse(localStorage.getItem(STORAGE_KEYS.UNIQUE_VIEWS)) || {};
+            const script = { id: scriptDoc.id, ...scriptDoc.data() };
             
-            if (!views[scriptId]) {
-                views[scriptId] = { total: 0, unique: 0 };
+            // Track view
+            await db.collection('analytics').add({
+                scriptId: scriptId,
+                type: 'view',
+                userId: currentUser?.uid || 'anonymous',
+                deviceId: deviceId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            // Increment view count (if using counter in script doc)
+            if (script.views) {
+                await db.collection('scripts').doc(scriptId).update({
+                    'views.total': firebase.firestore.FieldValue.increment(1)
+                });
             }
-            if (!uniqueViews[scriptId]) {
-                uniqueViews[scriptId] = [];
-            }
-            
-            // Increment total views
-            views[scriptId].total = (views[scriptId].total || 0) + 1;
-            
-            // Check for unique view using device ID
-            const viewerId = currentUser?.uid || deviceId;
-            
-            if (!uniqueViews[scriptId].includes(viewerId)) {
-                uniqueViews[scriptId].push(viewerId);
-                views[scriptId].unique = (views[scriptId].unique || 0) + 1;
-                
-                // Track viewed script for user
-                if (currentUser) {
-                    if (!viewedScripts[scriptId]) {
-                        viewedScripts[scriptId] = {
-                            firstView: new Date().toISOString(),
-                            viewCount: 1
-                        };
-                    } else {
-                        viewedScripts[scriptId].viewCount++;
-                    }
-                    
-                    const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS)) || {};
-                    viewedData[currentUser.uid] = viewedScripts;
-                    localStorage.setItem(STORAGE_KEYS.VIEWED_SCRIPTS, JSON.stringify(viewedData));
-                }
-            }
-            
-            localStorage.setItem(STORAGE_KEYS.SCRIPT_VIEWS, JSON.stringify(views));
-            localStorage.setItem(STORAGE_KEYS.UNIQUE_VIEWS, JSON.stringify(uniqueViews));
-            
-            updateUserAnalytics(script.ownerId, 'view');
             
             renderUnlocker(script);
-        }
-
-        // ============ UPDATE USER ANALYTICS ============
-        function updateUserAnalytics(userId, type) {
-            const analytics = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_ANALYTICS)) || {};
-            
-            if (!analytics[userId]) {
-                analytics[userId] = {
-                    totalViews: 0,
-                    totalUnlocks: 0,
-                    scriptsCreated: 0,
-                    lastActive: new Date().toISOString()
-                };
-            }
-            
-            if (type === 'view') {
-                analytics[userId].totalViews++;
-            } else if (type === 'unlock') {
-                analytics[userId].totalUnlocks++;
-            } else if (type === 'create') {
-                analytics[userId].scriptsCreated++;
-            }
-            
-            analytics[userId].lastActive = new Date().toISOString();
-            localStorage.setItem(STORAGE_KEYS.USER_ANALYTICS, JSON.stringify(analytics));
         }
 
         // ============ RENDER UNLOCKER ============
@@ -1321,7 +1320,6 @@
                     timeLeft: step.waitTime || 20,
                     watchStarted: false,
                     watchComplete: false,
-                    redirectPending: false,
                     videoCompleted: false
                 };
             });
@@ -1348,7 +1346,7 @@
                     
                     <div id="unlock-steps"></div>
                     
-                    <button class="btn-primary" id="final-unlock-btn" disabled onclick="window.finalUnlock()" style="margin-top: 32px; padding: 18px;">
+                    <button class="btn-primary" id="final-unlock-btn" disabled onclick="window.finalUnlock('${script.id}')" style="margin-top: 32px; padding: 18px;">
                         <i class="fas fa-lock"></i> Complete All Steps to Unlock
                     </button>
                     
@@ -1387,7 +1385,7 @@
                     statusClass = 'watching';
                 } else if (state.videoCompleted && !state.linkClicked) {
                     statusIcon = 'fa-check-circle';
-                    statusText = `Video completed! Click to start timer`;
+                    statusText = `Video completed! Auto-returning...`;
                     statusClass = 'visited';
                 } else if (state.linkClicked) {
                     statusIcon = 'fa-clock';
@@ -1401,6 +1399,7 @@
                             <span class="step-badge">
                                 <i class="fas ${getStepIcon(step.type)}"></i> 
                                 Step ${index + 1}: ${step.label || `Step ${index + 1}`}
+                                ${step.type === 'watch' ? `<span class="auto-redirect-badge"><i class="fas fa-redo-alt"></i> Auto-return</span>` : ''}
                             </span>
                             ${step.type === 'watch' && step.waitTime > 0 ? `
                             <span class="step-timer">
@@ -1431,7 +1430,7 @@
                                 ` : ''}
                                 ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
                                     <div style="color: #10b981; margin-top: 8px;">
-                                        <i class="fas fa-check-circle"></i> Video completed! Click "Start Timer" above
+                                        <i class="fas fa-check-circle"></i> Video completed! Auto-returning in <span id="return-timer-${index}">3</span>s...
                                     </div>
                                 ` : ''}
                                 ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
@@ -1476,7 +1475,7 @@
             if (step.type === 'watch') {
                 if (!state.videoCompleted) {
                     // Generate unique watch ID
-                    const watchId = `${script.scriptId}.${stepIndex}`;
+                    const watchId = `${script.id}.${stepIndex}`;
                     const watchUrl = `${window.location.origin}${window.location.pathname}#watch-${watchId}`;
                     
                     // Open video in new tab
@@ -1485,7 +1484,7 @@
                     state.watchStarted = true;
                     
                     renderUnlockSteps(script);
-                    showCopyNotification(`✅ Video opened! Watch the entire video`, false);
+                    showCopyNotification(`✅ Video opened! Will auto-return after watching`, false);
                 } else {
                     // Video completed, now start timer
                     state.linkClicked = true;
@@ -1521,8 +1520,8 @@
             }
         };
 
-        // ============ OPEN VIDEO PLAYER ============
-        function openVideoPlayer(videoUrl, stepIndex, scriptId) {
+        // ============ OPEN VIDEO PLAYER WITH AUTO-RETURN ============
+        function openVideoPlayer(videoUrl, stepIndex, scriptId, requiredWatchTime) {
             // Extract YouTube video ID
             let videoId = '';
             if (videoUrl.includes('youtube.com/shorts/')) {
@@ -1534,6 +1533,7 @@
                 videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
             } else {
                 showCopyNotification('❌ Invalid YouTube URL', true);
+                window.close();
                 return;
             }
             
@@ -1559,9 +1559,7 @@
                 <div style="width: 100%; max-width: ${isShorts ? '400px' : '1000px'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 20px;">
                         <h2 style="color: white;">${isShorts ? 'YouTube Short' : 'Watch Required Video'}</h2>
-                        <button onclick="window.closeVideoPlayer(this)" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div style="color: var(--accent);" id="return-countdown">Auto-return in 3s after completion</div>
                     </div>
                     
                     <div class="${isShorts ? 'custom-shorts-container' : 'custom-video-container'}">
@@ -1580,7 +1578,7 @@
                         <p style="color: var(--accent); margin-top: 5px;" id="video-complete-message"></p>
                         <p style="color: var(--text-dim); margin-top: 10px;">
                             <i class="fas fa-shield"></i> 
-                            Must watch the entire video
+                            Must watch the entire video (${requiredWatchTime}s required)
                         </p>
                     </div>
                 </div>
@@ -1596,7 +1594,10 @@
                 lastVideoTime: 0,
                 skipAttempts: 0,
                 videoDuration: 0,
-                videoCompleted: false
+                videoCompleted: false,
+                requiredWatchTime: requiredWatchTime,
+                watchedSeconds: 0,
+                autoReturnTimer: null
             };
             
             // Load YouTube player
@@ -1633,18 +1634,6 @@
                 }
             }, 100);
         }
-
-        window.closeVideoPlayer = function(button) {
-            const modal = button.closest('div[style*="position: fixed"]');
-            if (modal) modal.remove();
-            
-            if (youtubePlayer) {
-                try {
-                    youtubePlayer.destroy();
-                } catch (e) {}
-                youtubePlayer = null;
-            }
-        };
 
         function onWatchPlayerReady(event, watchState, modal) {
             const player = event.target;
@@ -1699,6 +1688,11 @@
                         player.playVideo();
                     }
                     
+                    // Track watched seconds
+                    if (playerState === YT.PlayerState.PLAYING && !watchState.videoCompleted) {
+                        watchState.watchedSeconds++;
+                    }
+                    
                     // Check for skipping
                     if (watchState.lastVideoTime > 0 && currentTime > watchState.lastVideoTime + 2) {
                         handleWatchSkipAttempt('skip', watchState, currentTime - watchState.lastVideoTime);
@@ -1737,23 +1731,36 @@
                         
                         const completeMessage = document.getElementById('video-complete-message');
                         if (completeMessage) {
-                            completeMessage.innerHTML = '✅ Video completed! You can now close this window and return to the unlocker.';
+                            completeMessage.innerHTML = '✅ Video completed! Returning to unlocker in 3 seconds...';
                             completeMessage.style.color = '#10b981';
                         }
                         
-                        // Update step state
-                        if (window.currentUnlockScript && window.currentUnlockScript.scriptId === watchState.scriptId) {
-                            if (activeStepStates[watchState.stepIndex]) {
-                                activeStepStates[watchState.stepIndex].videoCompleted = true;
-                                activeStepStates[watchState.stepIndex].watchStarted = false;
-                            }
-                        }
+                        // Start auto-return countdown
+                        let countdown = 3;
+                        const countdownElement = document.getElementById('return-countdown');
                         
-                        // Auto-close after 3 seconds
-                        setTimeout(() => {
-                            if (modal) modal.remove();
-                            showCopyNotification('✅ Video completed! Return to unlocker', false);
-                        }, 3000);
+                        watchState.autoReturnTimer = setInterval(() => {
+                            countdown--;
+                            if (countdownElement) {
+                                countdownElement.textContent = `Returning in ${countdown}s...`;
+                            }
+                            
+                            if (countdown <= 0) {
+                                clearInterval(watchState.autoReturnTimer);
+                                
+                                // Update step state in original window
+                                if (window.opener && window.opener.activeStepStates) {
+                                    window.opener.activeStepStates[watchState.stepIndex].videoCompleted = true;
+                                    window.opener.activeStepStates[watchState.stepIndex].watchStarted = false;
+                                    if (window.opener.renderUnlockSteps) {
+                                        window.opener.renderUnlockSteps(window.opener.currentUnlockScript);
+                                    }
+                                }
+                                
+                                // Close this window/tab
+                                window.close();
+                            }
+                        }, 1000);
                     }
                 } catch (e) {}
             }, 100);
@@ -1777,6 +1784,9 @@
                         window.removeEventListener('keydown', keyHandler, true);
                         observer.disconnect();
                         clearInterval(timerInterval);
+                        if (watchState.autoReturnTimer) {
+                            clearInterval(watchState.autoReturnTimer);
+                        }
                     }
                 });
             });
@@ -1806,23 +1816,36 @@
                 
                 const completeMessage = document.getElementById('video-complete-message');
                 if (completeMessage) {
-                    completeMessage.innerHTML = '✅ Video completed! You can now close this window and return to the unlocker.';
+                    completeMessage.innerHTML = '✅ Video completed! Returning to unlocker in 3 seconds...';
                     completeMessage.style.color = '#10b981';
                 }
                 
-                // Update step state
-                if (window.currentUnlockScript && window.currentUnlockScript.scriptId === scriptId) {
-                    if (activeStepStates[stepIndex]) {
-                        activeStepStates[stepIndex].videoCompleted = true;
-                        activeStepStates[stepIndex].watchStarted = false;
-                    }
-                }
+                // Start auto-return countdown
+                let countdown = 3;
+                const countdownElement = document.getElementById('return-countdown');
                 
-                // Auto-close after 3 seconds
-                setTimeout(() => {
-                    if (modal) modal.remove();
-                    showCopyNotification('✅ Video completed! Return to unlocker', false);
-                }, 3000);
+                watchState.autoReturnTimer = setInterval(() => {
+                    countdown--;
+                    if (countdownElement) {
+                        countdownElement.textContent = `Returning in ${countdown}s...`;
+                    }
+                    
+                    if (countdown <= 0) {
+                        clearInterval(watchState.autoReturnTimer);
+                        
+                        // Update step state in original window
+                        if (window.opener && window.opener.activeStepStates) {
+                            window.opener.activeStepStates[stepIndex].videoCompleted = true;
+                            window.opener.activeStepStates[stepIndex].watchStarted = false;
+                            if (window.opener.renderUnlockSteps) {
+                                window.opener.renderUnlockSteps(window.opener.currentUnlockScript);
+                            }
+                        }
+                        
+                        // Close this window/tab
+                        window.close();
+                    }
+                }, 1000);
             }
         }
 
@@ -1932,7 +1955,7 @@
         }
 
         // ============ FINAL UNLOCK ============
-        window.finalUnlock = function() {
+        window.finalUnlock = async function(scriptId) {
             const script = window.currentUnlockScript;
             if (!script) return;
             
@@ -1942,14 +1965,32 @@
                 return;
             }
             
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
-            unlocks[script.scriptId] = (unlocks[script.scriptId] || 0) + 1;
-            localStorage.setItem(STORAGE_KEYS.SCRIPT_UNLOCKS, JSON.stringify(unlocks));
+            // Track unlock
+            await db.collection('analytics').add({
+                scriptId: scriptId,
+                type: 'unlock',
+                userId: currentUser?.uid || 'anonymous',
+                deviceId: deviceId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
             
-            updateUserAnalytics(script.ownerId, 'unlock');
+            // Increment unlock count
+            await db.collection('scripts').doc(scriptId).update({
+                'unlocks': firebase.firestore.FieldValue.increment(1)
+            });
             
             window.location.href = script.unlockUrl;
         };
+
+        // ============ GET TIME LIMITS BASED ON USER ROLE ============
+        function getTimeLimits() {
+            if (!currentUser) return TIME_LIMITS.regular;
+            
+            const isOwner = currentUser.email === "plastealme2@vertexhub.com";
+            if (isOwner) return TIME_LIMITS.owner;
+            if (currentUser.isPremium) return TIME_LIMITS.premium;
+            return TIME_LIMITS.regular;
+        }
 
         // ============ UTILITY FUNCTIONS ============
         function formatTime(seconds) {
@@ -2054,7 +2095,7 @@
             document.querySelectorAll('.auth-tab')[1]?.classList.add('active');
         };
 
-        window.handleLogin = function() {
+        window.handleLogin = async function() {
             const email = document.getElementById('login-email')?.value;
             const password = document.getElementById('login-password')?.value;
             
@@ -2063,36 +2104,16 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const user = users.find(u => u.email === email && u.password === btoa(password));
-            
-            if (user) {
-                currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    isPremium: user.isPremium || false,
-                    createdAt: user.createdAt,
-                    role: user.role || 'user'
-                };
-                
-                isPremium = currentUser.isPremium;
-                
-                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
-                
-                const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS)) || {};
-                viewedScripts = viewedData[currentUser.uid] || {};
-                
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
                 showCopyNotification('✅ Login successful!');
-                
                 window.location.hash = '#dashboard';
-                renderDashboard();
-            } else {
-                showCopyNotification('❌ Invalid email or password', true);
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
             }
         };
 
-        window.handleSignup = function() {
+        window.handleSignup = async function() {
             const username = document.getElementById('signup-username')?.value;
             const email = document.getElementById('signup-email')?.value;
             const password = document.getElementById('signup-password')?.value;
@@ -2102,66 +2123,33 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            
-            if (users.some(u => u.email === email)) {
-                showCopyNotification('❌ Email already exists', true);
-                return;
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                const isOwner = email === "plastealme2@vertexhub.com";
+                
+                // Create user document in Firestore
+                await db.collection('users').doc(user.uid).set({
+                    displayName: username,
+                    email: email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    isPremium: isOwner ? true : false,
+                    role: isOwner ? "admin" : "user",
+                    totalScripts: 0
+                });
+                
+                showCopyNotification(isOwner ? '👑 Owner account created!' : '✅ Account created successfully!');
+                window.location.hash = '#dashboard';
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
             }
-            
-            const isOwner = email === "plastealme2@vertexhub.com";
-            
-            const newUser = {
-                uid: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
-                username: username,
-                email: email,
-                displayName: username,
-                password: btoa(password),
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString(),
-                isPremium: isOwner ? true : false,
-                totalScripts: 0,
-                totalViews: 0,
-                totalUnlocks: 0,
-                role: isOwner ? "admin" : "user",
-                premiumSince: isOwner ? new Date().toISOString() : null
-            };
-            
-            users.push(newUser);
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-            
-            currentUser = {
-                uid: newUser.uid,
-                email: newUser.email,
-                displayName: newUser.displayName,
-                isPremium: newUser.isPremium,
-                createdAt: newUser.createdAt,
-                role: newUser.role
-            };
-            
-            isPremium = currentUser.isPremium;
-            
-            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
-            
-            const viewedData = JSON.parse(localStorage.getItem(STORAGE_KEYS.VIEWED_SCRIPTS)) || {};
-            viewedData[currentUser.uid] = {};
-            localStorage.setItem(STORAGE_KEYS.VIEWED_SCRIPTS, JSON.stringify(viewedData));
-            viewedScripts = {};
-            
-            showCopyNotification(isOwner ? '👑 Owner premium activated!' : '✅ Account created successfully!');
-            
-            window.location.hash = '#dashboard';
-            renderDashboard();
         };
 
-        window.handleLogout = function() {
-            localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-            currentUser = null;
-            isPremium = false;
-            viewedScripts = {};
+        window.handleLogout = async function() {
+            await auth.signOut();
             showCopyNotification('👋 Logged out successfully');
             window.location.hash = '';
-            renderAuth();
         };
 
         // ============ RENDER AUTH ============
@@ -2201,13 +2189,22 @@
         }
 
         // ============ RENDER DASHBOARD ============
-        function renderDashboard() {
+        async function renderDashboard() {
             const app = document.getElementById('app');
             
-            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            currentScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
+            // Get user's scripts from Firestore
+            const scriptsSnapshot = await db.collection('scripts')
+                .where('ownerId', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            currentScripts = scriptsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
             
             const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            const timeLimits = getTimeLimits();
             
             app.innerHTML = `
                 <div class="dashboard">
@@ -2240,6 +2237,19 @@
                                 <span style="background: rgba(245,158,11,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
                                     <i class="fas fa-eye"></i> ${Object.keys(viewedScripts).length} Viewed
                                 </span>
+                            </div>
+                            <div class="time-limits" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                                <div style="color: var(--accent); font-size: 13px;">
+                                    <i class="fas fa-clock"></i> Time Limits:
+                                </div>
+                                <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                                    <span style="background: rgba(99,102,241,0.1); padding: 4px 8px; border-radius: 8px; font-size: 12px;">
+                                        Wait: 0-${timeLimits.max}s
+                                    </span>
+                                    <span style="background: rgba(245,158,11,0.1); padding: 4px 8px; border-radius: 8px; font-size: 12px;">
+                                        Watch: ${timeLimits.max}s max
+                                    </span>
+                                </div>
                             </div>
                             <div class="device-info">
                                 <i class="fas fa-globe"></i> Device: ${deviceId.substring(0, 8)}...
@@ -2284,7 +2294,7 @@
         }
 
         // ============ SHOW ADMIN PANEL ============
-        window.showAdminPanel = function() {
+        window.showAdminPanel = async function() {
             const container = document.getElementById('main-content');
             if (!container) return;
             
@@ -2294,17 +2304,30 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
+            // Get all users from Firestore
+            const usersSnapshot = await db.collection('users').get();
+            const users = usersSnapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            }));
+            
+            // Get all scripts
+            const scriptsSnapshot = await db.collection('scripts').get();
+            const scripts = scriptsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            // Get analytics
+            const analyticsSnapshot = await db.collection('analytics').get();
+            const analytics = analyticsSnapshot.docs.map(doc => doc.data());
             
             // Calculate totals
             const totalUsers = users.length;
             const totalScripts = scripts.length;
-            const totalViews = Object.values(views).reduce((sum, v) => sum + (v.total || 0), 0);
-            const totalUniqueViews = Object.values(views).reduce((sum, v) => sum + (v.unique || 0), 0);
-            const totalUnlocks = Object.values(unlocks).reduce((sum, v) => sum + (v || 0), 0);
+            const totalViews = analytics.filter(a => a.type === 'view').length;
+            const totalUnlocks = analytics.filter(a => a.type === 'unlock').length;
+            const uniqueDevices = [...new Set(analytics.map(a => a.deviceId))].length;
             
             let userOptions = '';
             users.forEach(user => {
@@ -2334,8 +2357,8 @@
                                 <div>Total Views</div>
                             </div>
                             <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalUniqueViews}</div>
-                                <div>Unique Views</div>
+                                <div class="admin-stat-value">${uniqueDevices}</div>
+                                <div>Unique Devices</div>
                             </div>
                             <div class="admin-stat-item">
                                 <div class="admin-stat-value">${totalUnlocks}</div>
@@ -2387,33 +2410,6 @@
                     </div>
                     
                     <div class="admin-panel-card">
-                        <h2 style="margin-bottom: 20px;">Video Watch Time Control</h2>
-                        <p style="margin-bottom: 16px;">Set custom watch times for video steps (0-999 seconds)</p>
-                        
-                        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-                            <input type="number" id="global-watch-time" class="auth-input" style="width: 200px;" min="0" max="999" value="30" placeholder="Seconds">
-                            <button class="btn-primary" onclick="window.setGlobalWatchTime()" style="width: auto;">
-                                <i class="fas fa-clock"></i> Set Global Watch Time
-                            </button>
-                        </div>
-                        
-                        <div style="margin-top: 24px;">
-                            <h3 style="margin-bottom: 16px;">Select Script to Modify</h3>
-                            <select id="admin-script-select" class="user-selector" onchange="window.loadScriptForAdmin()">
-                                <option value="">-- Select Script --</option>
-                                ${scripts.map(s => `<option value="${s.scriptId}">${s.title} (${s.steps.length} steps)</option>`).join('')}
-                            </select>
-                            
-                            <div id="admin-script-controls" style="display: none; margin-top: 24px;">
-                                <div id="script-step-controls"></div>
-                                <button class="btn-primary" onclick="window.applyScriptChanges()" style="margin-top: 16px;">
-                                    <i class="fas fa-save"></i> Apply Changes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="admin-panel-card">
                         <h2 style="margin-bottom: 20px;">System Controls</h2>
                         <div style="display: grid; gap: 16px;">
                             <button class="btn-primary" onclick="window.resetAllStats()" style="background: var(--gradient-danger);">
@@ -2430,7 +2426,6 @@
 
         // Admin panel functions
         let selectedUserId = null;
-        let selectedScriptId = null;
 
         window.loadUserForAdmin = function() {
             const select = document.getElementById('admin-user-select');
@@ -2444,63 +2439,52 @@
             }
         };
 
-        window.makeUserPremium = function() {
+        window.makeUserPremium = async function() {
             if (!selectedUserId) {
                 showCopyNotification('⚠️ Select a user first', true);
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const userIndex = users.findIndex(u => u.uid === selectedUserId);
+            await db.collection('users').doc(selectedUserId).update({
+                isPremium: true,
+                role: 'premium'
+            });
             
-            if (userIndex !== -1) {
-                users[userIndex].isPremium = true;
-                users[userIndex].role = users[userIndex].role === 'admin' ? 'admin' : 'premium';
-                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-                
-                showCopyNotification(`✅ Made ${users[userIndex].displayName} premium!`);
-            }
+            showCopyNotification('✅ User is now premium!');
         };
 
-        window.revokeUserPremium = function() {
+        window.revokeUserPremium = async function() {
             if (!selectedUserId) {
                 showCopyNotification('⚠️ Select a user first', true);
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const userIndex = users.findIndex(u => u.uid === selectedUserId);
+            const userDoc = await db.collection('users').doc(selectedUserId).get();
+            const userData = userDoc.data();
             
-            if (userIndex !== -1) {
-                users[userIndex].isPremium = false;
-                if (users[userIndex].role !== 'admin') {
-                    users[userIndex].role = 'user';
-                }
-                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-                
-                showCopyNotification(`✅ Revoked premium from ${users[userIndex].displayName}`);
-            }
+            await db.collection('users').doc(selectedUserId).update({
+                isPremium: false,
+                role: userData.role === 'admin' ? 'admin' : 'user'
+            });
+            
+            showCopyNotification('✅ Premium revoked');
         };
 
-        window.makeUserAdmin = function() {
+        window.makeUserAdmin = async function() {
             if (!selectedUserId) {
                 showCopyNotification('⚠️ Select a user first', true);
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const userIndex = users.findIndex(u => u.uid === selectedUserId);
+            await db.collection('users').doc(selectedUserId).update({
+                role: 'admin',
+                isPremium: true
+            });
             
-            if (userIndex !== -1) {
-                users[userIndex].role = 'admin';
-                users[userIndex].isPremium = true;
-                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-                
-                showCopyNotification(`✅ Made ${users[userIndex].displayName} an admin!`);
-            }
+            showCopyNotification('✅ User is now an admin!');
         };
 
-        window.deleteUser = function() {
+        window.deleteUser = async function() {
             if (!selectedUserId) {
                 showCopyNotification('⚠️ Select a user first', true);
                 return;
@@ -2508,150 +2492,104 @@
             
             if (!confirm('⚠️ Delete this user permanently?')) return;
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const filtered = users.filter(u => u.uid !== selectedUserId);
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(filtered));
+            // Delete user from Firebase Auth (requires Firebase Admin SDK - this will need backend)
+            // For now, just delete Firestore document
+            await db.collection('users').doc(selectedUserId).delete();
+            
+            // Delete user's scripts
+            const scriptsSnapshot = await db.collection('scripts').where('ownerId', '==', selectedUserId).get();
+            const batch = db.batch();
+            scriptsSnapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
             
             showCopyNotification('✅ User deleted');
             window.showAdminPanel();
         };
 
-        window.setGlobalWatchTime = function() {
-            const time = parseInt(document.getElementById('global-watch-time')?.value);
-            if (isNaN(time) || time < 0) {
-                showCopyNotification('⚠️ Enter a valid time (0-999)', true);
-                return;
-            }
-            
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            let modifiedCount = 0;
-            
-            scripts.forEach(script => {
-                script.steps.forEach(step => {
-                    if (step.type === 'watch') {
-                        step.waitTime = time;
-                        modifiedCount++;
-                    }
-                });
-            });
-            
-            localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(scripts));
-            showCopyNotification(`✅ Updated ${modifiedCount} watch steps to ${time}s`);
-        };
-
-        window.loadScriptForAdmin = function() {
-            const select = document.getElementById('admin-script-select');
-            selectedScriptId = select.value;
-            
-            const controls = document.getElementById('admin-script-controls');
-            const stepControls = document.getElementById('script-step-controls');
-            
-            if (!selectedScriptId) {
-                controls.style.display = 'none';
-                return;
-            }
-            
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            const script = scripts.find(s => s.scriptId === selectedScriptId);
-            
-            if (!script) return;
-            
-            let stepsHTML = '<h4 style="margin-bottom: 16px;">Step Times</h4>';
-            script.steps.forEach((step, index) => {
-                stepsHTML += `
-                    <div style="margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <strong>Step ${index + 1}:</strong> ${step.label} (${step.type})
-                            </div>
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="number" id="admin-step-${index}" class="wait-time-input" value="${step.waitTime || 0}" min="0" max="999">
-                                <span>seconds</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            stepControls.innerHTML = stepsHTML;
-            controls.style.display = 'block';
-        };
-
-        window.applyScriptChanges = function() {
-            if (!selectedScriptId) return;
-            
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            const scriptIndex = scripts.findIndex(s => s.scriptId === selectedScriptId);
-            
-            if (scriptIndex === -1) return;
-            
-            const script = scripts[scriptIndex];
-            let changed = false;
-            
-            script.steps.forEach((step, index) => {
-                const input = document.getElementById(`admin-step-${index}`);
-                if (input) {
-                    const newTime = parseInt(input.value);
-                    if (!isNaN(newTime) && newTime >= 0 && newTime <= 999 && newTime !== step.waitTime) {
-                        step.waitTime = newTime;
-                        changed = true;
-                    }
-                }
-            });
-            
-            if (changed) {
-                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(scripts));
-                showCopyNotification('✅ Script updated successfully!');
-            } else {
-                showCopyNotification('No changes made', true);
-            }
-        };
-
-        window.resetAllStats = function() {
+        window.resetAllStats = async function() {
             if (!confirm('Reset all statistics? This cannot be undone.')) return;
             
-            localStorage.setItem(STORAGE_KEYS.SCRIPT_VIEWS, JSON.stringify({}));
-            localStorage.setItem(STORAGE_KEYS.SCRIPT_UNLOCKS, JSON.stringify({}));
-            localStorage.setItem(STORAGE_KEYS.UNIQUE_VIEWS, JSON.stringify({}));
+            // Delete all analytics
+            const analyticsSnapshot = await db.collection('analytics').get();
+            const batch = db.batch();
+            analyticsSnapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+            
+            // Reset script counters
+            const scriptsSnapshot = await db.collection('scripts').get();
+            scriptsSnapshot.docs.forEach(async (doc) => {
+                await doc.ref.update({
+                    views: { total: 0, unique: [] },
+                    unlocks: 0
+                });
+            });
             
             showCopyNotification('✅ All statistics reset');
             window.showAdminPanel();
         };
 
+        window.clearAllData = async function() {
+            if (!confirm('⚠️ Delete ALL data for ALL users? This cannot be undone!')) return;
+            
+            // Delete all collections (requires multiple deletes)
+            const collections = ['users', 'scripts', 'analytics', 'userViews'];
+            
+            for (const collectionName of collections) {
+                const snapshot = await db.collection(collectionName).get();
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+            }
+            
+            showCopyNotification('✅ All data cleared');
+            window.location.reload();
+        };
+
         // ============ SHOW MY ANALYTICS ============
-        window.showMyAnalytics = function() {
+        window.showMyAnalytics = async function() {
             const container = document.getElementById('main-content');
             if (!container) return;
             
-            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            const myScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
+            // Get user's scripts
+            const scriptsSnapshot = await db.collection('scripts')
+                .where('ownerId', '==', currentUser.uid)
+                .get();
             
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
+            const myScripts = scriptsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
             
+            // Get analytics for user's scripts
             let totalViews = 0;
-            let totalUniqueViews = 0;
             let totalUnlocks = 0;
-            
-            myScripts.forEach(script => {
-                totalViews += views[script.scriptId]?.total || 0;
-                totalUniqueViews += views[script.scriptId]?.unique || 0;
-                totalUnlocks += unlocks[script.scriptId] || 0;
-            });
-            
-            const conversionRate = totalViews > 0 ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0;
-            
             let scriptsAnalyticsHTML = '';
-            myScripts.forEach(script => {
-                const scriptViews = views[script.scriptId]?.total || 0;
-                const scriptUniqueViews = views[script.scriptId]?.unique || 0;
-                const scriptUnlocks = unlocks[script.scriptId] || 0;
+            
+            for (const script of myScripts) {
+                const analyticsSnapshot = await db.collection('analytics')
+                    .where('scriptId', '==', script.id)
+                    .get();
+                
+                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
+                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
+                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
+                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                
+                totalViews += scriptViews;
+                totalUnlocks += scriptUnlocks;
+                
                 const scriptConversion = scriptViews > 0 ? ((scriptUnlocks / scriptViews) * 100).toFixed(1) : 0;
                 
                 scriptsAnalyticsHTML += `
                     <div style="background: var(--dark-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; position: relative;">
                         <div class="unique-view-badge">
-                            <i class="fas fa-users"></i> ${scriptUniqueViews} unique
+                            <i class="fas fa-users"></i> ${uniqueDevices} unique
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                             <div>
@@ -2666,8 +2604,8 @@
                                 <div style="color: var(--text-dim);">Total Views</div>
                             </div>
                             <div>
-                                <div style="font-size: 24px; font-weight: 700;">${scriptUniqueViews}</div>
-                                <div style="color: var(--text-dim);">Unique Views</div>
+                                <div style="font-size: 24px; font-weight: 700;">${uniqueDevices}</div>
+                                <div style="color: var(--text-dim);">Unique Devices</div>
                             </div>
                             <div>
                                 <div style="font-size: 24px; font-weight: 700;">${scriptUnlocks}</div>
@@ -2676,7 +2614,9 @@
                         </div>
                     </div>
                 `;
-            });
+            }
+            
+            const conversionRate = totalViews > 0 ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0;
             
             container.innerHTML = `
                 <div>
@@ -2691,10 +2631,6 @@
                             <p>Total Views</p>
                         </div>
                         <div class="stat-card">
-                            <h3>${totalUniqueViews}</h3>
-                            <p>Unique Views</p>
-                        </div>
-                        <div class="stat-card">
                             <h3>${totalUnlocks}</h3>
                             <p>Total Unlocks</p>
                         </div>
@@ -2705,10 +2641,6 @@
                         <div class="stat-card">
                             <h3>${myScripts.length}</h3>
                             <p>Scripts Created</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>${Object.keys(viewedScripts).length}</h3>
-                            <p>Scripts Viewed</p>
                         </div>
                     </div>
                     
@@ -2722,6 +2654,8 @@
         window.showTemplates = function() {
             const container = document.getElementById('main-content');
             if (!container) return;
+            
+            const timeLimits = getTimeLimits();
             
             const templates = [
                 { id: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', desc: 'Follow, Like, Comment, Watch', color: '#000000', steps: ['follow', 'like', 'comment', 'watch'] },
@@ -2740,6 +2674,9 @@
                         <i class="${template.icon}" style="font-size: 48px; margin-bottom: 16px; color: ${template.color};"></i>
                         <div class="template-name">${template.name}</div>
                         <div class="template-desc">${template.desc}</div>
+                        <div style="margin-top: 12px; font-size: 12px; color: var(--accent);">
+                            <i class="fas fa-clock"></i> Wait: 0-${timeLimits.max}s | Watch: ${timeLimits.max}s max
+                        </div>
                     </div>
                 `;
             });
@@ -2767,57 +2704,60 @@
                 return;
             }
             
+            const timeLimits = getTimeLimits();
+            const defaultWait = Math.min(20, timeLimits.max);
+            
             const templates = {
                 tiktok: {
                     name: 'TikTok',
                     steps: [
-                        { type: 'follow', label: 'Follow TikTok Channel', url: 'https://tiktok.com/@', wait: 20 },
-                        { type: 'like', label: 'Like TikTok Video', url: 'https://tiktok.com/', wait: 20 },
-                        { type: 'comment', label: 'Comment on TikTok', url: 'https://tiktok.com/', wait: 20 },
-                        { type: 'watch', label: 'Watch TikTok Video', url: 'https://tiktok.com/', wait: 30 }
+                        { type: 'follow', label: 'Follow TikTok Channel', url: 'https://tiktok.com/@', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'like', label: 'Like TikTok Video', url: 'https://tiktok.com/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'comment', label: 'Comment on TikTok', url: 'https://tiktok.com/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'watch', label: 'Watch TikTok Video', url: 'https://tiktok.com/', wait: defaultWait, watchTime: defaultWait }
                     ]
                 },
                 youtube: {
                     name: 'YouTube',
                     steps: [
-                        { type: 'subscribe', label: 'Subscribe to Channel', url: 'https://youtube.com/@', wait: 20 },
-                        { type: 'like', label: 'Like Video', url: 'https://youtube.com/watch', wait: 20 },
-                        { type: 'comment', label: 'Post Comment', url: 'https://youtube.com/watch', wait: 20 },
-                        { type: 'watch', label: 'Watch Video', url: 'https://youtube.com/watch', wait: 30 }
+                        { type: 'subscribe', label: 'Subscribe to Channel', url: 'https://youtube.com/@', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'like', label: 'Like Video', url: 'https://youtube.com/watch', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'comment', label: 'Post Comment', url: 'https://youtube.com/watch', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'watch', label: 'Watch Video', url: 'https://youtube.com/watch', wait: defaultWait, watchTime: defaultWait }
                     ]
                 },
                 instagram: {
                     name: 'Instagram',
                     steps: [
-                        { type: 'follow', label: 'Follow Instagram Profile', url: 'https://instagram.com/', wait: 20 },
-                        { type: 'like', label: 'Like Post', url: 'https://instagram.com/p/', wait: 20 },
-                        { type: 'comment', label: 'Comment on Post', url: 'https://instagram.com/p/', wait: 20 },
-                        { type: 'watch', label: 'Watch Story', url: 'https://instagram.com/stories/', wait: 20 }
+                        { type: 'follow', label: 'Follow Instagram Profile', url: 'https://instagram.com/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'like', label: 'Like Post', url: 'https://instagram.com/p/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'comment', label: 'Comment on Post', url: 'https://instagram.com/p/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'watch', label: 'Watch Story', url: 'https://instagram.com/stories/', wait: defaultWait, watchTime: defaultWait }
                     ]
                 },
                 twitter: {
                     name: 'X',
                     steps: [
-                        { type: 'follow', label: 'Follow X Account', url: 'https://twitter.com/', wait: 20 },
-                        { type: 'like', label: 'Like Post', url: 'https://twitter.com/', wait: 20 },
-                        { type: 'retweet', label: 'Retweet', url: 'https://twitter.com/', wait: 20 },
-                        { type: 'reply', label: 'Reply to Post', url: 'https://twitter.com/', wait: 20 }
+                        { type: 'follow', label: 'Follow X Account', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'like', label: 'Like Post', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'retweet', label: 'Retweet', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'reply', label: 'Reply to Post', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait }
                     ]
                 },
                 discord: {
                     name: 'Discord',
                     steps: [
-                        { type: 'join', label: 'Join Discord Server', url: 'https://discord.gg/', wait: 20 },
-                        { type: 'verify', label: 'Verify Account', url: 'https://discord.com/', wait: 20 },
-                        { type: 'react', label: 'React to Message', url: 'https://discord.com/', wait: 20 }
+                        { type: 'join', label: 'Join Discord Server', url: 'https://discord.gg/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'verify', label: 'Verify Account', url: 'https://discord.com/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'react', label: 'React to Message', url: 'https://discord.com/', wait: defaultWait, watchTime: defaultWait }
                     ]
                 },
                 twitch: {
                     name: 'Twitch',
                     steps: [
-                        { type: 'follow', label: 'Follow Twitch Channel', url: 'https://twitch.tv/', wait: 20 },
-                        { type: 'subscribe', label: 'Subscribe (Free)', url: 'https://twitch.tv/', wait: 20 },
-                        { type: 'watch', label: 'Watch Stream', url: 'https://twitch.tv/', wait: 30 }
+                        { type: 'follow', label: 'Follow Twitch Channel', url: 'https://twitch.tv/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'subscribe', label: 'Subscribe (Free)', url: 'https://twitch.tv/', wait: defaultWait, watchTime: defaultWait },
+                        { type: 'watch', label: 'Watch Stream', url: 'https://twitch.tv/', wait: defaultWait, watchTime: defaultWait }
                     ]
                 }
             };
@@ -2835,6 +2775,7 @@
             if (!container) return;
             
             const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            const timeLimits = getTimeLimits();
             
             let stepsHTML = '';
             template.steps.forEach((step, index) => {
@@ -2863,15 +2804,26 @@
                             <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
                         </div>
                         
-                        <div class="wait-time-control">
-                            <span class="wait-time-badge">
-                                <i class="fas fa-clock"></i> Wait Time (0-${isOwner ? 999 : 30}s)
-                            </span>
-                            <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="${isOwner ? 999 : 30}" step="1">
-                            <span style="color: var(--text-dim);">seconds</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="wait-time-control" style="margin: 0;">
+                                <span class="wait-time-badge">
+                                    <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                                </span>
+                                <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="${timeLimits.max}" step="1">
+                            </div>
+                            
+                            ${step.type === 'watch' ? `
+                            <div class="wait-time-control" style="margin: 0;">
+                                <span class="wait-time-badge">
+                                    <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                                </span>
+                                <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.wait}" min="0" max="${timeLimits.max}" step="1">
+                            </div>
+                            ` : ''}
                         </div>
                         
                         <input type="hidden" class="step-type" value="${step.type}">
+                        <input type="hidden" id="step-watch-hidden-${index}" value="${step.watchTime || step.wait}">
                     </div>
                 `;
             });
@@ -2889,9 +2841,16 @@
                     ${isOwner ? `
                     <div class="owner-warning">
                         <i class="fas fa-crown"></i>
-                        <div><strong>Owner Mode:</strong> You can set wait times up to 999 seconds</div>
+                        <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
                     </div>
                     ` : ''}
+                    
+                    <div style="margin-bottom: 20px; background: var(--dark-card); padding: 16px; border-radius: 16px;">
+                        <h3 style="color: var(--accent); margin-bottom: 8px;">⏱️ Your Time Limits</h3>
+                        <p style="color: var(--text-dim);">
+                            Max Wait Time: ${timeLimits.max}s | Max Watch Time: ${timeLimits.max}s
+                        </p>
+                    </div>
                     
                     <h2 style="margin-bottom: 20px;">Required Steps</h2>
                     <div id="steps-container">${stepsHTML}</div>
@@ -2931,6 +2890,7 @@
             if (!container) return;
             
             const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            const timeLimits = getTimeLimits();
             
             container.innerHTML = `
                 <div>
@@ -2942,9 +2902,16 @@
                     ${isOwner ? `
                     <div class="owner-warning">
                         <i class="fas fa-crown"></i>
-                        <div><strong>Owner Mode:</strong> You can set wait times up to 999 seconds</div>
+                        <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
                     </div>
                     ` : ''}
+                    
+                    <div style="margin-bottom: 20px; background: var(--dark-card); padding: 16px; border-radius: 16px;">
+                        <h3 style="color: var(--accent); margin-bottom: 8px;">⏱️ Your Time Limits</h3>
+                        <p style="color: var(--text-dim);">
+                            Max Wait Time: ${timeLimits.max}s | Max Watch Time: ${timeLimits.max}s
+                        </p>
+                    </div>
                     
                     <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 24px; padding: 40px; margin-bottom: 32px; text-align: center;">
                         <i class="fas fa-layer-group" style="font-size: 64px; color: #6366f1; margin-bottom: 16px;"></i>
@@ -2997,14 +2964,14 @@
             
             const stepCount = stepsContainer.children.length;
             const maxSteps = isPremium ? 20 : 8;
+            const timeLimits = getTimeLimits();
             
             if (stepCount >= maxSteps) {
                 showCopyNotification(`⚠️ Maximum ${maxSteps} steps reached`, true);
                 return;
             }
             
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            const maxWaitTime = isOwner ? 999 : 30;
+            const stepIndex = stepCount;
             
             const stepHTML = `
                 <div class="step-card" data-step-index="${stepCount}">
@@ -3035,11 +3002,20 @@
                         <input type="url" class="step-url-input" placeholder="Enter URL" required>
                     </div>
                     
-                    <div class="wait-time-control">
-                        <span class="wait-time-badge">
-                            <i class="fas fa-clock"></i> Wait Time (0-${maxWaitTime}s)
-                        </span>
-                        <input type="number" class="wait-time-input" value="20" min="0" max="${maxWaitTime}" step="1">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="wait-time-control" style="margin: 0;">
+                            <span class="wait-time-badge">
+                                <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                            </span>
+                            <input type="number" class="wait-time-input" value="20" min="0" max="${timeLimits.max}" step="1">
+                        </div>
+                        
+                        <div class="wait-time-control" style="margin: 0;" id="watch-time-container-${stepIndex}">
+                            <span class="wait-time-badge">
+                                <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                            </span>
+                            <input type="number" class="watch-time-input" id="watch-time-${stepIndex}" value="20" min="0" max="${timeLimits.max}" step="1">
+                        </div>
                     </div>
                     
                     <input type="hidden" class="step-type" value="watch">
@@ -3060,6 +3036,16 @@
                     badge.innerHTML = `<i class="fas fa-link"></i> Step ${index + 1}`;
                 }
                 card.setAttribute('data-step-index', index);
+                
+                // Update delete button visibility
+                const deleteBtn = card.querySelector('.delete-step-btn');
+                if (deleteBtn) {
+                    if (index === 0) {
+                        deleteBtn.style.display = 'none';
+                    } else {
+                        deleteBtn.style.display = 'inline-flex';
+                    }
+                }
             });
         };
 
@@ -3085,11 +3071,22 @@
         window.updateStepType = function(select, index) {
             const stepCard = select.closest('.step-card');
             const typeInput = stepCard.querySelector('.step-type');
+            const watchContainer = document.getElementById(`watch-time-container-${index}`);
+            
             if (typeInput) typeInput.value = select.value;
+            
+            // Show/hide watch time input based on step type
+            if (watchContainer) {
+                if (select.value === 'watch') {
+                    watchContainer.style.display = 'flex';
+                } else {
+                    watchContainer.style.display = 'none';
+                }
+            }
         };
 
         // ============ CREATE SCRIPT ============
-        window.createScript = function() {
+        window.createScript = async function() {
             if (!currentUser) {
                 showCopyNotification('⚠️ Please login first', true);
                 return;
@@ -3097,17 +3094,23 @@
             
             const steps = [];
             const stepCards = document.querySelectorAll('.step-card');
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            const maxWaitTime = isOwner ? 999 : 30;
+            const timeLimits = getTimeLimits();
             
             stepCards.forEach((card, index) => {
                 const nameInput = card.querySelector('.step-name-input');
                 const urlInput = card.querySelector('.step-url-input');
                 const typeInput = card.querySelector('.step-type');
                 const waitInput = card.querySelector('.wait-time-input');
+                const watchInput = card.querySelector('.watch-time-input');
                 
                 const waitTime = waitInput ? parseInt(waitInput.value) || 0 : 0;
-                const validWaitTime = Math.min(maxWaitTime, Math.max(0, waitTime));
+                const validWaitTime = Math.min(timeLimits.max, Math.max(0, waitTime));
+                
+                let validWatchTime = validWaitTime;
+                if (watchInput) {
+                    const watchTime = parseInt(watchInput.value) || validWaitTime;
+                    validWatchTime = Math.min(timeLimits.max, Math.max(0, watchTime));
+                }
                 
                 if (urlInput && urlInput.value) {
                     steps.push({
@@ -3116,6 +3119,7 @@
                         label: nameInput ? nameInput.value : `Step ${index + 1}`,
                         url: urlInput.value,
                         waitTime: validWaitTime,
+                        watchTime: validWatchTime,
                         completed: false,
                         locked: index > 0
                     });
@@ -3146,29 +3150,25 @@
                 unlockUrl: unlockUrl,
                 isPrivate: document.getElementById('private-script')?.checked || false,
                 sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
-                createdAt: new Date().toISOString(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 status: 'active',
-                isPremium: isPremium || false,
-                views: 0,
+                views: {
+                    total: 0,
+                    unique: []
+                },
                 unlocks: 0
             };
             
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            scripts.push(scriptData);
-            localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(scripts));
+            // Save to Firestore
+            await db.collection('scripts').add(scriptData);
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const userIndex = users.findIndex(u => u.uid === currentUser.uid);
-            if (userIndex !== -1) {
-                users[userIndex].totalScripts = (users[userIndex].totalScripts || 0) + 1;
-                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-            }
+            // Update user's script count
+            await db.collection('users').doc(currentUser.uid).update({
+                totalScripts: firebase.firestore.FieldValue.increment(1)
+            });
             
-            updateUserAnalytics(currentUser.uid, 'create');
-            
-            // Create shareable link with proper base URL
-            const baseUrl = window.location.origin + window.location.pathname;
-            const shareableLink = `${baseUrl}#script-${scriptId}`;
+            // Create shareable link
+            const shareableLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
             
             showCopyNotification(`✅ Script created! ${steps.length} steps`);
             
@@ -3183,15 +3183,21 @@
         };
 
         // ============ SHOW MY SCRIPTS ============
-        window.showMyScripts = function() {
+        window.showMyScripts = async function() {
             const container = document.getElementById('main-content');
             if (!container) return;
             
-            const allScripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            currentScripts = allScripts.filter(s => s.ownerId === currentUser.uid);
+            // Get user's scripts
+            const scriptsSnapshot = await db.collection('scripts')
+                .where('ownerId', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .get();
             
-            const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
-            const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
+            currentScripts = scriptsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
             const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
             
             if (currentScripts.length === 0) {
@@ -3208,12 +3214,18 @@
             }
             
             let scriptsHTML = '';
-            currentScripts.forEach(script => {
-                const baseUrl = window.location.origin + window.location.pathname;
-                const shareableLink = `${baseUrl}#script-${script.scriptId}`;
-                const scriptViews = views[script.scriptId]?.total || 0;
-                const scriptUniqueViews = views[script.scriptId]?.unique || 0;
-                const scriptUnlocks = unlocks[script.scriptId] || 0;
+            for (const script of currentScripts) {
+                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
+                
+                // Get analytics for this script
+                const analyticsSnapshot = await db.collection('analytics')
+                    .where('scriptId', '==', script.id)
+                    .get();
+                
+                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
+                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
+                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
+                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
                 
                 scriptsHTML += `
                     <div class="script-card">
@@ -3223,7 +3235,7 @@
                                 <div class="stat-label">Views</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">${scriptUniqueViews}</div>
+                                <div class="stat-value">${uniqueDevices}</div>
                                 <div class="stat-label">Unique</div>
                             </div>
                             <div class="stat-item">
@@ -3233,24 +3245,24 @@
                         </div>
                         <div style="padding: 20px;">
                             <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                                <button onclick="window.toggleShareLink('${script.scriptId}')" class="copy-btn" style="flex: 1;">
+                                <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
                                     <i class="fas fa-share-alt"></i> Share
                                 </button>
-                                <button onclick="window.testScript('${script.scriptId}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
+                                <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
                                     <i class="fas fa-play"></i> Test
                                 </button>
                             </div>
                             <div style="display: flex; gap: 12px;">
                                 ${isOwner ? `
-                                <button onclick="window.duplicateScript('${script.scriptId}')" class="copy-btn" style="flex: 1;">
+                                <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1;">
                                     <i class="fas fa-copy"></i> Duplicate
                                 </button>
                                 ` : ''}
-                                <button onclick="window.deleteScript('${script.scriptId}')" class="copy-btn" style="flex: 1; color: #ef4444;">
+                                <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
-                            <div class="share-link" id="share-${script.scriptId}" style="display: none;">
+                            <div class="share-link" id="share-${script.id}" style="display: none;">
                                 <input type="text" class="share-input" value="${shareableLink}" readonly>
                                 <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
                                     <i class="fas fa-copy"></i> Copy
@@ -3259,7 +3271,7 @@
                         </div>
                     </div>
                 `;
-            });
+            }
             
             container.innerHTML = `
                 <div>
@@ -3302,9 +3314,9 @@
                             <p>Detailed insights with unique views</p>
                         </div>
                         <div class="premium-feature-card">
-                            <i class="fas fa-layer-group" style="font-size: 32px;"></i>
-                            <h3>All Templates</h3>
-                            <p>Access premium templates</p>
+                            <i class="fas fa-clock" style="font-size: 32px;"></i>
+                            <h3>50s Watch Time</h3>
+                            <p>Longer video requirements</p>
                         </div>
                     </div>
                     
@@ -3435,26 +3447,22 @@
             overlay?.addEventListener('mousedown', blockHandler, true);
         }
 
-        window.activatePremium = function() {
+        window.activatePremium = async function() {
             if (!hasWatchedFullVideo) {
                 showCopyNotification('⚠️ Must watch the entire video!', true);
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-            const userIndex = users.findIndex(u => u.uid === currentUser.uid);
+            await db.collection('users').doc(currentUser.uid).update({
+                isPremium: true,
+                role: 'premium'
+            });
             
-            if (userIndex !== -1) {
-                users[userIndex].isPremium = true;
-                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-                
-                currentUser.isPremium = true;
-                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
-                
-                isPremium = true;
-                showCopyNotification('🎉 PREMIUM ACTIVATED!');
-                renderDashboard();
-            }
+            currentUser.isPremium = true;
+            isPremium = true;
+            
+            showCopyNotification('🎉 PREMIUM ACTIVATED!');
+            renderDashboard();
         };
 
         // ============ SHOW SETTINGS ============
@@ -3492,39 +3500,45 @@
             `;
         };
 
-        window.updateProfile = function() {
+        window.updateProfile = async function() {
             const newName = document.getElementById('settings-name')?.value;
             if (newName && currentUser) {
+                await db.collection('users').doc(currentUser.uid).update({
+                    displayName: newName
+                });
+                
                 currentUser.displayName = newName;
-                
-                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
-                const userIndex = users.findIndex(u => u.uid === currentUser.uid);
-                if (userIndex !== -1) {
-                    users[userIndex].displayName = newName;
-                    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-                }
-                
-                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
                 showCopyNotification('✅ Profile updated');
                 renderDashboard();
             }
         };
 
-        window.clearMyData = function() {
+        window.clearMyData = async function() {
             if (confirm('⚠️ Delete ALL your scripts and data?')) {
-                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-                const filtered = scripts.filter(s => s.ownerId !== currentUser.uid);
-                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(filtered));
+                // Delete user's scripts
+                const scriptsSnapshot = await db.collection('scripts')
+                    .where('ownerId', '==', currentUser.uid)
+                    .get();
+                
+                const batch = db.batch();
+                scriptsSnapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                
+                // Delete user's analytics
+                const analyticsSnapshot = await db.collection('analytics')
+                    .where('userId', '==', currentUser.uid)
+                    .get();
+                
+                const analyticsBatch = db.batch();
+                analyticsSnapshot.docs.forEach(doc => {
+                    analyticsBatch.delete(doc.ref);
+                });
+                await analyticsBatch.commit();
                 
                 showCopyNotification('✅ Your data cleared');
                 renderDashboard();
-            }
-        };
-
-        window.clearAllData = function() {
-            if (confirm('⚠️ Delete ALL data for ALL users?')) {
-                localStorage.clear();
-                window.location.reload();
             }
         };
 
@@ -3541,32 +3555,32 @@
             }
         };
 
-        window.duplicateScript = function(scriptId) {
-            const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-            const original = scripts.find(s => s.scriptId === scriptId);
+        window.duplicateScript = async function(scriptId) {
+            const scriptDoc = await db.collection('scripts').doc(scriptId).get();
+            const original = scriptDoc.data();
             
             if (original) {
                 const newScript = {
                     ...original,
                     scriptId: 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
                     title: original.title + ' (Copy)',
-                    createdAt: new Date().toISOString(),
-                    views: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    views: {
+                        total: 0,
+                        unique: []
+                    },
                     unlocks: 0
                 };
                 
-                scripts.push(newScript);
-                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(scripts));
+                await db.collection('scripts').add(newScript);
                 showCopyNotification('✅ Script duplicated');
                 window.showMyScripts();
             }
         };
 
-        window.deleteScript = function(scriptId) {
+        window.deleteScript = async function(scriptId) {
             if (confirm('Delete this script?')) {
-                const scripts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPTS)) || [];
-                const filtered = scripts.filter(s => s.scriptId !== scriptId);
-                localStorage.setItem(STORAGE_KEYS.SCRIPTS, JSON.stringify(filtered));
+                await db.collection('scripts').doc(scriptId).delete();
                 showCopyNotification('✅ Script deleted');
                 window.showMyScripts();
             }
@@ -3587,17 +3601,7 @@
 
         // ============ INITIALIZE ============
         window.onload = function() {
-            initStorage();
-            
-            if (!handleRouting()) {
-                if (currentUser) {
-                    window.location.hash = '#dashboard';
-                    renderDashboard();
-                } else {
-                    renderAuth();
-                }
-            }
-            
+            init();
             window.addEventListener('hashchange', handleRouting);
         };
     </script>
