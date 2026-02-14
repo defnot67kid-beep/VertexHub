@@ -2372,42 +2372,49 @@
             const hasViewed = hasDeviceViewed(scriptId);
             
             if (!hasViewed) {
-                // Track view (only once per device)
-                try {
-                    await db.collection('analytics').add({
-                        scriptId: scriptId,
-                        type: 'view',
-                        userId: currentUser?.uid || 'anonymous',
-                        deviceId: deviceId,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    // Update view count
-                    await db.collection('scripts').doc(scriptId).update({
-                        'views.total': firebase.firestore.FieldValue.increment(1),
-                        'views.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
-                    });
-                    
-                    // Update creator's total views
-                    if (script.ownerId) {
-                        await db.collection('users').doc(script.ownerId).update({
-                            totalViews: firebase.firestore.FieldValue.increment(1)
-                        });
-                    }
-                    
-                    // Mark as viewed for this device
-                    if (currentUser) {
-                        viewedScripts[scriptId] = true;
-                        await saveUserViews();
-                    } else {
-                        if (!deviceInteractions.viewedScripts) deviceInteractions.viewedScripts = {};
-                        deviceInteractions.viewedScripts[scriptId] = true;
-                        saveDeviceInteractions();
-                    }
-                } catch (error) {
-                    console.error('Error tracking view:', error);
-                }
-            }
+    // Track view (only once per device)
+    try {
+        await db.collection('analytics').add({
+            scriptId: scriptId,
+            type: 'view',
+            userId: currentUser?.uid || 'anonymous',
+            deviceId: deviceId,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // FIX: Update view count using separate operations
+        const scriptRef = db.collection('scripts').doc(scriptId);
+        
+        // First update: increment total views
+        await scriptRef.update({
+            'views.total': firebase.firestore.FieldValue.increment(1)
+        });
+        
+        // Second update: add device to unique views array
+        await scriptRef.update({
+            'views.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
+        });
+        
+        // Update creator's total views
+        if (script.ownerId) {
+            await db.collection('users').doc(script.ownerId).update({
+                totalViews: firebase.firestore.FieldValue.increment(1)
+            }).catch(e => console.log('Creator stats update error:', e));
+        }
+        
+        // Mark as viewed for this device
+        if (currentUser) {
+            viewedScripts[scriptId] = true;
+            await saveUserViews();
+        } else {
+            if (!deviceInteractions.viewedScripts) deviceInteractions.viewedScripts = {};
+            deviceInteractions.viewedScripts[scriptId] = true;
+            saveDeviceInteractions();
+        }
+    } catch (error) {
+        console.error('Error tracking view:', error);
+    }
+}
             
             renderUnlocker(script);
         }
@@ -3116,78 +3123,85 @@
             if (progressText) progressText.textContent = `${completedCount}/${script.steps.length} Steps`;
         }
 
-        // ============ FINAL UNLOCK ============
-        window.finalUnlock = async function(scriptId) {
-            const script = window.currentUnlockScript;
-            if (!script) return;
+       // ============ FINAL UNLOCK ============
+window.finalUnlock = async function(scriptId) {
+    const script = window.currentUnlockScript;
+    if (!script) return;
+    
+    const allCompleted = Object.values(activeStepStates).every(s => s.timerComplete);
+    if (!allCompleted) {
+        showCopyNotification('⚠️ Complete all steps first!', true);
+        return;
+    }
+    
+    // Check again if already unlocked (prevent double unlocks)
+    const alreadyUnlocked = await hasDeviceUnlocked(scriptId);
+    if (alreadyUnlocked) {
+        showCopyNotification('⚠️ You already unlocked this!', true);
+        window.location.href = script.unlockUrl;
+        return;
+    }
+    
+    try {
+        // Track unlock in analytics
+        await db.collection('analytics').add({
+            scriptId: scriptId,
+            type: 'unlock',
+            userId: currentUser?.uid || 'anonymous',
+            deviceId: deviceId,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // FIX: Update script unlock count using separate operations
+        const scriptRef = db.collection('scripts').doc(scriptId);
+        
+        // First update: increment total unlocks
+        await scriptRef.update({
+            unlocks: firebase.firestore.FieldValue.increment(1)
+        });
+        
+        // Second update: add device to unique unlocks array
+        await scriptRef.update({
+            'unlocks.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
+        });
+        
+        // Update creator's total unlocks (if exists)
+        if (script.ownerId) {
+            await db.collection('users').doc(script.ownerId).update({
+                totalUnlocks: firebase.firestore.FieldValue.increment(1)
+            }).catch(e => console.log('Creator stats update error:', e));
+        }
+        
+        // Record this unlock for the user/device
+        if (currentUser) {
+            unlockedScripts[scriptId] = true;
+            await saveUserUnlocks();
             
-            const allCompleted = Object.values(activeStepStates).every(s => s.timerComplete);
-            if (!allCompleted) {
-                showCopyNotification('⚠️ Complete all steps first!', true);
-                return;
-            }
-            
-            // Check again if already unlocked (prevent double unlocks)
-            const alreadyUnlocked = await hasDeviceUnlocked(scriptId);
-            if (alreadyUnlocked) {
-                showCopyNotification('⚠️ You already unlocked this!', true);
-                window.location.href = script.unlockUrl;
-                return;
-            }
-            
-            try {
-                // Track unlock
-                await db.collection('analytics').add({
-                    scriptId: scriptId,
-                    type: 'unlock',
-                    userId: currentUser?.uid || 'anonymous',
-                    deviceId: deviceId,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // Update script unlock count
-                await db.collection('scripts').doc(scriptId).update({
-                    unlocks: firebase.firestore.FieldValue.increment(1),
-                    'unlocks.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
-                });
-                
-                // Update creator's total unlocks
-                if (script.ownerId) {
-                    await db.collection('users').doc(script.ownerId).update({
-                        totalUnlocks: firebase.firestore.FieldValue.increment(1)
-                    });
-                }
-                
-                // Record this unlock for the user/device
-                if (currentUser) {
-                    unlockedScripts[scriptId] = true;
-                    await saveUserUnlocks();
-                    
-                    // Also store in scriptUnlocks collection
-                    await db.collection('scriptUnlocks').doc(`${scriptId}_${currentUser.uid}`).set({
-                        scriptId: scriptId,
-                        userId: currentUser.uid,
-                        deviceId: deviceId,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } else {
-                    if (!deviceInteractions.unlockedScripts) deviceInteractions.unlockedScripts = {};
-                    deviceInteractions.unlockedScripts[scriptId] = true;
-                    saveDeviceInteractions();
-                }
-                
-                showCopyNotification('✅ Content unlocked! Redirecting...', false);
-                
-                // Redirect after a short delay
-                setTimeout(() => {
-                    window.location.href = script.unlockUrl;
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Error during unlock:', error);
-                showCopyNotification('❌ Error unlocking: ' + error.message, true);
-            }
-        };
+            // Also store in scriptUnlocks collection
+            await db.collection('scriptUnlocks').doc(`${scriptId}_${currentUser.uid}`).set({
+                scriptId: scriptId,
+                userId: currentUser.uid,
+                deviceId: deviceId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+            if (!deviceInteractions.unlockedScripts) deviceInteractions.unlockedScripts = {};
+            deviceInteractions.unlockedScripts[scriptId] = true;
+            saveDeviceInteractions();
+        }
+        
+        showCopyNotification('✅ Content unlocked! Redirecting...', false);
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+            window.location.href = script.unlockUrl;
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error during unlock:', error);
+        showCopyNotification('❌ Error unlocking: ' + error.message, true);
+    }
+};
 
         // ============ RENDER DASHBOARD ============
         async function renderDashboard(filterType = 'all', searchTerm = '') {
@@ -4587,29 +4601,32 @@
             const scriptId = 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
             const templateName = currentTemplate?.name || 'Manual';
             
-            const scriptData = {
-                scriptId: scriptId,
-                ownerId: currentUser.uid,
-                ownerName: currentUser.displayName || 'Anonymous',
-                ownerIsPremium: isPremium, // Mark if creator is premium
-                title: scriptTitle,
-                template: templateName,
-                steps: steps,
-                unlockUrl: unlockUrl,
-                isPrivate: isPrivate,
-                isUnlisted: isUnlisted,
-                sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                status: 'active',
-                views: {
-                    total: 0,
-                    unique: []
-                },
-                unlocks: {
-                    total: 0,
-                    unique: []
-                }
-            };
+           // In createScript function, when creating scriptData:
+
+const scriptData = {
+    scriptId: scriptId,
+    ownerId: currentUser.uid,
+    ownerName: currentUser.displayName || 'Anonymous',
+    ownerIsPremium: isPremium || false,
+    title: scriptTitle,
+    template: templateName,
+    steps: steps,
+    unlockUrl: unlockUrl,
+    isPrivate: isPrivate,
+    isUnlisted: isUnlisted,
+    isPublic: isPublic,
+    sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    status: 'active',
+    views: {
+        total: 0,
+        unique: []  // Initialize as empty array
+    },
+    unlocks: {
+        total: 0,
+        unique: []  // Initialize as empty array
+    }
+};
             
             try {
                 const docRef = await db.collection('scripts').add(scriptData);
