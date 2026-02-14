@@ -1339,6 +1339,11 @@
             align-items: center;
             gap: 4px;
         }
+        
+        /* New class for hidden scripts */
+        .hidden-script {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1385,8 +1390,8 @@
         let currentVideoModal = null;
         let deviceInteractions = {};
         
-        // ============ NEW FEATURE: Track removed mandatory steps for premium users (only affects their own scripts) ============
-        let scriptStepRemovals = {}; // Structure: { scriptId: { removedBy: userId, removalTime: timestamp, stepIndex: 0 } }
+        // ============ NEW FEATURE: Track removed mandatory steps for premium owners (affects ALL viewers) ============
+        let scriptStepRemovals = {}; // Structure: { scriptId: { removedBy: userId, removalTime: timestamp } }
         
         // Premium video ID (UPDATED to the new video URL)
         const PREMIUM_VIDEO_ID = 'u0jrlB7hAk0'; // Extracted from https://www.youtube.com/watch?v=u0jrlB7hAk0&t=6s
@@ -1574,14 +1579,14 @@
                 
                 // ============ INJECT MANDATORY SUBSCRIPTION STEP ============
                 // Only add mandatory step if the script owner is a premium user
-                // AND the step hasn't been removed by the owner
+                // AND the step hasn't been removed by the owner (removal affects ALL viewers)
                 let steps = script.steps || [];
                 
                 // Check if this script belongs to a premium user
                 const isOwnerPremium = script.ownerIsPremium === true;
                 const isCurrentUserOwner = currentUser && currentUser.uid === script.ownerId;
                 
-                // Check if this script has the mandatory step removed by its owner
+                // Check if this script has the mandatory step removed by its owner (affects ALL viewers)
                 const isStepRemoved = scriptStepRemovals[scriptId] && 
                                      scriptStepRemovals[scriptId].removedBy === script.ownerId;
                 
@@ -1606,7 +1611,8 @@
                     mandatoryStepRemoved: isStepRemoved,
                     mandatoryStepRemovalTime: isStepRemoved ? scriptStepRemovals[scriptId]?.removalTime : null,
                     isOwnerPremium: isOwnerPremium,
-                    canRemoveMandatoryStep: isPremium && isCurrentUserOwner // Only owner can remove
+                    // Only show remove button if user is premium AND is the script owner
+                    canRemoveMandatoryStep: isPremium && isCurrentUserOwner
                 };
                 
                 return { success: true, script: modifiedScript };
@@ -1622,7 +1628,7 @@
             }
         }
 
-        // ============ PREMIUM FEATURE: REMOVE MANDATORY STEP FROM OWNER'S SCRIPT FOR 24 HOURS ============
+        // ============ PREMIUM FEATURE: REMOVE MANDATORY STEP FROM OWNER'S SCRIPT FOR 24 HOURS (AFFECTS ALL VIEWERS) ============
         window.removeMandatoryStep = async function(scriptId) {
             if (!isPremium) {
                 showCopyNotification('⚠️ Premium feature only!', true);
@@ -1641,15 +1647,15 @@
             const now = Date.now();
             scriptStepRemovals[scriptId] = {
                 removedBy: currentUser.uid,
-                removalTime: now,
-                stepIndex: 0 // The mandatory step is always index 0
+                removalTime: now
+                // No stepIndex needed - we remove the mandatory step entirely for ALL viewers
             };
             
             localStorage.setItem('vertexhub_script_removals', JSON.stringify(scriptStepRemovals));
             
-            showCopyNotification('✅ Vertex subscription step removed from YOUR script for 24 hours!', false);
+            showCopyNotification('✅ Vertex subscription step removed from YOUR script for 24 hours for ALL viewers!', false);
             
-            // Reload the script to reflect changes
+            // Reload the script to reflect changes for current viewer
             if (window.currentUnlockScript && window.currentUnlockScript.id === scriptId) {
                 loadScriptView(scriptId);
             }
@@ -1901,7 +1907,7 @@
                                     ${script.mandatoryStepPresent ? 
                                         '<span class="mandatory-step-badge"><i class="fas fa-star"></i> Vertex Step Required</span>' : 
                                         script.mandatoryStepRemoved ? 
-                                        '<span class="step-removed-badge"><i class="fas fa-clock"></i> Vertex Step Removed (24h)</span>' : ''}
+                                        '<span class="step-removed-badge"><i class="fas fa-clock"></i> Vertex Step Removed (24h) - Affects ALL viewers</span>' : ''}
                                     ${script.isPrivate ? 
                                         '<span style="margin-left: 10px; color: #ef4444;"><i class="fas fa-lock"></i> Private</span>' : 
                                         script.isUnlisted ?
@@ -1922,15 +1928,15 @@
                         </div>
                     </div>
                     
-                    <!-- Premium Step Removal Control - ONLY SHOW TO SCRIPT OWNER -->
+                    <!-- Premium Step Removal Control - ONLY SHOW TO SCRIPT OWNER WHO IS PREMIUM -->
                     ${isPremium && script.mandatoryStepPresent && isOwner ? `
                     <div class="premium-step-control">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-crown" style="color: var(--accent); font-size: 20px;"></i>
-                            <span><strong>Premium Owner Feature:</strong> Remove the Vertex subscription step from YOUR script for 24 hours</span>
+                            <span><strong>Premium Owner Feature:</strong> Remove the Vertex subscription step from YOUR script for 24 hours. This affects ALL viewers.</span>
                         </div>
                         <button class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="window.removeMandatoryStep('${script.id}')">
-                            <i class="fas fa-clock"></i> Remove for 24h
+                            <i class="fas fa-clock"></i> Remove for 24h (All Viewers)
                         </button>
                     </div>
                     ` : ''}
@@ -2605,7 +2611,7 @@
                     ...doc.data()
                 }));
                 
-                // Generate user's scripts HTML
+                // Generate user's scripts HTML (show ALL of user's own scripts regardless of visibility)
                 currentScripts.forEach(script => {
                     const createdDate = script.createdAt ? new Date(script.createdAt.seconds * 1000).toLocaleDateString() : 'Recent';
                     const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
@@ -2639,12 +2645,19 @@
                 });
             }
             
-            // Filter public scripts
+            // Filter public scripts - ONLY SHOW PUBLIC SCRIPTS IN COMMUNITY SECTION
+            // Private and Unlisted scripts are hidden from community dashboard
             let filteredScripts = allScripts.filter(script => {
                 // Skip if this is user's own script (they're already shown above)
                 if (currentUser && script.ownerId === currentUser.uid) return false;
                 
-                // Filter by visibility
+                // FIX: Only show PUBLIC scripts in community dashboard
+                // Hide private and unlisted scripts from community view
+                if (script.isPrivate || script.isUnlisted) {
+                    return false; // Hide private and unlisted scripts from community dashboard
+                }
+                
+                // Filter by type (but since we only show public, this is simplified)
                 if (filterType === 'public' && script.isPrivate) return false;
                 if (filterType === 'unlisted' && !script.isUnlisted) return false;
                 if (filterType === 'private' && !script.isPrivate) return false;
@@ -2662,9 +2675,6 @@
             // Generate public scripts HTML
             filteredScripts.forEach(script => {
                 const createdDate = script.createdAt ? new Date(script.createdAt.seconds * 1000).toLocaleDateString() : 'Recent';
-                const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
-                const visibilityIcon = script.isPrivate ? 'fa-lock' : (script.isUnlisted ? 'fa-eye-slash' : 'fa-globe');
-                const visibilityText = script.isPrivate ? 'Private' : (script.isUnlisted ? 'Unlisted' : 'Public');
                 
                 // Check if this device has already unlocked this script
                 const hasUnlocked = unlockedScripts[script.id] || 
@@ -2675,8 +2685,8 @@
                 publicScriptsHTML += `
                     <div class="dashboard-script-card ${hasUnlocked ? 'locked-unlocker' : ''}" 
                          onclick="${hasUnlocked ? 'return false;' : `window.location.hash='#script-${script.id}'`}">
-                        <div class="visibility-badge ${visibilityClass}">
-                            <i class="fas ${visibilityIcon}"></i> ${visibilityText}
+                        <div class="visibility-badge visibility-public">
+                            <i class="fas fa-globe"></i> Public
                         </div>
                         ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
                         ${hasUnlocked ? `
@@ -2743,7 +2753,7 @@
                                 </span>
                                 ` : ''}
                                 <span style="background: rgba(245,158,11,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
-                                    <i class="fas fa-globe"></i> ${allScripts.length} Total
+                                    <i class="fas fa-globe"></i> ${allScripts.filter(s => !s.isPrivate && !s.isUnlisted).length} Public
                                 </span>
                             </div>
                             <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
@@ -2813,16 +2823,14 @@
                         <h1 class="section-title">
                             <i class="fas fa-home"></i> Dashboard
                             <span style="font-size: 14px; margin-left: 15px; color: var(--text-dim);">
-                                ${filteredScripts.length} Available Unlockers
+                                ${filteredScripts.length} Public Unlockers
                             </span>
                         </h1>
                         
                         <div class="filter-section">
                             <select class="filter-select" id="filter-select" onchange="window.applyFilters()">
-                                <option value="all" ${filterType === 'all' ? 'selected' : ''}>All Scripts</option>
+                                <option value="all" ${filterType === 'all' ? 'selected' : ''}>All Public</option>
                                 <option value="public" ${filterType === 'public' ? 'selected' : ''}>Public Only</option>
-                                <option value="unlisted" ${filterType === 'unlisted' ? 'selected' : ''}>Unlisted Only</option>
-                                <option value="private" ${filterType === 'private' ? 'selected' : ''}>Private Only</option>
                             </select>
                             
                             <input type="text" class="search-input" id="search-input" 
@@ -2836,16 +2844,16 @@
                         </div>
                         
                         ${currentUser && currentScripts.length > 0 ? `
-                        <h2 style="margin: 30px 0 15px;">My Unlockers</h2>
+                        <h2 style="margin: 30px 0 15px;">My Unlockers (All)</h2>
                         <div class="dashboard-grid">
                             ${myScriptsHTML}
                         </div>
                         
-                        <h2 style="margin: 40px 0 15px;">Community Unlockers</h2>
+                        <h2 style="margin: 40px 0 15px;">Community Unlockers (Public Only)</h2>
                         ` : ''}
                         
                         <div class="dashboard-grid">
-                            ${publicScriptsHTML || '<p style="color: var(--text-dim); text-align: center; grid-column: 1/-1;">No scripts available matching your filters.</p>'}
+                            ${publicScriptsHTML || '<p style="color: var(--text-dim); text-align: center; grid-column: 1/-1;">No public scripts available matching your filters.</p>'}
                         </div>
                         
                         ${currentUser ? `
@@ -3579,11 +3587,11 @@
                         <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
                             <label style="display: flex; align-items: center; gap: 8px;">
                                 <input type="checkbox" id="public-script" style="width: 18px; height: 18px;" checked>
-                                <i class="fas fa-globe"></i> Public (shows in dashboard)
+                                <i class="fas fa-globe"></i> Public (shows in community dashboard)
                             </label>
                             <label style="display: flex; align-items: center; gap: 8px;">
-                                <input type="checkbox" id="unlisted-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false">
-                                <i class="fas fa-eye-slash"></i> Unlisted (hidden from dashboard, link only)
+                                <input type="checkbox" id="unlisted-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false; document.getElementById('private-script').checked = false">
+                                <i class="fas fa-eye-slash"></i> Unlisted (hidden from community, link only)
                             </label>
                             <label style="display: flex; align-items: center; gap: 8px;">
                                 <input type="checkbox" id="private-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false; document.getElementById('unlisted-script').checked = false">
@@ -3662,11 +3670,11 @@
                             <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" id="public-script" style="width: 18px; height: 18px;" checked>
-                                    <i class="fas fa-globe"></i> Public (shows in dashboard)
+                                    <i class="fas fa-globe"></i> Public (shows in community dashboard)
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
-                                    <input type="checkbox" id="unlisted-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false">
-                                    <i class="fas fa-eye-slash"></i> Unlisted (hidden from dashboard, link only)
+                                    <input type="checkbox" id="unlisted-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false; document.getElementById('private-script').checked = false">
+                                    <i class="fas fa-eye-slash"></i> Unlisted (hidden from community, link only)
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px;">
                                     <input type="checkbox" id="private-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false; document.getElementById('unlisted-script').checked = false">
@@ -3910,9 +3918,9 @@
                 const shareableLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
                 
                 let visibilityMessage = '✅ Script created! ';
-                if (isPrivate) visibilityMessage += '(Private)';
-                else if (isUnlisted) visibilityMessage += '(Unlisted)';
-                else visibilityMessage += '(Public)';
+                if (isPrivate) visibilityMessage += '(Private - only you can view)';
+                else if (isUnlisted) visibilityMessage += '(Unlisted - hidden from community)';
+                else visibilityMessage += '(Public - visible in community dashboard)';
                 
                 showCopyNotification(visibilityMessage);
                 
@@ -3971,7 +3979,7 @@
                         <div class="premium-feature-card">
                             <i class="fas fa-clock" style="font-size: 32px;"></i>
                             <h3>Remove Step for 24h</h3>
-                            <p>Temporarily remove Vertex step from your scripts</p>
+                            <p>Temporarily remove Vertex step from your scripts for ALL viewers</p>
                         </div>
                     </div>
                     
@@ -4434,7 +4442,7 @@
             window.location.hash = '';
         };
 
-        function renderAuth() {
+        function renderAxuth() {
             document.getElementById('app').innerHTML = `
                 <div class="auth-container">
                     <div class="auth-card">
