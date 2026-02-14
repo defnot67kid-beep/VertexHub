@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VertexHub 10.0 · Community Uploads</title>
+    <title>VertexHub 11.0 · Community Uploads with Subscriptions</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -45,6 +45,7 @@
             --gradient-success: linear-gradient(135deg, #10b981, #059669);
             --gradient-danger: linear-gradient(135deg, #ef4444, #dc2626);
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --subscribe: #ff0000;
             
             --pc-sidebar-width: 280px;
             --mobile-sidebar-width: 85vw;
@@ -357,7 +358,36 @@
             background: var(--gradient-success);
         }
 
-        .auth-input, .step-url-input, .step-select, .share-input, .step-name-input {
+        .btn-subscribe {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-subscribe:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,0,0,0.3);
+        }
+
+        .btn-subscribe.subscribed {
+            background: #22c55e;
+        }
+
+        .btn-subscribe.subscribed:hover {
+            background: #16a34a;
+        }
+
+        .auth-input, .step-url-input, .step-select, .share-input, .step-name-input, .script-title-input {
             width: 100%;
             padding: 14px 20px;
             background: var(--dark-input);
@@ -369,7 +399,7 @@
             margin-bottom: 16px;
         }
 
-        .auth-input:focus, .step-url-input:focus, .step-select:focus, .step-name-input:focus {
+        .auth-input:focus, .step-url-input:focus, .step-select:focus, .step-name-input:focus, .script-title-input:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
@@ -387,6 +417,47 @@
             border: 1px solid var(--border);
             transition: all 0.3s ease;
             position: relative;
+        }
+
+        .script-header {
+            padding: 20px 20px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .script-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .script-owner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .owner-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .owner-name {
+            font-weight: 600;
+            color: var(--text);
         }
 
         .script-stats {
@@ -1081,7 +1152,7 @@
         /* Dashboard Styles */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -1089,7 +1160,7 @@
         .dashboard-script-card {
             background: var(--dark-card);
             border-radius: 20px;
-            padding: 20px;
+            overflow: hidden;
             border: 1px solid var(--border);
             transition: all 0.3s ease;
             cursor: pointer;
@@ -1102,17 +1173,54 @@
             box-shadow: var(--shadow-glow);
         }
 
+        .dashboard-script-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
         .dashboard-script-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
             padding-right: 80px;
+        }
+
+        .dashboard-script-owner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-owner-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashboard-owner-avatar {
+            width: 28px;
+            height: 28px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .dashboard-owner-name {
+            font-size: 14px;
+            font-weight: 600;
         }
 
         .dashboard-script-meta {
             color: var(--text-dim);
             font-size: 13px;
             margin-bottom: 15px;
+            display: flex;
+            gap: 12px;
         }
 
         .dashboard-script-stats {
@@ -1340,7 +1448,108 @@
             gap: 4px;
         }
         
-        /* New class for hidden scripts */
+        /* Subscription styles */
+        .subscription-section {
+            background: linear-gradient(135deg, rgba(255,0,0,0.1), rgba(200,0,0,0.05));
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255,0,0,0.3);
+        }
+
+        .subscription-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .subscription-header i {
+            font-size: 40px;
+            color: #ff0000;
+        }
+
+        .subscription-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .subscription-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255,0,0,0.2);
+        }
+
+        .subscription-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subscription-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .subscription-details h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .subscription-details p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .notification-permission {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .btn-notification {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-notification:hover {
+            background: #0d9488;
+            transform: translateY(-2px);
+        }
+
+        .btn-notification:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .hidden-script {
             display: none !important;
         }
@@ -1376,6 +1585,37 @@
         .unlisted-access-banner .btn-primary {
             width: auto;
             margin-left: auto;
+        }
+
+        /* Creator stats */
+        .creator-stats {
+            background: rgba(255,0,0,0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,0,0,0.2);
+        }
+
+        .creator-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .creator-stat-item {
+            text-align: center;
+        }
+
+        .creator-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff0000;
+        }
+
+        .creator-stat-label {
+            font-size: 11px;
+            color: var(--text-dim);
         }
     </style>
 </head>
@@ -1423,6 +1663,10 @@
         let currentVideoModal = null;
         let deviceInteractions = {};
         
+        // NEW: Subscription system
+        let subscriptions = {}; // Structure: { creatorId: { subscribedAt: timestamp, deviceId: deviceId } }
+        let notificationPermission = false;
+        
         // NEW: Track currently accessed unlisted script
         let currentUnlistedScript = null;
         
@@ -1463,10 +1707,21 @@
                 deviceInteractions = JSON.parse(storedInteractions);
             }
             
+            // Load subscriptions from localStorage
+            const storedSubscriptions = localStorage.getItem('vertexhub_subscriptions');
+            if (storedSubscriptions) {
+                subscriptions = JSON.parse(storedSubscriptions);
+            }
+            
             // Load script step removals from localStorage
             const storedRemovals = localStorage.getItem('vertexhub_script_removals');
             if (storedRemovals) {
                 scriptStepRemovals = JSON.parse(storedRemovals);
+            }
+
+            // Check notification permission
+            if ('Notification' in window) {
+                notificationPermission = Notification.permission === 'granted';
             }
 
             auth.onAuthStateChanged(async (user) => {
@@ -1482,7 +1737,10 @@
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                                 isPremium: isOwner ? true : false,
                                 role: isOwner ? "admin" : "user",
-                                totalScripts: 0
+                                totalScripts: 0,
+                                subscribers: 0,
+                                totalViews: 0,
+                                totalUnlocks: 0
                             });
                             
                             currentUser = {
@@ -1491,7 +1749,8 @@
                                 displayName: user.email.split('@')[0],
                                 isPremium: isOwner,
                                 role: isOwner ? "admin" : "user",
-                                createdAt: new Date().toISOString()
+                                createdAt: new Date().toISOString(),
+                                subscribers: 0
                             };
                         } else {
                             const userData = userDoc.data();
@@ -1501,7 +1760,8 @@
                                 displayName: userData.displayName || user.email.split('@')[0],
                                 isPremium: userData.isPremium || false,
                                 role: userData.role || 'user',
-                                createdAt: userData.createdAt
+                                createdAt: userData.createdAt,
+                                subscribers: userData.subscribers || 0
                             };
                         }
                         
@@ -1514,6 +1774,13 @@
                         // Load unlocked scripts from Firestore
                         const unlockedDoc = await db.collection('userUnlocks').doc(user.uid).get();
                         unlockedScripts = unlockedDoc.exists ? unlockedDoc.data() : {};
+                        
+                        // Load user's subscriptions from Firestore
+                        const subsDoc = await db.collection('userSubscriptions').doc(user.uid).get();
+                        if (subsDoc.exists) {
+                            subscriptions = subsDoc.data();
+                            localStorage.setItem('vertexhub_subscriptions', JSON.stringify(subscriptions));
+                        }
                         
                         // Load all scripts for dashboard
                         await loadAllScripts();
@@ -1564,6 +1831,121 @@
             
             if (changed) {
                 localStorage.setItem('vertexhub_script_removals', JSON.stringify(scriptStepRemovals));
+            }
+        }
+
+        // ============ SUBSCRIPTION FUNCTIONS ============
+        window.subscribeToCreator = async function(creatorId, creatorName) {
+            // Check if already subscribed on this device
+            if (subscriptions[creatorId]) {
+                showCopyNotification('⚠️ Already subscribed to this creator!', true);
+                return false;
+            }
+
+            // Store subscription
+            subscriptions[creatorId] = {
+                creatorName: creatorName,
+                subscribedAt: Date.now(),
+                deviceId: deviceId,
+                lastNotification: null
+            };
+
+            localStorage.setItem('vertexhub_subscriptions', JSON.stringify(subscriptions));
+
+            // If logged in, save to Firestore
+            if (currentUser) {
+                await db.collection('userSubscriptions').doc(currentUser.uid).set(subscriptions);
+                
+                // Increment creator's subscriber count
+                await db.collection('users').doc(creatorId).update({
+                    subscribers: firebase.firestore.FieldValue.increment(1)
+                });
+
+                // Update current user's subscriber count if viewing their own profile
+                if (currentUser.uid === creatorId) {
+                    currentUser.subscribers = (currentUser.subscribers || 0) + 1;
+                }
+            }
+
+            // Track subscription in analytics
+            await db.collection('analytics').add({
+                type: 'subscription',
+                creatorId: creatorId,
+                userId: currentUser?.uid || 'anonymous',
+                deviceId: deviceId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            showCopyNotification(`✅ Subscribed to ${creatorName}!`);
+
+            // Ask for notification permission
+            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                setTimeout(() => {
+                    if (confirm('🔔 Allow notifications to get alerts when this creator uploads new scripts?')) {
+                        requestNotificationPermission();
+                    }
+                }, 1000);
+            }
+
+            return true;
+        };
+
+        window.unsubscribeFromCreator = async function(creatorId, creatorName) {
+            if (!subscriptions[creatorId]) return;
+
+            delete subscriptions[creatorId];
+            localStorage.setItem('vertexhub_subscriptions', JSON.stringify(subscriptions));
+
+            if (currentUser) {
+                await db.collection('userSubscriptions').doc(currentUser.uid).set(subscriptions);
+                
+                // Decrement creator's subscriber count
+                await db.collection('users').doc(creatorId).update({
+                    subscribers: firebase.firestore.FieldValue.increment(-1)
+                });
+            }
+
+            showCopyNotification(`❌ Unsubscribed from ${creatorName}`);
+        };
+
+        // ============ NOTIFICATION FUNCTIONS ============
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                showCopyNotification('❌ Notifications not supported in this browser', true);
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                notificationPermission = permission === 'granted';
+                if (notificationPermission) {
+                    showCopyNotification('✅ Notifications enabled!');
+                }
+            });
+        }
+
+        async function sendNewScriptNotification(script, creatorName) {
+            if (!notificationPermission || !('Notification' in window)) return;
+
+            // Find all subscribers for this creator
+            const subscribers = Object.entries(subscriptions)
+                .filter(([_, sub]) => sub.creatorId === script.ownerId);
+
+            for (const [userId, sub] of subscribers) {
+                // Create notification
+                const notification = new Notification('📢 New Upload from ' + creatorName, {
+                    body: script.title + ' is now available!',
+                    icon: '/favicon.ico',
+                    badge: '/favicon.ico',
+                    tag: 'new-script-' + script.id,
+                    renotify: true,
+                    data: { scriptId: script.id, url: window.location.origin + window.location.pathname + '#script-' + script.id }
+                });
+
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus();
+                    window.location.hash = '#script-' + event.target.data.scriptId;
+                };
             }
         }
 
@@ -1781,6 +2163,11 @@
                 return true;
             }
             
+            if (hash === '#subscriptions') {
+                renderSubscriptions();
+                return true;
+            }
+            
             // Clear unlisted script when navigating away
             currentUnlistedScript = null;
             
@@ -1791,6 +2178,121 @@
                 renderDashboard();
             }
             return false;
+        }
+
+        // ============ RENDER SUBSCRIPTIONS PAGE ============
+        function renderSubscriptions() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+
+            let subscriptionsHTML = '';
+            let subscribedCreators = [];
+
+            // Get unique creators from subscriptions
+            const creatorIds = Object.keys(subscriptions);
+            
+            // Find creator details from scripts
+            creatorIds.forEach(creatorId => {
+                const creatorScripts = allScripts.filter(s => s.ownerId === creatorId);
+                if (creatorScripts.length > 0) {
+                    const creator = creatorScripts[0];
+                    const subData = subscriptions[creatorId];
+                    
+                    subscribedCreators.push({
+                        id: creatorId,
+                        name: creator.ownerName || 'Anonymous',
+                        totalScripts: creatorScripts.length,
+                        latestScript: creatorScripts[0],
+                        subscribedAt: subData.subscribedAt
+                    });
+                }
+            });
+
+            if (subscribedCreators.length === 0) {
+                subscriptionsHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <i class="fas fa-bell" style="font-size: 64px; color: #ff0000; opacity: 0.5; margin-bottom: 20px;"></i>
+                        <h2 style="margin-bottom: 16px;">No Subscriptions Yet</h2>
+                        <p style="color: var(--text-dim); margin-bottom: 24px;">Subscribe to creators to get notified when they upload new content.</p>
+                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.location.hash='#dashboard'">
+                            <i class="fas fa-home"></i> Browse Community
+                        </button>
+                    </div>
+                `;
+            } else {
+                subscriptionsHTML = subscribedCreators.map(creator => {
+                    const latestScript = creator.latestScript;
+                    const createdDate = latestScript.createdAt ? new Date(latestScript.createdAt.seconds * 1000).toLocaleDateString() : 'Recent';
+                    
+                    return `
+                        <div class="subscription-card">
+                            <div class="subscription-info">
+                                <div class="subscription-avatar">
+                                    ${creator.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="subscription-details">
+                                    <h4>${creator.name}</h4>
+                                    <p>${creator.totalScripts} scripts · Subscribed ${new Date(creator.subscribedAt).toLocaleDateString()}</p>
+                                    <p style="color: #ff0000; font-size: 11px; margin-top: 4px;">
+                                        <i class="fas fa-bell"></i> Latest: ${latestScript.title || 'Unlocker'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-subscribe subscribed" onclick="window.unsubscribeFromCreator('${creator.id}', '${creator.name}')">
+                                    <i class="fas fa-check"></i> Subscribed
+                                </button>
+                                <button class="copy-btn" onclick="window.location.hash='#script-${latestScript.id}'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            container.innerHTML = `
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
+                        <h1 class="section-title">
+                            <i class="fas fa-bell" style="color: #ff0000;"></i>
+                            My Subscriptions
+                        </h1>
+                        <button class="copy-btn" onclick="window.location.hash='#dashboard'">
+                            <i class="fas fa-home"></i> Dashboard
+                        </button>
+                    </div>
+
+                    <div class="subscription-section">
+                        <div class="subscription-header">
+                            <i class="fas fa-youtube"></i>
+                            <div>
+                                <h2>Creators You Follow</h2>
+                                <p style="color: var(--text-dim);">Get notified when they upload new content</p>
+                            </div>
+                        </div>
+
+                        <div class="subscription-grid">
+                            ${subscriptionsHTML}
+                        </div>
+                    </div>
+
+                    ${!notificationPermission ? `
+                    <div class="notification-permission">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-bell" style="font-size: 24px; color: #10b981;"></i>
+                            <div>
+                                <h3>Enable Notifications</h3>
+                                <p style="color: var(--text-dim);">Get alerts when your subscribed creators upload new scripts</p>
+                            </div>
+                        </div>
+                        <button class="btn-notification" onclick="requestNotificationPermission()">
+                            <i class="fas fa-bell"></i> Enable Notifications
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
         }
 
         // ============ LOAD SCRIPT VIEW ============
@@ -1886,6 +2388,13 @@
                         'views.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
                     });
                     
+                    // Update creator's total views
+                    if (script.ownerId) {
+                        await db.collection('users').doc(script.ownerId).update({
+                            totalViews: firebase.firestore.FieldValue.increment(1)
+                        });
+                    }
+                    
                     // Mark as viewed for this device
                     if (currentUser) {
                         viewedScripts[scriptId] = true;
@@ -1925,6 +2434,9 @@
             // Check if current user is the owner
             const isOwner = currentUser && currentUser.uid === script.ownerId;
             
+            // Check if subscribed to this creator
+            const isSubscribed = subscriptions[script.ownerId];
+            
             // Calculate remaining time if step was removed
             let removalTimeRemaining = null;
             if (script.mandatoryStepRemoved && script.mandatoryStepRemovalTime) {
@@ -1957,9 +2469,29 @@
                             <i class="fas fa-cube" style="font-size: 40px; color: #6366f1;"></i>
                             <div>
                                 <h1 style="font-size: 28px; margin-bottom: 4px;">${script.title || 'Content Unlocker'}</h1>
-                                <p style="color: var(--text-dim);">
-                                    <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'} · 
-                                    <i class="fas fa-list"></i> ${script.steps.length} steps
+                                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                    <div class="owner-info">
+                                        <div class="owner-avatar">
+                                            ${(script.ownerName || 'A').charAt(0).toUpperCase()}
+                                        </div>
+                                        <span class="owner-name">${script.ownerName || 'Anonymous'}</span>
+                                    </div>
+                                    
+                                    ${!isOwner ? `
+                                        ${isSubscribed ? `
+                                            <button class="btn-subscribe subscribed" onclick="window.unsubscribeFromCreator('${script.ownerId}', '${script.ownerName || 'Anonymous'}')">
+                                                <i class="fas fa-check"></i> Subscribed
+                                            </button>
+                                        ` : `
+                                            <button class="btn-subscribe" onclick="window.subscribeToCreator('${script.ownerId}', '${script.ownerName || 'Anonymous'}')">
+                                                <i class="fas fa-bell"></i> Subscribe
+                                            </button>
+                                        `}
+                                    ` : ''}
+                                    
+                                    <span style="color: var(--text-dim);">
+                                        <i class="fas fa-list"></i> ${script.steps.length} steps
+                                    </span>
                                     ${script.ownerIsPremium ? '<span class="owner-only-badge"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
                                     ${script.mandatoryStepPresent ? 
                                         '<span class="mandatory-step-badge"><i class="fas fa-star"></i> Vertex Step Required</span>' : 
@@ -1971,12 +2503,15 @@
                                         '<span style="margin-left: 10px; color: #f59e0b;"><i class="fas fa-eye-slash"></i> Unlisted (Link Only)</span>' :
                                         '<span style="margin-left: 10px; color: #10b981;"><i class="fas fa-globe"></i> Public</span>'
                                     }
-                                </p>
+                                </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px;">
                             <button class="copy-btn" onclick="window.location.hash='#dashboard'">
                                 <i class="fas fa-home"></i> Dashboard
+                            </button>
+                            <button class="copy-btn" onclick="window.location.hash='#subscriptions'">
+                                <i class="fas fa-bell"></i> Subs
                             </button>
                             <div style="background: var(--dark-card); padding: 12px 24px; border-radius: 100px;">
                                 <i class="fas fa-clock" style="color: var(--accent);"></i>
@@ -2616,6 +3151,13 @@
                     'unlocks.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
                 });
                 
+                // Update creator's total unlocks
+                if (script.ownerId) {
+                    await db.collection('users').doc(script.ownerId).update({
+                        totalUnlocks: firebase.firestore.FieldValue.increment(1)
+                    });
+                }
+                
                 // Record this unlock for the user/device
                 if (currentUser) {
                     unlockedScripts[scriptId] = true;
@@ -2672,18 +3214,27 @@
                     </div>
                     <div class="dashboard-grid">
                         <div class="dashboard-script-card" onclick="window.location.hash='#script-${script.id}'">
-                            <div class="visibility-badge visibility-unlisted">
-                                <i class="fas fa-eye-slash"></i> Unlisted
-                            </div>
-                            ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
-                            <div class="dashboard-script-title">
-                                <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
-                                ${script.title || 'Unlisted Unlocker'}
-                            </div>
-                            <div class="dashboard-script-meta">
-                                <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'} · 
-                                <i class="fas fa-calendar"></i> ${createdDate} · 
-                                <i class="fas fa-list"></i> ${script.steps?.length || 0} steps
+                            <div class="dashboard-script-header">
+                                <div class="visibility-badge visibility-unlisted">
+                                    <i class="fas fa-eye-slash"></i> Unlisted
+                                </div>
+                                ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
+                                <div class="dashboard-script-title">
+                                    <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
+                                    ${script.title || 'Unlisted Unlocker'}
+                                </div>
+                                <div class="dashboard-script-owner">
+                                    <div class="dashboard-owner-info">
+                                        <div class="dashboard-owner-avatar">
+                                            ${(script.ownerName || 'A').charAt(0).toUpperCase()}
+                                        </div>
+                                        <span class="dashboard-owner-name">${script.ownerName || 'Anonymous'}</span>
+                                    </div>
+                                </div>
+                                <div class="dashboard-script-meta">
+                                    <span><i class="fas fa-calendar"></i> ${createdDate}</span>
+                                    <span><i class="fas fa-list"></i> ${script.steps?.length || 0} steps</span>
+                                </div>
                             </div>
                             <div class="dashboard-script-stats">
                                 <div><i class="fas fa-eye"></i> ${script.views?.total || 0}</div>
@@ -2715,17 +3266,27 @@
                     
                     myScriptsHTML += `
                         <div class="dashboard-script-card" onclick="window.location.hash='#script-${script.id}'">
-                            <div class="visibility-badge ${visibilityClass}">
-                                <i class="fas ${visibilityIcon}"></i> ${visibilityText}
-                            </div>
-                            ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
-                            <div class="dashboard-script-title">
-                                <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
-                                ${script.title || 'Unlocker'}
-                            </div>
-                            <div class="dashboard-script-meta">
-                                <i class="fas fa-calendar"></i> ${createdDate} · 
-                                <i class="fas fa-list"></i> ${script.steps?.length || 0} steps
+                            <div class="dashboard-script-header">
+                                <div class="visibility-badge ${visibilityClass}">
+                                    <i class="fas ${visibilityIcon}"></i> ${visibilityText}
+                                </div>
+                                ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
+                                <div class="dashboard-script-title">
+                                    <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
+                                    ${script.title || 'Unlocker'}
+                                </div>
+                                <div class="dashboard-script-owner">
+                                    <div class="dashboard-owner-info">
+                                        <div class="dashboard-owner-avatar">
+                                            ${(script.ownerName || 'A').charAt(0).toUpperCase()}
+                                        </div>
+                                        <span class="dashboard-owner-name">${script.ownerName || 'Anonymous'}</span>
+                                    </div>
+                                </div>
+                                <div class="dashboard-script-meta">
+                                    <span><i class="fas fa-calendar"></i> ${createdDate}</span>
+                                    <span><i class="fas fa-list"></i> ${script.steps?.length || 0} steps</span>
+                                </div>
                             </div>
                             <div class="dashboard-script-stats">
                                 <div><i class="fas fa-eye"></i> ${script.views?.total || 0}</div>
@@ -2771,31 +3332,46 @@
                                    (deviceInteractions.unlockedScripts && deviceInteractions.unlockedScripts[script.id]);
                 const hasViewed = viewedScripts[script.id] || 
                                  (deviceInteractions.viewedScripts && deviceInteractions.viewedScripts[script.id]);
+                const isSubscribed = subscriptions[script.ownerId];
                 
                 publicScriptsHTML += `
                     <div class="dashboard-script-card ${hasUnlocked ? 'locked-unlocker' : ''}" 
                          onclick="${hasUnlocked ? 'return false;' : `window.location.hash='#script-${script.id}'`}">
-                        <div class="visibility-badge visibility-public">
-                            <i class="fas fa-globe"></i> Public
-                        </div>
-                        ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
-                        ${hasUnlocked ? `
-                        <div class="already-unlocked-badge" style="position: absolute; top: 45px; left: 15px;">
-                            <i class="fas fa-check-circle"></i> Already Unlocked
-                        </div>
-                        ` : hasViewed ? `
-                        <div class="already-viewed-badge" style="position: absolute; top: 45px; left: 15px;">
-                            <i class="fas fa-eye"></i> Viewed
-                        </div>
-                        ` : ''}
-                        <div class="dashboard-script-title">
-                            <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
-                            ${script.title || 'Unlocker'}
-                        </div>
-                        <div class="dashboard-script-meta">
-                            <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'} · 
-                            <i class="fas fa-calendar"></i> ${createdDate} · 
-                            <i class="fas fa-list"></i> ${script.steps?.length || 0} steps
+                        <div class="dashboard-script-header">
+                            <div class="visibility-badge visibility-public">
+                                <i class="fas fa-globe"></i> Public
+                            </div>
+                            ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
+                            ${hasUnlocked ? `
+                            <div class="already-unlocked-badge" style="position: absolute; top: 45px; left: 15px;">
+                                <i class="fas fa-check-circle"></i> Already Unlocked
+                            </div>
+                            ` : hasViewed ? `
+                            <div class="already-viewed-badge" style="position: absolute; top: 45px; left: 15px;">
+                                <i class="fas fa-eye"></i> Viewed
+                            </div>
+                            ` : ''}
+                            <div class="dashboard-script-title">
+                                <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
+                                ${script.title || 'Unlocker'}
+                            </div>
+                            <div class="dashboard-script-owner">
+                                <div class="dashboard-owner-info">
+                                    <div class="dashboard-owner-avatar">
+                                        ${(script.ownerName || 'A').charAt(0).toUpperCase()}
+                                    </div>
+                                    <span class="dashboard-owner-name">${script.ownerName || 'Anonymous'}</span>
+                                </div>
+                                ${isSubscribed ? `
+                                <span style="color: #ff0000; font-size: 11px; background: rgba(255,0,0,0.1); padding: 4px 8px; border-radius: 100px;">
+                                    <i class="fas fa-bell"></i> Subscribed
+                                </span>
+                                ` : ''}
+                            </div>
+                            <div class="dashboard-script-meta">
+                                <span><i class="fas fa-calendar"></i> ${createdDate}</span>
+                                <span><i class="fas fa-list"></i> ${script.steps?.length || 0} steps</span>
+                            </div>
                         </div>
                         <div class="dashboard-script-stats">
                             <div><i class="fas fa-eye"></i> ${script.views?.total || 0}</div>
@@ -2845,6 +3421,9 @@
                                 <span style="background: rgba(245,158,11,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
                                     <i class="fas fa-globe"></i> ${allScripts.filter(s => !s.isPrivate && !s.isUnlisted).length} Public
                                 </span>
+                                <span style="background: rgba(255,0,0,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
+                                    <i class="fas fa-bell"></i> ${Object.keys(subscriptions).length} Subs
+                                </span>
                             </div>
                             <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
                                 <div style="color: var(--accent); font-size: 13px; margin-bottom: 8px;">
@@ -2874,6 +3453,9 @@
                         </div>
                         <div class="nav-item" onclick="window.showMyScripts(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-code"></i> My Scripts
+                        </div>
+                        <div class="nav-item" onclick="window.renderSubscriptions(); document.querySelector('.sidebar')?.classList.remove('active');">
+                            <i class="fas fa-bell"></i> Subscriptions
                         </div>
                         <div class="nav-item" onclick="window.showMyAnalytics(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-chart-line"></i> My Analytics
@@ -3007,10 +3589,11 @@
             const totalScripts = scripts.length;
             const totalViews = analytics.filter(a => a.type === 'view').length;
             const totalUnlocks = analytics.filter(a => a.type === 'unlock').length;
+            const totalSubscriptions = analytics.filter(a => a.type === 'subscription').length;
             
             let userOptions = '';
             users.forEach(user => {
-                userOptions += `<option value="${user.uid}">${user.displayName} (${user.email}) - ${user.role || 'user'}</option>`;
+                userOptions += `<option value="${user.uid}">${user.displayName} (${user.email}) - ${user.role || 'user'} - Subs: ${user.subscribers || 0}</option>`;
             });
             
             container.innerHTML = `
@@ -3052,8 +3635,8 @@
                                 <div>Total Unlocks</div>
                             </div>
                             <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalViews ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0}%</div>
-                                <div>Conversion Rate</div>
+                                <div class="admin-stat-value">${totalSubscriptions}</div>
+                                <div>Total Subscriptions</div>
                             </div>
                         </div>
                     </div>
@@ -3217,7 +3800,7 @@
         window.clearAllData = async function() {
             if (!confirm('⚠️ Delete ALL data for ALL users? This cannot be undone!')) return;
             
-            const collections = ['users', 'scripts', 'analytics', 'userViews', 'userUnlocks', 'scriptUnlocks'];
+            const collections = ['users', 'scripts', 'analytics', 'userViews', 'userUnlocks', 'scriptUnlocks', 'userSubscriptions'];
             
             for (const collectionName of collections) {
                 const snapshot = await db.collection(collectionName).get();
@@ -3251,6 +3834,9 @@
             let totalUniqueViews = 0;
             let totalUniqueUnlocks = 0;
             let scriptsAnalyticsHTML = '';
+            
+            // Get subscription count
+            const subscribers = currentUser.subscribers || 0;
             
             for (const script of myScripts) {
                 const analyticsSnapshot = await db.collection('analytics')
@@ -3315,6 +3901,16 @@
                         <i class="fas fa-chart-line" style="color: #6366f1;"></i>
                         My Analytics
                     </h1>
+                    
+                    <div class="creator-stats">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <i class="fas fa-users" style="font-size: 32px; color: #ff0000;"></i>
+                            <div>
+                                <h2 style="color: #ff0000;">Your Subscribers: ${subscribers}</h2>
+                                <p style="color: var(--text-dim);">People who get notified when you upload new scripts</p>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -3398,6 +3994,15 @@
                 
                 scriptsHTML += `
                     <div class="script-card">
+                        <div class="script-header">
+                            <h3 class="script-title">${script.title || 'Unlocker'}</h3>
+                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                <span class="${visibilityClass}" style="padding: 4px 12px; border-radius: 100px; font-size: 11px;">
+                                    <i class="fas ${visibilityIcon}"></i> ${visibilityText}
+                                </span>
+                                ${script.ownerIsPremium ? '<span class="owner-only-badge"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
+                            </div>
+                        </div>
                         <div class="script-stats">
                             <div class="stat-item">
                                 <div class="stat-value">${scriptViews}</div>
@@ -3413,12 +4018,6 @@
                             </div>
                         </div>
                         <div style="padding: 20px;">
-                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                                <span class="${visibilityClass}" style="padding: 4px 12px; border-radius: 100px; font-size: 11px;">
-                                    <i class="fas ${visibilityIcon}"></i> ${visibilityText}
-                                </span>
-                                ${script.ownerIsPremium ? '<span class="owner-only-badge"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
-                            </div>
                             <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                                 <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
                                     <i class="fas fa-share-alt"></i> Share
@@ -3673,7 +4272,10 @@
                     </div>
                     
                     <div style="margin-top: 32px;">
-                        <h2>Unlock Destination</h2>
+                        <h2>Script Title</h2>
+                        <input type="text" id="script-title" class="auth-input" placeholder="Enter a title for your unlocker" value="${template.name} Unlocker" required>
+                        
+                        <h2 style="margin-top: 24px;">Unlock Destination</h2>
                         <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-download-link.com" required>
                         
                         <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
@@ -3756,7 +4358,10 @@
                         </div>
                         
                         <div style="margin-top: 32px;">
-                            <h2>Unlock Destination</h2>
+                            <h2>Script Title</h2>
+                            <input type="text" id="script-title" class="auth-input" placeholder="Enter a title for your unlocker" required>
+                            
+                            <h2 style="margin-top: 24px;">Unlock Destination</h2>
                             <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-link.com">
                             
                             <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
@@ -3962,6 +4567,12 @@
                 return;
             }
             
+            const scriptTitle = document.getElementById('script-title')?.value;
+            if (!scriptTitle) {
+                showCopyNotification('⚠️ Please enter a script title', true);
+                return;
+            }
+            
             const unlockUrl = document.getElementById('unlock-url')?.value;
             if (!unlockUrl) {
                 showCopyNotification('⚠️ Please enter an unlock URL', true);
@@ -3981,7 +4592,7 @@
                 ownerId: currentUser.uid,
                 ownerName: currentUser.displayName || 'Anonymous',
                 ownerIsPremium: isPremium, // Mark if creator is premium
-                title: `${templateName} Unlocker ${new Date().toLocaleDateString()}`,
+                title: scriptTitle,
                 template: templateName,
                 steps: steps,
                 unlockUrl: unlockUrl,
@@ -4001,7 +4612,7 @@
             };
             
             try {
-                await db.collection('scripts').add(scriptData);
+                const docRef = await db.collection('scripts').add(scriptData);
                 
                 await db.collection('users').doc(currentUser.uid).update({
                     totalScripts: firebase.firestore.FieldValue.increment(1)
@@ -4015,6 +4626,13 @@
                 else visibilityMessage += '(Public - visible in community dashboard)';
                 
                 showCopyNotification(visibilityMessage);
+                
+                // Send notifications to subscribers
+                await sendNewScriptNotification({
+                    id: docRef.id,
+                    title: scriptTitle,
+                    ownerId: currentUser.uid
+                }, currentUser.displayName || 'Anonymous');
                 
                 currentTemplate = null;
                 await loadAllScripts();
@@ -4236,6 +4854,14 @@
                         <h3 style="margin-bottom: 20px;">Profile</h3>
                         <input type="text" class="auth-input" value="${currentUser?.displayName || ''}" id="settings-name">
                         <button class="btn-primary" onclick="window.updateProfile()">Update</button>
+                        
+                        <h3 style="margin: 32px 0 20px;">Subscriptions</h3>
+                        <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px;">
+                            <p><i class="fas fa-bell"></i> You follow: ${Object.keys(subscriptions).length} creators</p>
+                            <button class="btn-subscribe" onclick="window.location.hash='#subscriptions'" style="margin-top: 10px;">
+                                <i class="fas fa-eye"></i> View Subscriptions
+                            </button>
+                        </div>
                         
                         <h3 style="margin: 32px 0 20px;">Device Info</h3>
                         <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px;">
@@ -4513,7 +5139,10 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     isPremium: isOwner ? true : false,
                     role: isOwner ? "admin" : "user",
-                    totalScripts: 0
+                    totalScripts: 0,
+                    subscribers: 0,
+                    totalViews: 0,
+                    totalUnlocks: 0
                 });
                 
                 showCopyNotification(isOwner ? '👑 Owner account created!' : '✅ Account created successfully!');
@@ -4568,6 +5197,12 @@
                 </div>
             `;
         }
+
+        // ============ RENDER SUBSCRIPTIONS ============
+        window.renderSubscriptions = function() {
+            const container = document.getElementById('main-content');
+            if (!container) return renderSubscriptions();
+        };
 
         // ============ INITIALIZE ============
         window.onload = function() {
