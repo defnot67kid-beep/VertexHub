@@ -1104,15 +1104,15 @@
         
         // ============ LOCAL STORAGE KEYS ============
         const STORAGE_KEYS = {
-            USERS: 'vertexhub_users_v9',
-            SCRIPTS: 'vertexhub_scripts_v9',
-            CURRENT_USER: 'vertexhub_current_user_v9',
-            SCRIPT_VIEWS: 'vertexhub_script_views_v9',
-            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks_v9',
-            USER_ANALYTICS: 'vertexhub_user_analytics_v9',
-            UNIQUE_VIEWS: 'vertexhub_unique_views_v9',
-            VIEWED_SCRIPTS: 'vertexhub_viewed_scripts_v9',
-            DEVICE_ID: 'vertexhub_device_id_v9'
+            USERS: 'vertexhub_users_v10',
+            SCRIPTS: 'vertexhub_scripts_v10',
+            CURRENT_USER: 'vertexhub_current_user_v10',
+            SCRIPT_VIEWS: 'vertexhub_script_views_v10',
+            SCRIPT_UNLOCKS: 'vertexhub_script_unlocks_v10',
+            USER_ANALYTICS: 'vertexhub_user_analytics_v10',
+            UNIQUE_VIEWS: 'vertexhub_unique_views_v10',
+            VIEWED_SCRIPTS: 'vertexhub_viewed_scripts_v10',
+            DEVICE_ID: 'vertexhub_device_id_v10'
         };
 
         // ============ INITIALIZE STORAGE ============
@@ -3166,7 +3166,9 @@
             
             updateUserAnalytics(currentUser.uid, 'create');
             
-            const shareableLink = `${GITHUB_PAGES_URL}#script-${scriptId}`;
+            // Create shareable link with proper base URL
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareableLink = `${baseUrl}#script-${scriptId}`;
             
             showCopyNotification(`✅ Script created! ${steps.length} steps`);
             
@@ -3190,6 +3192,7 @@
             
             const views = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_VIEWS)) || {};
             const unlocks = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCRIPT_UNLOCKS)) || {};
+            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
             
             if (currentScripts.length === 0) {
                 container.innerHTML = `
@@ -3206,7 +3209,8 @@
             
             let scriptsHTML = '';
             currentScripts.forEach(script => {
-                const shareableLink = `${GITHUB_PAGES_URL}#script-${script.scriptId}`;
+                const baseUrl = window.location.origin + window.location.pathname;
+                const shareableLink = `${baseUrl}#script-${script.scriptId}`;
                 const scriptViews = views[script.scriptId]?.total || 0;
                 const scriptUniqueViews = views[script.scriptId]?.unique || 0;
                 const scriptUnlocks = unlocks[script.scriptId] || 0;
@@ -3237,9 +3241,11 @@
                                 </button>
                             </div>
                             <div style="display: flex; gap: 12px;">
+                                ${isOwner ? `
                                 <button onclick="window.duplicateScript('${script.scriptId}')" class="copy-btn" style="flex: 1;">
                                     <i class="fas fa-copy"></i> Duplicate
                                 </button>
+                                ` : ''}
                                 <button onclick="window.deleteScript('${script.scriptId}')" class="copy-btn" style="flex: 1; color: #ef4444;">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
@@ -3456,6 +3462,8 @@
             const container = document.getElementById('main-content');
             if (!container) return;
             
+            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            
             container.innerHTML = `
                 <div style="max-width: 600px;">
                     <h1 class="section-title">Settings</h1>
@@ -3474,9 +3482,11 @@
                         <button style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px 24px; border-radius: 12px; margin-right: 12px;" onclick="window.clearMyData()">
                             <i class="fas fa-trash"></i> Clear My Data
                         </button>
+                        ${isOwner ? `
                         <button style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px 24px; border-radius: 12px;" onclick="window.clearAllData()">
                             <i class="fas fa-trash"></i> Clear All Data
                         </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -3592,4 +3602,4 @@
         };
     </script>
 </body>
-</html>
+    </html>
