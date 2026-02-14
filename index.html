@@ -1077,6 +1077,89 @@
             color: var(--text-dim);
             margin-top: 4px;
         }
+
+        .video-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.98);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .video-modal-content {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .video-modal-content.shorts {
+            max-width: 400px;
+        }
+
+        .video-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+
+        .video-modal-close {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .video-modal-close:hover {
+            background: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .video-progress-container {
+            margin-top: 20px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .video-complete-message {
+            color: var(--accent);
+            margin-top: 5px;
+        }
+
+        .video-info-text {
+            color: var(--text-dim);
+            margin-top: 10px;
+        }
+
+        .video-required-progress {
+            width: 100%;
+            height: 12px;
+            background: var(--dark-input);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .video-required-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 100px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
     </style>
 </head>
 <body>
@@ -1101,10 +1184,16 @@
             appId: "1:159837255599:web:e69bb8959e22508242a15a"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+        // Initialize Firebase with error handling
+        let db, auth;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+        }
 
         // ============ APP STATE ============
         let currentUser = null;
@@ -1119,6 +1208,8 @@
         let viewedScripts = {};
         let deviceId = null;
         let autoCloseTimer = null;
+        let currentVideoModal = null;
+        let currentVideoStep = null;
         
         // Premium video ID (YouTube Short)
         const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs';
@@ -1140,64 +1231,82 @@
             }
 
             // Check auth state
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    // Get user data from Firestore
-                    const userDoc = await db.collection('users').doc(user.uid).get();
-                    
-                    if (!userDoc.exists) {
-                        // Create user document if it doesn't exist
-                        const isOwner = user.email === "plastealme2@vertexhub.com";
-                        await db.collection('users').doc(user.uid).set({
-                            displayName: user.email.split('@')[0],
-                            email: user.email,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            isPremium: isOwner ? true : false,
-                            role: isOwner ? "admin" : "user",
-                            totalScripts: 0
-                        });
-                        
-                        const userData = {
-                            displayName: user.email.split('@')[0],
-                            email: user.email,
-                            isPremium: isOwner,
-                            role: isOwner ? "admin" : "user"
-                        };
-                        
-                        currentUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: userData.displayName,
-                            isPremium: userData.isPremium,
-                            role: userData.role,
-                            createdAt: new Date().toISOString()
-                        };
+            if (auth) {
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        try {
+                            // Get user data from Firestore
+                            const userDoc = await db.collection('users').doc(user.uid).get();
+                            
+                            if (!userDoc.exists) {
+                                // Create user document if it doesn't exist
+                                const isOwner = user.email === "plastealme2@vertexhub.com";
+                                await db.collection('users').doc(user.uid).set({
+                                    displayName: user.email.split('@')[0],
+                                    email: user.email,
+                                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                    isPremium: isOwner ? true : false,
+                                    role: isOwner ? "admin" : "user",
+                                    totalScripts: 0
+                                });
+                                
+                                const userData = {
+                                    displayName: user.email.split('@')[0],
+                                    email: user.email,
+                                    isPremium: isOwner,
+                                    role: isOwner ? "admin" : "user"
+                                };
+                                
+                                currentUser = {
+                                    uid: user.uid,
+                                    email: user.email,
+                                    displayName: userData.displayName,
+                                    isPremium: userData.isPremium,
+                                    role: userData.role,
+                                    createdAt: new Date().toISOString()
+                                };
+                            } else {
+                                const userData = userDoc.data();
+                                currentUser = {
+                                    uid: user.uid,
+                                    email: user.email,
+                                    displayName: userData.displayName || user.email.split('@')[0],
+                                    isPremium: userData.isPremium || false,
+                                    role: userData.role || 'user',
+                                    createdAt: userData.createdAt
+                                };
+                            }
+                            
+                            isPremium = currentUser.isPremium;
+                            
+                            // Load viewed scripts
+                            const viewedDoc = await db.collection('userViews').doc(user.uid).get();
+                            viewedScripts = viewedDoc.data() || {};
+                            
+                            handleRouting();
+                        } catch (error) {
+                            console.error('Error loading user data:', error);
+                            handleRouting();
+                        }
                     } else {
-                        const userData = userDoc.data();
-                        currentUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: userData.displayName || user.email.split('@')[0],
-                            isPremium: userData.isPremium || false,
-                            role: userData.role || 'user',
-                            createdAt: userData.createdAt
-                        };
+                        currentUser = null;
+                        isPremium = false;
+                        viewedScripts = {};
+                        handleRouting();
                     }
-                    
-                    isPremium = currentUser.isPremium;
-                    
-                    // Load viewed scripts
-                    const viewedDoc = await db.collection('userViews').doc(user.uid).get();
-                    viewedScripts = viewedDoc.data() || {};
-                    
-                    handleRouting();
-                } else {
-                    currentUser = null;
-                    isPremium = false;
-                    viewedScripts = {};
-                    handleRouting();
-                }
-            });
+                });
+            } else {
+                // Firebase not initialized, show error
+                document.getElementById('app').innerHTML = `
+                    <div class="auth-container">
+                        <div class="auth-card text-center">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
+                            <h2 style="margin-bottom: 16px;">Firebase Error</h2>
+                            <p style="color: var(--text-dim); margin-bottom: 24px;">Failed to initialize Firebase. Please check your configuration.</p>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         // ============ URL ROUTING ============
@@ -1207,12 +1316,6 @@
             if (hash.startsWith('#script-')) {
                 const scriptId = hash.replace('#script-', '');
                 loadScriptView(scriptId);
-                return true;
-            }
-            
-            if (hash.startsWith('#watch-')) {
-                const watchId = hash.replace('#watch-', '');
-                handleWatchRedirect(watchId);
                 return true;
             }
             
@@ -1234,43 +1337,26 @@
             return false;
         }
 
-        // ============ HANDLE WATCH REDIRECT ============
-        async function handleWatchRedirect(watchId) {
-            const [scriptId, stepIndex] = watchId.split('.');
-            
-            if (!scriptId || stepIndex === undefined) {
-                window.location.hash = '#dashboard';
-                return;
-            }
-            
-            const scriptDoc = await db.collection('scripts').doc(scriptId).get();
-            
-            if (!scriptDoc.exists) {
-                window.location.hash = '#dashboard';
-                return;
-            }
-            
-            const script = { id: scriptDoc.id, ...scriptDoc.data() };
-            
-            if (!script || !script.steps[parseInt(stepIndex)]) {
-                window.location.hash = '#dashboard';
-                return;
-            }
-            
-            // Open video player with auto-return
-            setTimeout(() => {
-                const step = script.steps[parseInt(stepIndex)];
-                openVideoPlayer(step.url, parseInt(stepIndex), scriptId, step.watchTime || 20);
-            }, 500);
-        }
-
         // ============ LOAD SCRIPT VIEW ============
         async function loadScriptView(scriptId) {
+            const app = document.getElementById('app');
+            
             try {
+                // Show loading state
+                app.innerHTML = `
+                    <div class="auth-container">
+                        <div class="auth-card text-center">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #6366f1; margin-bottom: 16px;"></i>
+                            <h2 style="margin-bottom: 16px;">Loading Unlocker...</h2>
+                            <p style="color: var(--text-dim);">Please wait</p>
+                        </div>
+                    </div>
+                `;
+                
                 const scriptDoc = await db.collection('scripts').doc(scriptId).get();
                 
                 if (!scriptDoc.exists) {
-                    document.getElementById('app').innerHTML = `
+                    app.innerHTML = `
                         <div class="auth-container">
                             <div class="auth-card text-center">
                                 <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
@@ -1288,25 +1374,29 @@
                 const script = { id: scriptDoc.id, ...scriptDoc.data() };
                 
                 // Track view
-                await db.collection('analytics').add({
-                    scriptId: scriptId,
-                    type: 'view',
-                    userId: currentUser?.uid || 'anonymous',
-                    deviceId: deviceId,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // Increment view count
-                if (script.views) {
-                    await db.collection('scripts').doc(scriptId).update({
-                        'views.total': firebase.firestore.FieldValue.increment(1)
+                try {
+                    await db.collection('analytics').add({
+                        scriptId: scriptId,
+                        type: 'view',
+                        userId: currentUser?.uid || 'anonymous',
+                        deviceId: deviceId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                    
+                    // Increment view count
+                    if (script.views) {
+                        await db.collection('scripts').doc(scriptId).update({
+                            'views.total': firebase.firestore.FieldValue.increment(1)
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error tracking view:', error);
                 }
                 
                 renderUnlocker(script);
             } catch (error) {
                 console.error('Error loading script:', error);
-                document.getElementById('app').innerHTML = `
+                app.innerHTML = `
                     <div class="auth-container">
                         <div class="auth-card text-center">
                             <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
@@ -1374,24 +1464,6 @@
             
             window.currentUnlockScript = script;
             renderUnlockSteps(script);
-            
-            // Check for any pending watch completions from localStorage
-            const pendingWatchKey = `watch_completed_${script.id}`;
-            const pendingWatch = localStorage.getItem(pendingWatchKey);
-            if (pendingWatch) {
-                try {
-                    const [savedScriptId, savedStepIndex] = pendingWatch.split(':');
-                    if (savedScriptId === script.id) {
-                        const stepIndex = parseInt(savedStepIndex);
-                        if (activeStepStates[stepIndex] && !activeStepStates[stepIndex].videoCompleted) {
-                            activeStepStates[stepIndex].videoCompleted = true;
-                            activeStepStates[stepIndex].watchStarted = false;
-                            localStorage.removeItem(pendingWatchKey);
-                            renderUnlockSteps(script);
-                        }
-                    }
-                } catch (e) {}
-            }
         }
 
         // ============ RENDER UNLOCK STEPS ============
@@ -1413,7 +1485,7 @@
                     statusIcon = 'fa-check-circle';
                     statusText = 'Completed';
                     statusClass = 'completed';
-                } else if (state.watchStarted && !state.videoCompleted) {
+                } else if (state.watchStarted) {
                     statusIcon = 'fa-eye';
                     statusText = `Watching video...`;
                     statusClass = 'watching';
@@ -1421,13 +1493,6 @@
                     statusIcon = 'fa-check-circle';
                     statusText = `Video completed! Starting timer...`;
                     statusClass = 'visited';
-                    
-                    // Auto-start timer when video is completed
-                    setTimeout(() => {
-                        if (activeStepStates[index] && activeStepStates[index].videoCompleted && !activeStepStates[index].linkClicked) {
-                            window.handleStepLinkClick(index, true);
-                        }
-                    }, 500);
                 } else if (state.linkClicked) {
                     statusIcon = 'fa-clock';
                     statusText = `Timer running (${state.timeLeft}s remaining)`;
@@ -1469,9 +1534,9 @@
                                         <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
                                     </div>
                                 ` : ''}
-                                ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
+                                ${step.type === 'watch' && state.watchStarted ? `
                                     <div style="color: #10b981; margin-top: 8px;">
-                                        <i class="fas fa-check-circle"></i> Video completed! Starting timer...
+                                        <i class="fas fa-eye"></i> Watching video...
                                     </div>
                                 ` : ''}
                                 ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
@@ -1496,7 +1561,7 @@
         }
 
         // ============ HANDLE STEP LINK CLICK ============
-        window.handleStepLinkClick = function(stepIndex, fromVideoComplete = false) {
+        window.handleStepLinkClick = function(stepIndex) {
             const script = window.currentUnlockScript;
             if (!script) return;
             
@@ -1514,49 +1579,20 @@
             if (state.linkClicked || state.timerComplete) return;
             
             if (step.type === 'watch') {
-                if (!state.videoCompleted && !fromVideoComplete) {
-                    // Generate unique watch ID
-                    const watchId = `${script.id}.${stepIndex}`;
-                    const watchUrl = `${window.location.origin}${window.location.pathname}#watch-${watchId}`;
-                    
-                    // Open video in new tab
-                    window.open(watchUrl, '_blank');
-                    
+                if (!state.videoCompleted) {
+                    // Open video in same tab (modal)
                     state.watchStarted = true;
-                    
                     renderUnlockSteps(script);
-                    showCopyNotification(`✅ Video opened! Will auto-return after watching required time`, false);
+                    openVideoModal(step.url, stepIndex, script.id, step.watchTime || 20);
                 } else {
-                    // Video completed OR forced start, now start timer
-                    state.linkClicked = true;
-                    state.timeLeft = step.waitTime || 20; // Default to 20 if not set
-                    
-                    // Force timer to start
-                    if (step.waitTime > 0) {
-                        startStepTimer(stepIndex);
-                    } else {
-                        // If wait time is 0, complete immediately
-                        setTimeout(() => {
-                            state.timerComplete = true;
-                            window.completeStep(stepIndex);
-                        }, 500);
-                    }
-                    
-                    // Update button state
-                    const visitBtn = document.getElementById(`visit-btn-${stepIndex}`);
-                    if (visitBtn) {
-                        visitBtn.disabled = true;
-                        visitBtn.innerHTML = `<i class="fas fa-clock"></i> Timer Running...`;
-                    }
-                    
-                    renderUnlockSteps(script);
-                    showCopyNotification(step.waitTime > 0 ? `✅ Timer started (${step.waitTime}s)` : `✅ Step completed!`, false);
+                    // Video completed, now start timer
+                    startStepTimerAfterVideo(stepIndex);
                 }
             } else {
-                // Regular link steps - only open link, timer starts automatically
+                // Regular link steps - open in new tab
                 window.open(step.url, '_blank');
                 state.linkClicked = true;
-                state.timeLeft = step.waitTime || 20; // Default to 20 if not set
+                state.timeLeft = step.waitTime || 20;
                 
                 // Force timer to start
                 if (step.waitTime > 0) {
@@ -1581,94 +1617,95 @@
             }
         };
 
-        // ============ OPEN VIDEO PLAYER WITH AUTO-RETURN ============
-        function openVideoPlayer(videoUrl, stepIndex, scriptId, requiredWatchTime) {
+        // ============ OPEN VIDEO MODAL (SAME TAB) ============
+        function openVideoModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
             // Extract YouTube video ID
             let videoId = '';
             if (videoUrl.includes('youtube.com/shorts/')) {
                 videoId = videoUrl.split('shorts/')[1].split('?')[0].split('/')[0];
             } else if (videoUrl.includes('youtube.com/watch')) {
-                const urlParams = new URLSearchParams(new URL(videoUrl).search);
-                videoId = urlParams.get('v');
+                try {
+                    const urlParams = new URLSearchParams(new URL(videoUrl).search);
+                    videoId = urlParams.get('v');
+                } catch (e) {
+                    // Handle relative URLs
+                    const match = videoUrl.match(/[?&]v=([^&]+)/);
+                    if (match) videoId = match[1];
+                }
             } else if (videoUrl.includes('youtu.be/')) {
                 videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
             } else {
                 showCopyNotification('❌ Invalid YouTube URL', true);
-                window.close();
+                return;
+            }
+            
+            if (!videoId) {
+                showCopyNotification('❌ Could not extract video ID', true);
                 return;
             }
             
             const isShorts = videoUrl.includes('shorts/');
             
-            // Create modal overlay
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.98);
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                backdrop-filter: blur(10px);
-            `;
+            // Remove any existing modal
+            const existingModal = document.querySelector('.video-modal');
+            if (existingModal) existingModal.remove();
             
-            modal.innerHTML = `
-                <div style="width: 100%; max-width: ${isShorts ? '400px' : '1000px'};">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 20px;">
-                        <h2 style="color: white;">${isShorts ? 'YouTube Short' : 'Watch Required Video'}</h2>
-                        <div style="color: var(--accent);" id="return-countdown">Auto-return after watching ${requiredWatchTime}s</div>
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'video-modal';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = `video-modal-content ${isShorts ? 'shorts' : ''}`;
+            
+            modalContent.innerHTML = `
+                <div class="video-modal-header">
+                    <h2 style="color: white;">${isShorts ? 'YouTube Short' : 'Watch Required Video'}</h2>
+                    <div class="video-modal-close" onclick="window.closeVideoModal()">
+                        <i class="fas fa-times"></i>
                     </div>
-                    
-                    <div class="${isShorts ? 'custom-shorts-container' : 'custom-video-container'}">
-                        <div id="watch-youtube-player"></div>
-                        <div class="video-overlay" id="video-overlay"></div>
-                        <div class="video-timer-progress" id="video-progress-bar"></div>
-                        <div class="video-timer-display" id="video-timer">
-                            Loading...
-                        </div>
-                        <div class="video-warning" id="video-warning" style="display: none;">
-                            ⚠️ Skip detected! Don't skip!
-                        </div>
+                </div>
+                
+                <div class="${isShorts ? 'custom-shorts-container' : 'custom-video-container'}">
+                    <div id="modal-youtube-player"></div>
+                    <div class="video-overlay" id="modal-video-overlay"></div>
+                    <div class="video-timer-progress" id="modal-progress-bar"></div>
+                    <div class="video-timer-display" id="modal-timer">
+                        Loading...
                     </div>
-                    
-                    <div style="margin-top: 20px; text-align: center; padding: 0 20px;">
-                        <p style="color: var(--accent); margin-top: 5px;" id="video-complete-message"></p>
-                        <p style="color: var(--text-dim); margin-top: 10px;">
-                            <i class="fas fa-shield"></i> 
-                            Must watch ${requiredWatchTime} seconds (not the whole video)
-                        </p>
-                        <div class="timer-progress-bar" style="margin-top: 15px;">
-                            <div id="watch-time-progress" class="timer-progress-fill" style="width: 0%;"></div>
-                        </div>
+                    <div class="video-warning" id="modal-warning" style="display: none;">
+                        ⚠️ Skip detected! Don't skip!
+                    </div>
+                </div>
+                
+                <div class="video-progress-container">
+                    <p class="video-complete-message" id="modal-complete-message"></p>
+                    <p class="video-info-text">
+                        <i class="fas fa-shield"></i> 
+                        Must watch <span id="modal-required-time">${requiredWatchTime}</span> seconds
+                    </p>
+                    <div class="video-required-progress">
+                        <div id="modal-required-progress" class="video-required-fill" style="width: 0%;"></div>
                     </div>
                 </div>
             `;
             
+            modal.appendChild(modalContent);
             document.body.appendChild(modal);
             
-            // Store state for this watch session
-            const watchState = {
+            // Store current video step
+            currentVideoStep = {
                 stepIndex: stepIndex,
                 scriptId: scriptId,
-                completed: false,
-                lastVideoTime: 0,
-                skipAttempts: 0,
-                videoDuration: 0,
-                videoCompleted: false,
                 requiredWatchTime: requiredWatchTime,
-                watchedSeconds: 0,
-                autoReturnTimer: null,
-                watchCompleted: false
+                videoCompleted: false,
+                lastVideoTime: 0,
+                skipAttempts: 0
             };
             
             // Load YouTube player
             setTimeout(() => {
                 try {
-                    youtubePlayer = new YT.Player('watch-youtube-player', {
+                    youtubePlayer = new YT.Player('modal-youtube-player', {
                         videoId: videoId,
                         width: '100%',
                         height: '100%',
@@ -1686,11 +1723,11 @@
                             enablejsapi: 1
                         },
                         events: {
-                            'onReady': (event) => onWatchPlayerReady(event, watchState, modal),
-                            'onStateChange': (event) => onWatchStateChange(event, watchState, modal, scriptId, stepIndex),
+                            'onReady': onModalPlayerReady,
+                            'onStateChange': onModalPlayerStateChange,
                             'onError': (e) => {
                                 console.error('YouTube error:', e);
-                                showCopyNotification('❌ Video error - please refresh', true);
+                                showCopyNotification('❌ Video error - please try again', true);
                             }
                         }
                     });
@@ -1700,7 +1737,7 @@
             }, 100);
         }
 
-        function onWatchPlayerReady(event, watchState, modal) {
+        function onModalPlayerReady(event) {
             const player = event.target;
             
             try {
@@ -1708,167 +1745,59 @@
                 player.mute();
                 player.playVideo();
                 
-                // Get video duration
+                // Update timer display with video duration
                 setTimeout(() => {
                     try {
-                        watchState.videoDuration = player.getDuration();
-                        const timerDisplay = document.getElementById('video-timer');
+                        const duration = player.getDuration();
+                        const timerDisplay = document.getElementById('modal-timer');
                         if (timerDisplay) {
-                            timerDisplay.innerHTML = `0:00 / ${formatTime(watchState.videoDuration)} (need ${watchState.requiredWatchTime}s)`;
+                            timerDisplay.innerHTML = `0:00 / ${formatTime(duration)}`;
                         }
                     } catch (e) {}
                 }, 1000);
             } catch (e) {}
             
             // Overlay to block interactions
-            const overlay = document.getElementById('video-overlay');
+            const overlay = document.getElementById('modal-video-overlay');
             if (overlay) {
                 overlay.style.pointerEvents = 'all';
                 overlay.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleWatchSkipAttempt('click', watchState);
+                    handleModalSkipAttempt('click');
                     return false;
                 };
             }
-            
-            let warningTimeout = null;
-            
-            // Update progress interval
-            const timerInterval = setInterval(() => {
-                if (watchState.completed) {
-                    clearInterval(timerInterval);
-                    return;
-                }
-                
-                try {
-                    const currentTime = player.getCurrentTime();
-                    const playerState = player.getPlayerState();
-                    
-                    if (!currentTime) return;
-                    
-                    // Force play if not playing
-                    if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
-                        player.playVideo();
-                    }
-                    
-                    // Track watched seconds (only count if playing)
-                    if (playerState === YT.PlayerState.PLAYING && !watchState.watchCompleted) {
-                        watchState.watchedSeconds = currentTime;
-                        
-                        // Update progress for required watch time
-                        const watchProgress = document.getElementById('watch-time-progress');
-                        if (watchProgress) {
-                            const progressPercent = Math.min((currentTime / watchState.requiredWatchTime) * 100, 100);
-                            watchProgress.style.width = progressPercent + '%';
-                        }
-                    }
-                    
-                    // Check for skipping
-                    if (watchState.lastVideoTime > 0 && currentTime > watchState.lastVideoTime + 2) {
-                        handleWatchSkipAttempt('skip', watchState, currentTime - watchState.lastVideoTime);
-                        
-                        // Force video back
-                        player.seekTo(watchState.lastVideoTime, true);
-                        
-                        const warning = document.getElementById('video-warning');
-                        if (warning) {
-                            warning.style.display = 'block';
-                            if (warningTimeout) clearTimeout(warningTimeout);
-                            warningTimeout = setTimeout(() => {
-                                warning.style.display = 'none';
-                            }, 3000);
-                        }
-                    } else {
-                        watchState.lastVideoTime = currentTime;
-                    }
-                    
-                    // Update timer display
-                    const timerDisplay = document.getElementById('video-timer');
-                    if (timerDisplay) {
-                        timerDisplay.innerHTML = `${formatTime(currentTime)} / ${formatTime(watchState.videoDuration)} (need ${watchState.requiredWatchTime}s)`;
-                    }
-                    
-                    // Update progress bar
-                    const progressBar = document.getElementById('video-progress-bar');
-                    if (progressBar) {
-                        const progressPercent = (currentTime / watchState.videoDuration) * 100;
-                        progressBar.style.width = progressPercent + '%';
-                    }
-                    
-                    // Check if required watch time is completed
-                    if (currentTime >= watchState.requiredWatchTime && !watchState.watchCompleted) {
-                        watchState.watchCompleted = true;
-                        
-                        const completeMessage = document.getElementById('video-complete-message');
-                        if (completeMessage) {
-                            completeMessage.innerHTML = `✅ Watched ${watchState.requiredWatchTime}s! Returning to unlocker in 3 seconds...`;
-                            completeMessage.style.color = '#10b981';
-                        }
-                        
-                        // Store completion in localStorage for cross-tab communication
-                        localStorage.setItem(`watch_completed_${watchState.scriptId}`, `${watchState.scriptId}:${watchState.stepIndex}`);
-                        
-                        // Start auto-return countdown
-                        let countdown = 3;
-                        const countdownElement = document.getElementById('return-countdown');
-                        
-                        watchState.autoReturnTimer = setInterval(() => {
-                            countdown--;
-                            if (countdownElement) {
-                                countdownElement.textContent = `Returning in ${countdown}s...`;
-                            }
-                            
-                            if (countdown <= 0) {
-                                clearInterval(watchState.autoReturnTimer);
-                                
-                                // Close this window/tab
-                                window.close();
-                            }
-                        }, 1000);
-                    }
-                } catch (e) {}
-            }, 100);
             
             // Block keyboard inputs
             const keyHandler = (e) => {
                 if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleWatchSkipAttempt('keyboard', watchState);
+                    handleModalSkipAttempt('keyboard');
                     return false;
                 }
             };
             
             window.addEventListener('keydown', keyHandler, true);
             
-            // Clean up
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (!document.body.contains(modal)) {
-                        window.removeEventListener('keydown', keyHandler, true);
-                        observer.disconnect();
-                        clearInterval(timerInterval);
-                        if (watchState.autoReturnTimer) {
-                            clearInterval(watchState.autoReturnTimer);
-                        }
-                    }
-                });
-            });
+            // Store key handler for cleanup
+            currentVideoStep.keyHandler = keyHandler;
             
-            observer.observe(document.body, { childList: true, subtree: true });
+            // Start progress tracking
+            startModalProgressTracking();
         }
 
-        function onWatchStateChange(event, watchState, modal, scriptId, stepIndex) {
+        function onModalPlayerStateChange(event) {
             const player = event.target;
             
-            if (watchState.completed) return;
+            if (currentVideoStep?.videoCompleted) return;
             
             // Force play if paused
             if (event.data === YT.PlayerState.PAUSED) {
                 setTimeout(() => {
                     try {
-                        if (player && !watchState.completed) {
+                        if (player && !currentVideoStep?.videoCompleted) {
                             player.playVideo();
                         }
                     } catch (e) {}
@@ -1878,7 +1807,7 @@
             // Handle video ended
             if (event.data === YT.PlayerState.ENDED) {
                 // If video ended but required watch time not met, loop it
-                if (!watchState.watchCompleted) {
+                if (!currentVideoStep?.videoCompleted) {
                     setTimeout(() => {
                         try {
                             player.playVideo();
@@ -1889,12 +1818,12 @@
             }
         }
 
-        function handleWatchSkipAttempt(reason, watchState, amount = 0) {
-            if (watchState.completed || watchState.watchCompleted) return;
+        function handleModalSkipAttempt(reason) {
+            if (!currentVideoStep || currentVideoStep.videoCompleted) return;
             
-            watchState.skipAttempts++;
+            currentVideoStep.skipAttempts++;
             
-            const warning = document.getElementById('video-warning');
+            const warning = document.getElementById('modal-warning');
             if (warning) {
                 warning.style.display = 'block';
                 setTimeout(() => {
@@ -1902,22 +1831,162 @@
                 }, 3000);
             }
             
-            let message = `⚠️ Skip detected! Attempt ${watchState.skipAttempts}/3`;
+            let message = `⚠️ Skip detected! Attempt ${currentVideoStep.skipAttempts}/3`;
             if (reason === 'keyboard') message = '⚠️ Keyboard controls disabled! ' + message;
             if (reason === 'click') message = '⚠️ Don\'t click the video! ' + message;
             
             showCopyNotification(message, true);
             
-            if (watchState.skipAttempts >= 3) {
+            if (currentVideoStep.skipAttempts >= 3) {
                 try {
                     if (youtubePlayer) youtubePlayer.pauseVideo();
                 } catch (e) {}
                 
-                showCopyNotification('❌ Too many skips - Refresh page', true);
-                
-                const modals = document.querySelectorAll('div[style*="position: fixed"]');
-                modals.forEach(modal => modal.remove());
+                showCopyNotification('❌ Too many skips - Please refresh', true);
+                closeVideoModal();
             }
+        }
+
+        function startModalProgressTracking() {
+            if (!currentVideoStep) return;
+            
+            const interval = setInterval(() => {
+                if (!currentVideoStep || !youtubePlayer) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                try {
+                    const currentTime = youtubePlayer.getCurrentTime();
+                    const playerState = youtubePlayer.getPlayerState();
+                    
+                    if (!currentTime) return;
+                    
+                    // Force play if not playing
+                    if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
+                        youtubePlayer.playVideo();
+                    }
+                    
+                    // Check for skipping
+                    if (currentVideoStep.lastVideoTime > 0 && currentTime > currentVideoStep.lastVideoTime + 2) {
+                        handleModalSkipAttempt('skip');
+                        
+                        // Force video back
+                        youtubePlayer.seekTo(currentVideoStep.lastVideoTime, true);
+                    } else {
+                        currentVideoStep.lastVideoTime = currentTime;
+                    }
+                    
+                    // Update timers
+                    const duration = youtubePlayer.getDuration();
+                    const timerDisplay = document.getElementById('modal-timer');
+                    const progressBar = document.getElementById('modal-progress-bar');
+                    const requiredProgress = document.getElementById('modal-required-progress');
+                    
+                    if (timerDisplay && duration) {
+                        timerDisplay.innerHTML = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+                    }
+                    
+                    if (progressBar && duration) {
+                        const progressPercent = (currentTime / duration) * 100;
+                        progressBar.style.width = progressPercent + '%';
+                    }
+                    
+                    if (requiredProgress && currentVideoStep.requiredWatchTime) {
+                        const requiredPercent = Math.min((currentTime / currentVideoStep.requiredWatchTime) * 100, 100);
+                        requiredProgress.style.width = requiredPercent + '%';
+                    }
+                    
+                    // Check if required watch time is completed
+                    if (currentTime >= currentVideoStep.requiredWatchTime && !currentVideoStep.videoCompleted) {
+                        currentVideoStep.videoCompleted = true;
+                        
+                        const completeMessage = document.getElementById('modal-complete-message');
+                        if (completeMessage) {
+                            completeMessage.innerHTML = `✅ Watched ${currentVideoStep.requiredWatchTime}s!`;
+                            completeMessage.style.color = '#10b981';
+                        }
+                        
+                        // Update step state
+                        const script = window.currentUnlockScript;
+                        if (script) {
+                            const state = activeStepStates[currentVideoStep.stepIndex];
+                            if (state) {
+                                state.videoCompleted = true;
+                                state.watchStarted = false;
+                            }
+                        }
+                        
+                        // Close modal after short delay
+                        setTimeout(() => {
+                            closeVideoModal();
+                            // Auto-start timer
+                            startStepTimerAfterVideo(currentVideoStep.stepIndex);
+                        }, 1500);
+                    }
+                } catch (e) {}
+            }, 100);
+            
+            // Store interval for cleanup
+            currentVideoStep.interval = interval;
+        }
+
+        window.closeVideoModal = function() {
+            const modal = document.querySelector('.video-modal');
+            if (modal) {
+                modal.remove();
+            }
+            
+            // Clean up
+            if (currentVideoStep) {
+                if (currentVideoStep.keyHandler) {
+                    window.removeEventListener('keydown', currentVideoStep.keyHandler, true);
+                }
+                if (currentVideoStep.interval) {
+                    clearInterval(currentVideoStep.interval);
+                }
+                currentVideoStep = null;
+            }
+            
+            // Update UI
+            const script = window.currentUnlockScript;
+            if (script) {
+                renderUnlockSteps(script);
+            }
+        };
+
+        function startStepTimerAfterVideo(stepIndex) {
+            const script = window.currentUnlockScript;
+            if (!script) return;
+            
+            const state = activeStepStates[stepIndex];
+            const step = script.steps[stepIndex];
+            
+            if (state.linkClicked || state.timerComplete) return;
+            
+            // Start timer
+            state.linkClicked = true;
+            state.timeLeft = step.waitTime || 20;
+            
+            if (step.waitTime > 0) {
+                startStepTimer(stepIndex);
+            } else {
+                // If wait time is 0, complete immediately
+                setTimeout(() => {
+                    state.timerComplete = true;
+                    window.completeStep(stepIndex);
+                }, 500);
+            }
+            
+            // Update button state
+            const visitBtn = document.getElementById(`visit-btn-${stepIndex}`);
+            if (visitBtn) {
+                visitBtn.disabled = true;
+                visitBtn.innerHTML = `<i class="fas fa-clock"></i> Timer Running...`;
+            }
+            
+            renderUnlockSteps(script);
+            showCopyNotification(`✅ Timer started (${step.waitTime}s)`, false);
         }
 
         // ============ START STEP TIMER ============
@@ -2006,18 +2075,22 @@
             }
             
             // Track unlock
-            await db.collection('analytics').add({
-                scriptId: scriptId,
-                type: 'unlock',
-                userId: currentUser?.uid || 'anonymous',
-                deviceId: deviceId,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Increment unlock count
-            await db.collection('scripts').doc(scriptId).update({
-                'unlocks': firebase.firestore.FieldValue.increment(1)
-            });
+            try {
+                await db.collection('analytics').add({
+                    scriptId: scriptId,
+                    type: 'unlock',
+                    userId: currentUser?.uid || 'anonymous',
+                    deviceId: deviceId,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Increment unlock count
+                await db.collection('scripts').doc(scriptId).update({
+                    'unlocks': firebase.firestore.FieldValue.increment(1)
+                });
+            } catch (error) {
+                console.error('Error tracking unlock:', error);
+            }
             
             window.location.href = script.unlockUrl;
         };
@@ -2232,16 +2305,21 @@
         async function renderDashboard() {
             const app = document.getElementById('app');
             
-            // Get user's scripts from Firestore
-            const scriptsSnapshot = await db.collection('scripts')
-                .where('ownerId', '==', currentUser.uid)
-                .orderBy('createdAt', 'desc')
-                .get();
-            
-            currentScripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            try {
+                // Get user's scripts from Firestore
+                const scriptsSnapshot = await db.collection('scripts')
+                    .where('ownerId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                currentScripts = scriptsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+            } catch (error) {
+                console.error('Error loading scripts:', error);
+                currentScripts = [];
+            }
             
             const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
             const timeLimits = getTimeLimits();
@@ -2344,124 +2422,129 @@
                 return;
             }
             
-            // Get all users from Firestore
-            const usersSnapshot = await db.collection('users').get();
-            const users = usersSnapshot.docs.map(doc => ({
-                uid: doc.id,
-                ...doc.data()
-            }));
-            
-            // Get all scripts
-            const scriptsSnapshot = await db.collection('scripts').get();
-            const scripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            // Get analytics
-            const analyticsSnapshot = await db.collection('analytics').get();
-            const analytics = analyticsSnapshot.docs.map(doc => doc.data());
-            
-            // Calculate totals
-            const totalUsers = users.length;
-            const totalScripts = scripts.length;
-            const totalViews = analytics.filter(a => a.type === 'view').length;
-            const totalUnlocks = analytics.filter(a => a.type === 'unlock').length;
-            const uniqueDevices = [...new Set(analytics.map(a => a.deviceId))].length;
-            
-            let userOptions = '';
-            users.forEach(user => {
-                userOptions += `<option value="${user.uid}">${user.displayName} (${user.email}) - ${user.role || 'user'}</option>`;
-            });
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title" style="margin-bottom: 32px;">
-                        <i class="fas fa-shield-alt" style="color: #f59e0b;"></i>
-                        Admin Panel
-                    </h1>
-                    
-                    <div class="admin-panel-card">
-                        <h2 style="margin-bottom: 20px;">Global Statistics</h2>
-                        <div class="admin-stat-grid">
-                            <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalUsers}</div>
-                                <div>Total Users</div>
-                            </div>
-                            <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalScripts}</div>
-                                <div>Total Scripts</div>
-                            </div>
-                            <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalViews}</div>
-                                <div>Total Views</div>
-                            </div>
-                            <div class="admin-stat-item">
-                                <div class="admin-stat-value">${uniqueDevices}</div>
-                                <div>Unique Devices</div>
-                            </div>
-                            <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalUnlocks}</div>
-                                <div>Total Unlocks</div>
-                            </div>
-                            <div class="admin-stat-item">
-                                <div class="admin-stat-value">${totalViews ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0}%</div>
-                                <div>Conversion Rate</div>
+            try {
+                // Get all users from Firestore
+                const usersSnapshot = await db.collection('users').get();
+                const users = usersSnapshot.docs.map(doc => ({
+                    uid: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Get all scripts
+                const scriptsSnapshot = await db.collection('scripts').get();
+                const scripts = scriptsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Get analytics
+                const analyticsSnapshot = await db.collection('analytics').get();
+                const analytics = analyticsSnapshot.docs.map(doc => doc.data());
+                
+                // Calculate totals
+                const totalUsers = users.length;
+                const totalScripts = scripts.length;
+                const totalViews = analytics.filter(a => a.type === 'view').length;
+                const totalUnlocks = analytics.filter(a => a.type === 'unlock').length;
+                const uniqueDevices = [...new Set(analytics.map(a => a.deviceId))].length;
+                
+                let userOptions = '';
+                users.forEach(user => {
+                    userOptions += `<option value="${user.uid}">${user.displayName} (${user.email}) - ${user.role || 'user'}</option>`;
+                });
+                
+                container.innerHTML = `
+                    <div>
+                        <h1 class="section-title" style="margin-bottom: 32px;">
+                            <i class="fas fa-shield-alt" style="color: #f59e0b;"></i>
+                            Admin Panel
+                        </h1>
+                        
+                        <div class="admin-panel-card">
+                            <h2 style="margin-bottom: 20px;">Global Statistics</h2>
+                            <div class="admin-stat-grid">
+                                <div class="admin-stat-item">
+                                    <div class="admin-stat-value">${totalUsers}</div>
+                                    <div>Total Users</div>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <div class="admin-stat-value">${totalScripts}</div>
+                                    <div>Total Scripts</div>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <div class="admin-stat-value">${totalViews}</div>
+                                    <div>Total Views</div>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <div class="admin-stat-value">${uniqueDevices}</div>
+                                    <div>Unique Devices</div>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <div class="admin-stat-value">${totalUnlocks}</div>
+                                    <div>Total Unlocks</div>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <div class="admin-stat-value">${totalViews ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0}%</div>
+                                    <div>Conversion Rate</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="admin-panel-card">
-                        <h2 style="margin-bottom: 20px;">Owner Controls</h2>
                         
-                        <div style="margin-bottom: 32px;">
-                            <h3 style="margin-bottom: 16px;">Select User to Manage</h3>
-                            <select id="admin-user-select" class="user-selector" onchange="window.loadUserForAdmin()">
-                                <option value="">-- Select User --</option>
-                                ${userOptions}
-                            </select>
-                        </div>
-                        
-                        <div id="admin-user-controls" style="display: none;">
-                            <h3 style="margin-bottom: 16px;">User Controls</h3>
+                        <div class="admin-panel-card">
+                            <h2 style="margin-bottom: 20px;">Owner Controls</h2>
                             
-                            <div style="display: grid; gap: 16px; margin-bottom: 24px;">
-                                <button class="btn-primary" onclick="window.makeUserPremium()" style="background: var(--gradient-premium);">
-                                    <i class="fas fa-crown"></i> Grant Premium
-                                </button>
-                                <button class="btn-primary" onclick="window.revokeUserPremium()" style="background: var(--gradient-danger);">
-                                    <i class="fas fa-times-circle"></i> Revoke Premium
-                                </button>
-                                <button class="btn-primary" onclick="window.makeUserAdmin()" style="background: var(--gradient-primary);">
-                                    <i class="fas fa-shield-alt"></i> Make Admin
-                                </button>
-                                <button class="btn-primary" onclick="window.deleteUser()" style="background: var(--gradient-danger);">
-                                    <i class="fas fa-user-slash"></i> Delete User
-                                </button>
+                            <div style="margin-bottom: 32px;">
+                                <h3 style="margin-bottom: 16px;">Select User to Manage</h3>
+                                <select id="admin-user-select" class="user-selector" onchange="window.loadUserForAdmin()">
+                                    <option value="">-- Select User --</option>
+                                    ${userOptions}
+                                </select>
+                            </div>
+                            
+                            <div id="admin-user-controls" style="display: none;">
+                                <h3 style="margin-bottom: 16px;">User Controls</h3>
+                                
+                                <div style="display: grid; gap: 16px; margin-bottom: 24px;">
+                                    <button class="btn-primary" onclick="window.makeUserPremium()" style="background: var(--gradient-premium);">
+                                        <i class="fas fa-crown"></i> Grant Premium
+                                    </button>
+                                    <button class="btn-primary" onclick="window.revokeUserPremium()" style="background: var(--gradient-danger);">
+                                        <i class="fas fa-times-circle"></i> Revoke Premium
+                                    </button>
+                                    <button class="btn-primary" onclick="window.makeUserAdmin()" style="background: var(--gradient-primary);">
+                                        <i class="fas fa-shield-alt"></i> Make Admin
+                                    </button>
+                                    <button class="btn-primary" onclick="window.deleteUser()" style="background: var(--gradient-danger);">
+                                        <i class="fas fa-user-slash"></i> Delete User
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="owner-warning">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 24px;"></i>
+                                <div>
+                                    <strong>Owner Warning:</strong> These actions affect real users and cannot be undone.
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="owner-warning">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 24px;"></i>
-                            <div>
-                                <strong>Owner Warning:</strong> These actions affect real users and cannot be undone.
+                        <div class="admin-panel-card">
+                            <h2 style="margin-bottom: 20px;">System Controls</h2>
+                            <div style="display: grid; gap: 16px;">
+                                <button class="btn-primary" onclick="window.resetAllStats()" style="background: var(--gradient-danger);">
+                                    <i class="fas fa-chart-simple"></i> Reset All Statistics
+                                </button>
+                                <button class="btn-primary" onclick="window.clearAllData()" style="background: var(--gradient-danger);">
+                                    <i class="fas fa-trash"></i> WIPE ALL DATA
+                                </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="admin-panel-card">
-                        <h2 style="margin-bottom: 20px;">System Controls</h2>
-                        <div style="display: grid; gap: 16px;">
-                            <button class="btn-primary" onclick="window.resetAllStats()" style="background: var(--gradient-danger);">
-                                <i class="fas fa-chart-simple"></i> Reset All Statistics
-                            </button>
-                            <button class="btn-primary" onclick="window.clearAllData()" style="background: var(--gradient-danger);">
-                                <i class="fas fa-trash"></i> WIPE ALL DATA
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+                `;
+            } catch (error) {
+                console.error('Error loading admin panel:', error);
+                container.innerHTML = `<p style="color: var(--danger);">Error loading admin panel: ${error.message}</p>`;
+            }
         };
 
         // Admin panel functions
@@ -2485,12 +2568,15 @@
                 return;
             }
             
-            await db.collection('users').doc(selectedUserId).update({
-                isPremium: true,
-                role: 'premium'
-            });
-            
-            showCopyNotification('✅ User is now premium!');
+            try {
+                await db.collection('users').doc(selectedUserId).update({
+                    isPremium: true,
+                    role: 'premium'
+                });
+                showCopyNotification('✅ User is now premium!');
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
+            }
         };
 
         window.revokeUserPremium = async function() {
@@ -2499,15 +2585,18 @@
                 return;
             }
             
-            const userDoc = await db.collection('users').doc(selectedUserId).get();
-            const userData = userDoc.data();
-            
-            await db.collection('users').doc(selectedUserId).update({
-                isPremium: false,
-                role: userData.role === 'admin' ? 'admin' : 'user'
-            });
-            
-            showCopyNotification('✅ Premium revoked');
+            try {
+                const userDoc = await db.collection('users').doc(selectedUserId).get();
+                const userData = userDoc.data();
+                
+                await db.collection('users').doc(selectedUserId).update({
+                    isPremium: false,
+                    role: userData.role === 'admin' ? 'admin' : 'user'
+                });
+                showCopyNotification('✅ Premium revoked');
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
+            }
         };
 
         window.makeUserAdmin = async function() {
@@ -2516,12 +2605,15 @@
                 return;
             }
             
-            await db.collection('users').doc(selectedUserId).update({
-                role: 'admin',
-                isPremium: true
-            });
-            
-            showCopyNotification('✅ User is now an admin!');
+            try {
+                await db.collection('users').doc(selectedUserId).update({
+                    role: 'admin',
+                    isPremium: true
+                });
+                showCopyNotification('✅ User is now an admin!');
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
+            }
         };
 
         window.deleteUser = async function() {
@@ -2532,63 +2624,74 @@
             
             if (!confirm('⚠️ Delete this user permanently?')) return;
             
-            // Delete user from Firebase Auth (requires Firebase Admin SDK - this will need backend)
-            // For now, just delete Firestore document
-            await db.collection('users').doc(selectedUserId).delete();
-            
-            // Delete user's scripts
-            const scriptsSnapshot = await db.collection('scripts').where('ownerId', '==', selectedUserId).get();
-            const batch = db.batch();
-            scriptsSnapshot.docs.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            await batch.commit();
-            
-            showCopyNotification('✅ User deleted');
-            window.showAdminPanel();
+            try {
+                // Delete user from Firestore
+                await db.collection('users').doc(selectedUserId).delete();
+                
+                // Delete user's scripts
+                const scriptsSnapshot = await db.collection('scripts').where('ownerId', '==', selectedUserId).get();
+                const batch = db.batch();
+                scriptsSnapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                
+                showCopyNotification('✅ User deleted');
+                window.showAdminPanel();
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
+            }
         };
 
         window.resetAllStats = async function() {
             if (!confirm('Reset all statistics? This cannot be undone.')) return;
             
-            // Delete all analytics
-            const analyticsSnapshot = await db.collection('analytics').get();
-            const batch = db.batch();
-            analyticsSnapshot.docs.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            await batch.commit();
-            
-            // Reset script counters
-            const scriptsSnapshot = await db.collection('scripts').get();
-            scriptsSnapshot.docs.forEach(async (doc) => {
-                await doc.ref.update({
-                    views: { total: 0, unique: [] },
-                    unlocks: 0
+            try {
+                // Delete all analytics
+                const analyticsSnapshot = await db.collection('analytics').get();
+                const batch = db.batch();
+                analyticsSnapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
                 });
-            });
-            
-            showCopyNotification('✅ All statistics reset');
-            window.showAdminPanel();
+                await batch.commit();
+                
+                // Reset script counters
+                const scriptsSnapshot = await db.collection('scripts').get();
+                scriptsSnapshot.docs.forEach(async (doc) => {
+                    await doc.ref.update({
+                        views: { total: 0, unique: [] },
+                        unlocks: 0
+                    });
+                });
+                
+                showCopyNotification('✅ All statistics reset');
+                window.showAdminPanel();
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
+            }
         };
 
         window.clearAllData = async function() {
             if (!confirm('⚠️ Delete ALL data for ALL users? This cannot be undone!')) return;
             
-            // Delete all collections (requires multiple deletes)
-            const collections = ['users', 'scripts', 'analytics', 'userViews'];
-            
-            for (const collectionName of collections) {
-                const snapshot = await db.collection(collectionName).get();
-                const batch = db.batch();
-                snapshot.docs.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
+            try {
+                // Delete all collections
+                const collections = ['users', 'scripts', 'analytics', 'userViews'];
+                
+                for (const collectionName of collections) {
+                    const snapshot = await db.collection(collectionName).get();
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                }
+                
+                showCopyNotification('✅ All data cleared');
+                window.location.reload();
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
             }
-            
-            showCopyNotification('✅ All data cleared');
-            window.location.reload();
         };
 
         // ============ SHOW MY ANALYTICS ============
@@ -2596,98 +2699,103 @@
             const container = document.getElementById('main-content');
             if (!container) return;
             
-            // Get user's scripts
-            const scriptsSnapshot = await db.collection('scripts')
-                .where('ownerId', '==', currentUser.uid)
-                .get();
-            
-            const myScripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            // Get analytics for user's scripts
-            let totalViews = 0;
-            let totalUnlocks = 0;
-            let scriptsAnalyticsHTML = '';
-            
-            for (const script of myScripts) {
-                const analyticsSnapshot = await db.collection('analytics')
-                    .where('scriptId', '==', script.id)
+            try {
+                // Get user's scripts
+                const scriptsSnapshot = await db.collection('scripts')
+                    .where('ownerId', '==', currentUser.uid)
                     .get();
                 
-                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
-                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
-                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
-                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                const myScripts = scriptsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
                 
-                totalViews += scriptViews;
-                totalUnlocks += scriptUnlocks;
+                // Get analytics for user's scripts
+                let totalViews = 0;
+                let totalUnlocks = 0;
+                let scriptsAnalyticsHTML = '';
                 
-                const scriptConversion = scriptViews > 0 ? ((scriptUnlocks / scriptViews) * 100).toFixed(1) : 0;
+                for (const script of myScripts) {
+                    const analyticsSnapshot = await db.collection('analytics')
+                        .where('scriptId', '==', script.id)
+                        .get();
+                    
+                    const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
+                    const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
+                    const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
+                    const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                    
+                    totalViews += scriptViews;
+                    totalUnlocks += scriptUnlocks;
+                    
+                    const scriptConversion = scriptViews > 0 ? ((scriptUnlocks / scriptViews) * 100).toFixed(1) : 0;
+                    
+                    scriptsAnalyticsHTML += `
+                        <div style="background: var(--dark-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; position: relative;">
+                            <div class="unique-view-badge">
+                                <i class="fas fa-users"></i> ${uniqueDevices} unique
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                                <div>
+                                    <h3 style="margin-bottom: 4px;">${script.title}</h3>
+                                    <p style="color: var(--text-dim); font-size: 13px;">${script.steps.length} steps</p>
+                                </div>
+                                <span class="badge-premium" style="background: var(--gradient-primary);">${scriptConversion}% conv</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
+                                <div>
+                                    <div style="font-size: 24px; font-weight: 700;">${scriptViews}</div>
+                                    <div style="color: var(--text-dim);">Total Views</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 24px; font-weight: 700;">${uniqueDevices}</div>
+                                    <div style="color: var(--text-dim);">Unique Devices</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 24px; font-weight: 700;">${scriptUnlocks}</div>
+                                    <div style="color: var(--text-dim);">Unlocks</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
                 
-                scriptsAnalyticsHTML += `
-                    <div style="background: var(--dark-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; position: relative;">
-                        <div class="unique-view-badge">
-                            <i class="fas fa-users"></i> ${uniqueDevices} unique
+                const conversionRate = totalViews > 0 ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0;
+                
+                container.innerHTML = `
+                    <div>
+                        <h1 class="section-title" style="margin-bottom: 32px;">
+                            <i class="fas fa-chart-line" style="color: #6366f1;"></i>
+                            My Analytics
+                        </h1>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <h3>${totalViews}</h3>
+                                <p>Total Views</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>${totalUnlocks}</h3>
+                                <p>Total Unlocks</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>${conversionRate}%</h3>
+                                <p>Conversion Rate</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>${myScripts.length}</h3>
+                                <p>Scripts Created</p>
+                            </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <h3 style="margin-bottom: 4px;">${script.title}</h3>
-                                <p style="color: var(--text-dim); font-size: 13px;">${script.steps.length} steps</p>
-                            </div>
-                            <span class="badge-premium" style="background: var(--gradient-primary);">${scriptConversion}% conv</span>
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
-                            <div>
-                                <div style="font-size: 24px; font-weight: 700;">${scriptViews}</div>
-                                <div style="color: var(--text-dim);">Total Views</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 24px; font-weight: 700;">${uniqueDevices}</div>
-                                <div style="color: var(--text-dim);">Unique Devices</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 24px; font-weight: 700;">${scriptUnlocks}</div>
-                                <div style="color: var(--text-dim);">Unlocks</div>
-                            </div>
-                        </div>
+                        
+                        <h2 style="margin: 32px 0 20px;">Script Performance</h2>
+                        ${scriptsAnalyticsHTML || '<p style="color: var(--text-dim); text-align: center;">No scripts yet</p>'}
                     </div>
                 `;
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                container.innerHTML = `<p style="color: var(--danger);">Error loading analytics: ${error.message}</p>`;
             }
-            
-            const conversionRate = totalViews > 0 ? ((totalUnlocks / totalViews) * 100).toFixed(1) : 0;
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title" style="margin-bottom: 32px;">
-                        <i class="fas fa-chart-line" style="color: #6366f1;"></i>
-                        My Analytics
-                    </h1>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h3>${totalViews}</h3>
-                            <p>Total Views</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>${totalUnlocks}</h3>
-                            <p>Total Unlocks</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>${conversionRate}%</h3>
-                            <p>Conversion Rate</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>${myScripts.length}</h3>
-                            <p>Scripts Created</p>
-                        </div>
-                    </div>
-                    
-                    <h2 style="margin: 32px 0 20px;">Script Performance</h2>
-                    ${scriptsAnalyticsHTML || '<p style="color: var(--text-dim); text-align: center;">No scripts yet</p>'}
-                </div>
-            `;
         };
 
         // ============ TEMPLATES GALLERY ============
@@ -3199,27 +3307,32 @@
                 unlocks: 0
             };
             
-            // Save to Firestore
-            await db.collection('scripts').add(scriptData);
-            
-            // Update user's script count
-            await db.collection('users').doc(currentUser.uid).update({
-                totalScripts: firebase.firestore.FieldValue.increment(1)
-            });
-            
-            // Create shareable link
-            const shareableLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
-            
-            showCopyNotification(`✅ Script created! ${steps.length} steps`);
-            
-            window.currentTemplate = null;
-            window.showMyScripts();
-            
-            setTimeout(() => {
-                if (confirm('Script created! Copy share link?')) {
-                    window.copyToClipboard(shareableLink);
-                }
-            }, 500);
+            try {
+                // Save to Firestore
+                await db.collection('scripts').add(scriptData);
+                
+                // Update user's script count
+                await db.collection('users').doc(currentUser.uid).update({
+                    totalScripts: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                // Create shareable link
+                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
+                
+                showCopyNotification(`✅ Script created! ${steps.length} steps`);
+                
+                window.currentTemplate = null;
+                window.showMyScripts();
+                
+                setTimeout(() => {
+                    if (confirm('Script created! Copy share link?')) {
+                        window.copyToClipboard(shareableLink);
+                    }
+                }, 500);
+            } catch (error) {
+                console.error('Error creating script:', error);
+                showCopyNotification('❌ ' + error.message, true);
+            }
         };
 
         // ============ SHOW MY SCRIPTS ============
@@ -3227,103 +3340,108 @@
             const container = document.getElementById('main-content');
             if (!container) return;
             
-            // Get user's scripts
-            const scriptsSnapshot = await db.collection('scripts')
-                .where('ownerId', '==', currentUser.uid)
-                .orderBy('createdAt', 'desc')
-                .get();
-            
-            currentScripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            
-            if (currentScripts.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 80px 20px;">
-                        <i class="fas fa-code" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
-                        <h2 style="margin: 20px 0;">No scripts yet</h2>
-                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
-                            <i class="fas fa-layer-group"></i> Use Template
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-            
-            let scriptsHTML = '';
-            for (const script of currentScripts) {
-                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
-                
-                // Get analytics for this script
-                const analyticsSnapshot = await db.collection('analytics')
-                    .where('scriptId', '==', script.id)
+            try {
+                // Get user's scripts
+                const scriptsSnapshot = await db.collection('scripts')
+                    .where('ownerId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
                     .get();
                 
-                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
-                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
-                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
-                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                currentScripts = scriptsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
                 
-                scriptsHTML += `
-                    <div class="script-card">
-                        <div class="script-stats">
-                            <div class="stat-item">
-                                <div class="stat-value">${scriptViews}</div>
-                                <div class="stat-label">Views</div>
+                const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+                
+                if (currentScripts.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 80px 20px;">
+                            <i class="fas fa-code" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
+                            <h2 style="margin: 20px 0;">No scripts yet</h2>
+                            <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
+                                <i class="fas fa-layer-group"></i> Use Template
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let scriptsHTML = '';
+                for (const script of currentScripts) {
+                    const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
+                    
+                    // Get analytics for this script
+                    const analyticsSnapshot = await db.collection('analytics')
+                        .where('scriptId', '==', script.id)
+                        .get();
+                    
+                    const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
+                    const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
+                    const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
+                    const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                    
+                    scriptsHTML += `
+                        <div class="script-card">
+                            <div class="script-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">${scriptViews}</div>
+                                    <div class="stat-label">Views</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${uniqueDevices}</div>
+                                    <div class="stat-label">Unique</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${scriptUnlocks}</div>
+                                    <div class="stat-label">Unlocks</div>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${uniqueDevices}</div>
-                                <div class="stat-label">Unique</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${scriptUnlocks}</div>
-                                <div class="stat-label">Unlocks</div>
+                            <div style="padding: 20px;">
+                                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                    <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
+                                        <i class="fas fa-share-alt"></i> Share
+                                    </button>
+                                    <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
+                                        <i class="fas fa-play"></i> Test
+                                    </button>
+                                </div>
+                                <div style="display: flex; gap: 12px;">
+                                    ${isOwner ? `
+                                    <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1;">
+                                        <i class="fas fa-copy"></i> Duplicate
+                                    </button>
+                                    ` : ''}
+                                    <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                                <div class="share-link" id="share-${script.id}" style="display: none;">
+                                    <input type="text" class="share-input" value="${shareableLink}" readonly>
+                                    <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div style="padding: 20px;">
-                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                                <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
-                                    <i class="fas fa-share-alt"></i> Share
-                                </button>
-                                <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
-                                    <i class="fas fa-play"></i> Test
-                                </button>
-                            </div>
-                            <div style="display: flex; gap: 12px;">
-                                ${isOwner ? `
-                                <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1;">
-                                    <i class="fas fa-copy"></i> Duplicate
-                                </button>
-                                ` : ''}
-                                <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </div>
-                            <div class="share-link" id="share-${script.id}" style="display: none;">
-                                <input type="text" class="share-input" value="${shareableLink}" readonly>
-                                <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
-                                    <i class="fas fa-copy"></i> Copy
-                                </button>
-                            </div>
+                    `;
+                }
+                
+                container.innerHTML = `
+                    <div>
+                        <h1 class="section-title">My Unlockers</h1>
+                        <div style="margin: 20px 0;">
+                            <button class="btn-primary" style="width: auto;" onclick="window.showTemplates()">
+                                <i class="fas fa-plus-circle"></i> Create New
+                            </button>
                         </div>
+                        <div class="scripts-grid">${scriptsHTML}</div>
                     </div>
                 `;
+            } catch (error) {
+                console.error('Error loading scripts:', error);
+                container.innerHTML = `<p style="color: var(--danger);">Error loading scripts: ${error.message}</p>`;
             }
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title">My Unlockers</h1>
-                    <div style="margin: 20px 0;">
-                        <button class="btn-primary" style="width: auto;" onclick="window.showTemplates()">
-                            <i class="fas fa-plus-circle"></i> Create New
-                        </button>
-                    </div>
-                    <div class="scripts-grid">${scriptsHTML}</div>
-                </div>
-            `;
         };
 
         // ============ SHOW UPGRADE ============
@@ -3493,16 +3611,20 @@
                 return;
             }
             
-            await db.collection('users').doc(currentUser.uid).update({
-                isPremium: true,
-                role: 'premium'
-            });
-            
-            currentUser.isPremium = true;
-            isPremium = true;
-            
-            showCopyNotification('🎉 PREMIUM ACTIVATED!');
-            renderDashboard();
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    isPremium: true,
+                    role: 'premium'
+                });
+                
+                currentUser.isPremium = true;
+                isPremium = true;
+                
+                showCopyNotification('🎉 PREMIUM ACTIVATED!');
+                renderDashboard();
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
+            }
         };
 
         // ============ SHOW SETTINGS ============
@@ -3543,42 +3665,50 @@
         window.updateProfile = async function() {
             const newName = document.getElementById('settings-name')?.value;
             if (newName && currentUser) {
-                await db.collection('users').doc(currentUser.uid).update({
-                    displayName: newName
-                });
-                
-                currentUser.displayName = newName;
-                showCopyNotification('✅ Profile updated');
-                renderDashboard();
+                try {
+                    await db.collection('users').doc(currentUser.uid).update({
+                        displayName: newName
+                    });
+                    
+                    currentUser.displayName = newName;
+                    showCopyNotification('✅ Profile updated');
+                    renderDashboard();
+                } catch (error) {
+                    showCopyNotification('❌ ' + error.message, true);
+                }
             }
         };
 
         window.clearMyData = async function() {
             if (confirm('⚠️ Delete ALL your scripts and data?')) {
-                // Delete user's scripts
-                const scriptsSnapshot = await db.collection('scripts')
-                    .where('ownerId', '==', currentUser.uid)
-                    .get();
-                
-                const batch = db.batch();
-                scriptsSnapshot.docs.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                
-                // Delete user's analytics
-                const analyticsSnapshot = await db.collection('analytics')
-                    .where('userId', '==', currentUser.uid)
-                    .get();
-                
-                const analyticsBatch = db.batch();
-                analyticsSnapshot.docs.forEach(doc => {
-                    analyticsBatch.delete(doc.ref);
-                });
-                await analyticsBatch.commit();
-                
-                showCopyNotification('✅ Your data cleared');
-                renderDashboard();
+                try {
+                    // Delete user's scripts
+                    const scriptsSnapshot = await db.collection('scripts')
+                        .where('ownerId', '==', currentUser.uid)
+                        .get();
+                    
+                    const batch = db.batch();
+                    scriptsSnapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    
+                    // Delete user's analytics
+                    const analyticsSnapshot = await db.collection('analytics')
+                        .where('userId', '==', currentUser.uid)
+                        .get();
+                    
+                    const analyticsBatch = db.batch();
+                    analyticsSnapshot.docs.forEach(doc => {
+                        analyticsBatch.delete(doc.ref);
+                    });
+                    await analyticsBatch.commit();
+                    
+                    showCopyNotification('✅ Your data cleared');
+                    renderDashboard();
+                } catch (error) {
+                    showCopyNotification('❌ ' + error.message, true);
+                }
             }
         };
 
@@ -3596,33 +3726,41 @@
         };
 
         window.duplicateScript = async function(scriptId) {
-            const scriptDoc = await db.collection('scripts').doc(scriptId).get();
-            const original = scriptDoc.data();
-            
-            if (original) {
-                const newScript = {
-                    ...original,
-                    scriptId: 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
-                    title: original.title + ' (Copy)',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    views: {
-                        total: 0,
-                        unique: []
-                    },
-                    unlocks: 0
-                };
+            try {
+                const scriptDoc = await db.collection('scripts').doc(scriptId).get();
+                const original = scriptDoc.data();
                 
-                await db.collection('scripts').add(newScript);
-                showCopyNotification('✅ Script duplicated');
-                window.showMyScripts();
+                if (original) {
+                    const newScript = {
+                        ...original,
+                        scriptId: 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
+                        title: original.title + ' (Copy)',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        views: {
+                            total: 0,
+                            unique: []
+                        },
+                        unlocks: 0
+                    };
+                    
+                    await db.collection('scripts').add(newScript);
+                    showCopyNotification('✅ Script duplicated');
+                    window.showMyScripts();
+                }
+            } catch (error) {
+                showCopyNotification('❌ ' + error.message, true);
             }
         };
 
         window.deleteScript = async function(scriptId) {
             if (confirm('Delete this script?')) {
-                await db.collection('scripts').doc(scriptId).delete();
-                showCopyNotification('✅ Script deleted');
-                window.showMyScripts();
+                try {
+                    await db.collection('scripts').doc(scriptId).delete();
+                    showCopyNotification('✅ Script deleted');
+                    window.showMyScripts();
+                } catch (error) {
+                    showCopyNotification('❌ ' + error.message, true);
+                }
             }
         };
 
