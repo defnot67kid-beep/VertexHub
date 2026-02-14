@@ -278,33 +278,6 @@
             gap: 6px;
         }
 
-        .badge-public {
-            background: var(--gradient-success);
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 11px;
-            font-weight: 600;
-            color: white;
-        }
-
-        .badge-private {
-            background: var(--gradient-danger);
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 11px;
-            font-weight: 600;
-            color: white;
-        }
-
-        .badge-unlisted {
-            background: var(--gradient-premium);
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 11px;
-            font-weight: 600;
-            color: white;
-        }
-
         .nav-item {
             display: flex;
             align-items: center;
@@ -1035,46 +1008,6 @@
             margin-left: 12px;
         }
 
-        .visibility-selector {
-            display: flex;
-            gap: 12px;
-            margin: 20px 0;
-            padding: 12px;
-            background: var(--dark-card);
-            border-radius: 100px;
-        }
-
-        .visibility-option {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            border-radius: 100px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-        }
-
-        .visibility-option:hover {
-            background: rgba(99,102,241,0.1);
-        }
-
-        .visibility-option.selected {
-            background: var(--gradient-primary);
-            color: white;
-        }
-
-        .visibility-option.public.selected {
-            background: var(--gradient-success);
-        }
-
-        .visibility-option.private.selected {
-            background: var(--gradient-danger);
-        }
-
-        .visibility-option.unlisted.selected {
-            background: var(--gradient-premium);
-        }
-
         @keyframes pulseRing {
             0% { transform: scale(1); opacity: 0.8; }
             100% { transform: scale(1.5); opacity: 0; }
@@ -1191,12 +1124,33 @@
 
         .visibility-badge {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             padding: 4px 12px;
             border-radius: 100px;
             font-size: 11px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .visibility-public {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .visibility-private {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .visibility-unlisted {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
         }
 
         .video-modal {
@@ -1285,7 +1239,6 @@
         let deviceId = null;
         let allScripts = [];
         let currentVideoModal = null;
-        let selectedVisibility = 'public'; // public, private, unlisted
         
         // Premium video ID
         const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs';
@@ -1307,63 +1260,72 @@
 
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
-                    const userDoc = await db.collection('users').doc(user.uid).get();
-                    
-                    if (!userDoc.exists) {
-                        const isOwner = user.email === "plastealme2@vertexhub.com";
-                        await db.collection('users').doc(user.uid).set({
-                            displayName: user.email.split('@')[0],
-                            email: user.email,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            isPremium: isOwner ? true : false,
-                            role: isOwner ? "admin" : "user",
-                            totalScripts: 0
-                        });
+                    try {
+                        const userDoc = await db.collection('users').doc(user.uid).get();
                         
-                        currentUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.email.split('@')[0],
-                            isPremium: isOwner,
-                            role: isOwner ? "admin" : "user",
-                            createdAt: new Date().toISOString()
-                        };
-                    } else {
-                        const userData = userDoc.data();
-                        currentUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: userData.displayName || user.email.split('@')[0],
-                            isPremium: userData.isPremium || false,
-                            role: userData.role || 'user',
-                            createdAt: userData.createdAt
-                        };
+                        if (!userDoc.exists) {
+                            const isOwner = user.email === "plastealme2@vertexhub.com";
+                            await db.collection('users').doc(user.uid).set({
+                                displayName: user.email.split('@')[0],
+                                email: user.email,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                isPremium: isOwner ? true : false,
+                                role: isOwner ? "admin" : "user",
+                                totalScripts: 0
+                            });
+                            
+                            currentUser = {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.email.split('@')[0],
+                                isPremium: isOwner,
+                                role: isOwner ? "admin" : "user",
+                                createdAt: new Date().toISOString()
+                            };
+                        } else {
+                            const userData = userDoc.data();
+                            currentUser = {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: userData.displayName || user.email.split('@')[0],
+                                isPremium: userData.isPremium || false,
+                                role: userData.role || 'user',
+                                createdAt: userData.createdAt
+                            };
+                        }
+                        
+                        isPremium = currentUser.isPremium;
+                        
+                        const viewedDoc = await db.collection('userViews').doc(user.uid).get();
+                        viewedScripts = viewedDoc.data() || {};
+                        
+                        // Load public scripts for dashboard (not private)
+                        await loadPublicScripts();
+                        
+                        handleRouting();
+                    } catch (error) {
+                        console.error('Auth error:', error);
+                        handleRouting();
                     }
-                    
-                    isPremium = currentUser.isPremium;
-                    
-                    const viewedDoc = await db.collection('userViews').doc(user.uid).get();
-                    viewedScripts = viewedDoc.data() || {};
-                    
-                    handleRouting();
                 } else {
                     currentUser = null;
                     isPremium = false;
                     viewedScripts = {};
+                    
+                    // Load public scripts even when not logged in
+                    await loadPublicScripts();
+                    
                     handleRouting();
                 }
             });
-            
-            // Load all public and unlisted scripts for dashboard
-            loadAllScripts();
         }
 
-        // ============ LOAD ALL SCRIPTS FOR DASHBOARD ============
-        async function loadAllScripts() {
+        // ============ LOAD PUBLIC SCRIPTS FOR DASHBOARD ============
+        async function loadPublicScripts() {
             try {
-                // Only load public scripts for the dashboard
+                // Only load public scripts (not private) for the dashboard
                 const scriptsSnapshot = await db.collection('scripts')
-                    .where('visibility', '==', 'public')
+                    .where('isPrivate', '==', false)
                     .orderBy('createdAt', 'desc')
                     .get();
                 
@@ -1374,7 +1336,44 @@
                 
                 console.log('Loaded', allScripts.length, 'public scripts for dashboard');
             } catch (error) {
-                console.error('Error loading scripts:', error);
+                console.error('Error loading public scripts:', error);
+                allScripts = [];
+            }
+        }
+
+        // ============ LOAD SINGLE SCRIPT BY ID (WITH ACCESS CONTROL) ============
+        async function loadScriptById(scriptId) {
+            try {
+                // Try to get the script directly - this bypasses collection queries
+                // and should work regardless of Firestore rules if the document is readable
+                const scriptDoc = await db.collection('scripts').doc(scriptId).get();
+                
+                if (!scriptDoc.exists) {
+                    return { error: 'not_found' };
+                }
+                
+                const script = { id: scriptDoc.id, ...scriptDoc.data() };
+                
+                // Check access permissions
+                if (script.isPrivate) {
+                    // Private scripts: only owner can view
+                    if (!currentUser || currentUser.uid !== script.ownerId) {
+                        return { error: 'private' };
+                    }
+                }
+                
+                // Public or unlisted scripts are accessible to everyone
+                return { success: true, script };
+                
+            } catch (error) {
+                console.error('Error loading script:', error);
+                
+                // Check if it's a permission error
+                if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+                    return { error: 'permission_denied' };
+                }
+                
+                return { error: 'unknown', message: error.message };
             }
         }
 
@@ -1408,53 +1407,65 @@
 
         // ============ LOAD SCRIPT VIEW ============
         async function loadScriptView(scriptId) {
-            try {
-                // First check if we have it in allScripts (public scripts)
-                let script = allScripts.find(s => s.id === scriptId);
+            const app = document.getElementById('app');
+            
+            // Show loading state
+            app.innerHTML = `
+                <div class="auth-container">
+                    <div class="auth-card text-center">
+                        <i class="fas fa-spinner fa-pulse" style="font-size: 48px; color: #6366f1; margin-bottom: 16px;"></i>
+                        <h2 style="margin-bottom: 16px;">Loading Unlocker...</h2>
+                        <p style="color: var(--text-dim);">Please wait</p>
+                    </div>
+                </div>
+            `;
+            
+            // Load script with access control
+            const result = await loadScriptById(scriptId);
+            
+            if (!result.success) {
+                // Handle different error types
+                let errorTitle = 'Error Loading Script';
+                let errorMessage = 'An unknown error occurred';
+                let showBackButton = true;
                 
-                // If not in cache, fetch directly from Firestore (could be private or unlisted)
-                if (!script) {
-                    const scriptDoc = await db.collection('scripts').doc(scriptId).get();
-                    
-                    if (!scriptDoc.exists) {
-                        document.getElementById('app').innerHTML = `
-                            <div class="auth-container">
-                                <div class="auth-card text-center">
-                                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
-                                    <h2 style="margin-bottom: 16px;">Script Not Found</h2>
-                                    <p style="color: var(--text-dim); margin-bottom: 24px;">The unlocker doesn't exist or has been deleted.</p>
-                                    <button class="btn-primary" onclick="window.location.hash='#dashboard'">
-                                        <i class="fas fa-home"></i> Back to Dashboard
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    script = { id: scriptDoc.id, ...scriptDoc.data() };
-                    
-                    // Check visibility permissions
-                    if (script.visibility === 'private' && (!currentUser || currentUser.uid !== script.ownerId)) {
-                        document.getElementById('app').innerHTML = `
-                            <div class="auth-container">
-                                <div class="auth-card text-center">
-                                    <i class="fas fa-lock" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
-                                    <h2 style="margin-bottom: 16px;">Private Script</h2>
-                                    <p style="color: var(--text-dim); margin-bottom: 24px;">This unlocker is private and only the owner can access it.</p>
-                                    <button class="btn-primary" onclick="window.location.hash='#dashboard'">
-                                        <i class="fas fa-home"></i> Back to Dashboard
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    // For unlisted scripts, anyone with the link can view (no restrictions)
+                if (result.error === 'not_found') {
+                    errorTitle = 'Script Not Found';
+                    errorMessage = 'The unlocker doesn\'t exist or has been deleted.';
+                } else if (result.error === 'private') {
+                    errorTitle = 'Private Script';
+                    errorMessage = 'This script is private. Only the owner can view it.';
+                } else if (result.error === 'permission_denied') {
+                    errorTitle = 'Access Denied';
+                    errorMessage = 'You don\'t have permission to view this script.';
+                } else {
+                    errorMessage = result.message || 'Failed to load the script. Please try again.';
                 }
                 
-                // Track view
+                app.innerHTML = `
+                    <div class="auth-container">
+                        <div class="auth-card text-center">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
+                            <h2 style="margin-bottom: 16px;">${errorTitle}</h2>
+                            <p style="color: var(--text-dim); margin-bottom: 24px;">${errorMessage}</p>
+                            <button class="btn-primary" onclick="window.location.hash='#dashboard'">
+                                <i class="fas fa-home"></i> Back to Dashboard
+                            </button>
+                            ${!currentUser ? `
+                                <button class="btn-primary" style="margin-top: 10px; background: var(--gradient-premium);" onclick="window.location.hash=''">
+                                    <i class="fas fa-sign-in-alt"></i> Login
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const script = result.script;
+            
+            // Track view (only for successful loads)
+            try {
                 await db.collection('analytics').add({
                     scriptId: scriptId,
                     type: 'view',
@@ -1467,23 +1478,12 @@
                 await db.collection('scripts').doc(scriptId).update({
                     'views.total': firebase.firestore.FieldValue.increment(1)
                 });
-                
-                renderUnlocker(script);
             } catch (error) {
-                console.error('Error loading script:', error);
-                document.getElementById('app').innerHTML = `
-                    <div class="auth-container">
-                        <div class="auth-card text-center">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
-                            <h2 style="margin-bottom: 16px;">Error Loading Script</h2>
-                            <p style="color: var(--text-dim); margin-bottom: 24px;">${error.message}</p>
-                            <button class="btn-primary" onclick="window.location.hash='#dashboard'">
-                                <i class="fas fa-home"></i> Back to Dashboard
-                            </button>
-                        </div>
-                    </div>
-                `;
+                console.error('Error tracking view:', error);
+                // Don't fail if tracking fails
             }
+            
+            renderUnlocker(script);
         }
 
         // ============ RENDER UNLOCKER ============
@@ -1505,15 +1505,8 @@
                 };
             });
             
-            // Determine visibility badge
-            let visibilityBadge = '';
-            if (script.visibility === 'private') {
-                visibilityBadge = '<span class="badge-private"><i class="fas fa-lock"></i> PRIVATE</span>';
-            } else if (script.visibility === 'unlisted') {
-                visibilityBadge = '<span class="badge-unlisted"><i class="fas fa-link"></i> UNLISTED</span>';
-            } else {
-                visibilityBadge = '<span class="badge-public"><i class="fas fa-globe"></i> PUBLIC</span>';
-            }
+            // Check if current user is the owner
+            const isOwner = currentUser && currentUser.uid === script.ownerId;
             
             app.innerHTML = `
                 <div class="unlocker-container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
@@ -1522,7 +1515,16 @@
                             <i class="fas fa-cube" style="font-size: 40px; color: #6366f1;"></i>
                             <div>
                                 <h1 style="font-size: 28px; margin-bottom: 4px;">${script.title || 'Content Unlocker'}</h1>
-                                <p style="color: var(--text-dim);">Complete all steps to unlock your content ${visibilityBadge}</p>
+                                <p style="color: var(--text-dim);">
+                                    <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'} · 
+                                    <i class="fas fa-list"></i> ${script.steps.length} steps
+                                    ${script.isPrivate ? 
+                                        '<span style="margin-left: 10px; color: #ef4444;"><i class="fas fa-lock"></i> Private</span>' : 
+                                        script.isUnlisted ?
+                                        '<span style="margin-left: 10px; color: #f59e0b;"><i class="fas fa-eye-slash"></i> Unlisted</span>' :
+                                        '<span style="margin-left: 10px; color: #10b981;"><i class="fas fa-globe"></i> Public</span>'
+                                    }
+                                </p>
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -1678,7 +1680,6 @@
             
             if (step.type === 'watch') {
                 if (!state.videoCompleted) {
-                    // Open video in same tab
                     state.showingVideo = true;
                     renderUnlockSteps(script);
                     openVideoInModal(step.url, stepIndex, script.id, step.watchTime || 20);
@@ -1686,7 +1687,6 @@
                     startStepTimerAfterVideo(stepIndex);
                 }
             } else {
-                // Regular step - open in new tab and start timer
                 window.open(step.url, '_blank');
                 startStepTimer(stepIndex);
                 showCopyNotification(`✅ Timer started (${step.waitTime || 20}s)`, false);
@@ -1695,7 +1695,6 @@
 
         // ============ OPEN VIDEO IN MODAL ============
         function openVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
-            // Extract YouTube video ID
             let videoId = '';
             if (videoUrl.includes('youtube.com/shorts/')) {
                 videoId = videoUrl.split('shorts/')[1].split('?')[0].split('/')[0];
@@ -1711,7 +1710,6 @@
             
             const isShorts = videoUrl.includes('shorts/');
             
-            // Create modal
             const modal = document.createElement('div');
             modal.className = 'video-modal';
             modal.id = 'video-modal';
@@ -1754,7 +1752,6 @@
             document.getElementById('video-modal-container').appendChild(modal);
             currentVideoModal = modal;
             
-            // Store watch state
             const watchState = {
                 stepIndex: stepIndex,
                 scriptId: scriptId,
@@ -1768,7 +1765,6 @@
                 player: null
             };
             
-            // Load player
             setTimeout(() => {
                 try {
                     watchState.player = new YT.Player('modal-youtube-player', {
@@ -1899,20 +1895,17 @@
                             countdown.innerHTML = '✓ Completed! Closing...';
                         }
                         
-                        // Update step state
                         const script = window.currentUnlockScript;
                         if (script) {
                             activeStepStates[watchState.stepIndex].videoCompleted = true;
                             activeStepStates[watchState.stepIndex].showingVideo = false;
                             renderUnlockSteps(script);
                             
-                            // Auto-start timer
                             setTimeout(() => {
                                 startStepTimerAfterVideo(watchState.stepIndex);
                             }, 500);
                         }
                         
-                        // Close modal after delay
                         setTimeout(() => {
                             window.closeVideoModal();
                         }, 1500);
@@ -2124,60 +2117,86 @@
                 return;
             }
             
-            await db.collection('analytics').add({
-                scriptId: scriptId,
-                type: 'unlock',
-                userId: currentUser?.uid || 'anonymous',
-                deviceId: deviceId,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            await db.collection('scripts').doc(scriptId).update({
-                'unlocks': firebase.firestore.FieldValue.increment(1)
-            });
+            try {
+                await db.collection('analytics').add({
+                    scriptId: scriptId,
+                    type: 'unlock',
+                    userId: currentUser?.uid || 'anonymous',
+                    deviceId: deviceId,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                await db.collection('scripts').doc(scriptId).update({
+                    'unlocks': firebase.firestore.FieldValue.increment(1)
+                });
+            } catch (error) {
+                console.error('Error tracking unlock:', error);
+            }
             
             window.location.href = script.unlockUrl;
         };
 
         // ============ RENDER DASHBOARD ============
         async function renderDashboard() {
-            await loadAllScripts();
+            await loadPublicScripts();
             
             const app = document.getElementById('app');
             
-            const scriptsSnapshot = await db.collection('scripts')
-                .where('ownerId', '==', currentUser.uid)
-                .orderBy('createdAt', 'desc')
-                .get();
+            let myScriptsHTML = '';
+            let publicScriptsHTML = '';
             
-            currentScripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            if (currentUser) {
+                // Get user's own scripts
+                const scriptsSnapshot = await db.collection('scripts')
+                    .where('ownerId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                currentScripts = scriptsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Generate user's scripts HTML
+                currentScripts.forEach(script => {
+                    const createdDate = script.createdAt ? new Date(script.createdAt.seconds * 1000).toLocaleDateString() : 'Recent';
+                    const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
+                    const visibilityIcon = script.isPrivate ? 'fa-lock' : (script.isUnlisted ? 'fa-eye-slash' : 'fa-globe');
+                    const visibilityText = script.isPrivate ? 'Private' : (script.isUnlisted ? 'Unlisted' : 'Public');
+                    
+                    myScriptsHTML += `
+                        <div class="dashboard-script-card" onclick="window.location.hash='#script-${script.id}'">
+                            <div class="visibility-badge ${visibilityClass}">
+                                <i class="fas ${visibilityIcon}"></i> ${visibilityText}
+                            </div>
+                            <div class="dashboard-script-title">
+                                <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
+                                ${script.title || 'Unlocker'}
+                            </div>
+                            <div class="dashboard-script-meta">
+                                <i class="fas fa-calendar"></i> ${createdDate} · 
+                                <i class="fas fa-list"></i> ${script.steps?.length || 0} steps
+                            </div>
+                            <div class="dashboard-script-stats">
+                                <div><i class="fas fa-eye"></i> ${script.views?.total || 0}</div>
+                                <div><i class="fas fa-unlock"></i> ${script.unlocks || 0}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
             
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            const timeLimits = getTimeLimits();
-            
-            // Generate dashboard HTML for public scripts only
-            let dashboardScriptsHTML = '';
+            // Generate public scripts HTML (excluding user's own if logged in)
             allScripts.forEach(script => {
+                // Skip if this is user's own script (they're already shown above)
+                if (currentUser && script.ownerId === currentUser.uid) return;
+                
                 const createdDate = script.createdAt ? new Date(script.createdAt.seconds * 1000).toLocaleDateString() : 'Recent';
+                const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
+                const visibilityIcon = script.isPrivate ? 'fa-lock' : (script.isUnlisted ? 'fa-eye-slash' : 'fa-globe');
+                const visibilityText = script.isPrivate ? 'Private' : (script.isUnlisted ? 'Unlisted' : 'Public');
                 
-                let visibilityClass = 'badge-public';
-                let visibilityIcon = 'fa-globe';
-                let visibilityText = 'PUBLIC';
-                
-                if (script.visibility === 'private') {
-                    visibilityClass = 'badge-private';
-                    visibilityIcon = 'fa-lock';
-                    visibilityText = 'PRIVATE';
-                } else if (script.visibility === 'unlisted') {
-                    visibilityClass = 'badge-unlisted';
-                    visibilityIcon = 'fa-link';
-                    visibilityText = 'UNLISTED';
-                }
-                
-                dashboardScriptsHTML += `
+                publicScriptsHTML += `
                     <div class="dashboard-script-card" onclick="window.location.hash='#script-${script.id}'">
                         <div class="visibility-badge ${visibilityClass}">
                             <i class="fas ${visibilityIcon}"></i> ${visibilityText}
@@ -2199,6 +2218,9 @@
                 `;
             });
             
+            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            const timeLimits = getTimeLimits();
+            
             app.innerHTML = `
                 <div class="dashboard">
                     <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active')">
@@ -2219,18 +2241,21 @@
                                     <i class="fas fa-user" style="font-size: 24px;"></i>
                                 </div>
                                 <div style="flex: 1;">
-                                    <div style="font-weight: 700;">${currentUser?.displayName || 'User'}</div>
-                                    <div style="color: var(--text-dim); font-size: 14px;">${currentUser?.email || ''}</div>
+                                    <div style="font-weight: 700;">${currentUser?.displayName || 'Guest'}</div>
+                                    <div style="color: var(--text-dim); font-size: 14px;">${currentUser?.email || 'Not logged in'}</div>
                                 </div>
                             </div>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                ${currentUser ? `
                                 <span style="background: rgba(99,102,241,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
                                     <i class="fas fa-code"></i> ${currentScripts.length} My Scripts
                                 </span>
+                                ` : ''}
                                 <span style="background: rgba(245,158,11,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">
                                     <i class="fas fa-globe"></i> ${allScripts.length} Public
                                 </span>
                             </div>
+                            ${currentUser ? `
                             <div class="time-limits" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
                                 <div style="color: var(--accent); font-size: 13px;">
                                     <i class="fas fa-clock"></i> Time Limits:
@@ -2244,6 +2269,7 @@
                                     </span>
                                 </div>
                             </div>
+                            ` : ''}
                             <div class="device-info">
                                 <i class="fas fa-globe"></i> Device: ${deviceId.substring(0, 8)}...
                             </div>
@@ -2252,6 +2278,8 @@
                         <div class="nav-item active" onclick="window.showDashboard(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-home"></i> Dashboard
                         </div>
+                        
+                        ${currentUser ? `
                         <div class="nav-item" onclick="window.showCreator(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-plus-circle"></i> Create Unlocker
                         </div>
@@ -2264,22 +2292,32 @@
                         <div class="nav-item" onclick="window.showTemplates(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-layer-group"></i> Templates
                         </div>
+                        ` : ''}
+                        
                         ${isOwner ? `
                         <div class="nav-item" onclick="window.showAdminPanel(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-shield-alt"></i> Admin Panel
                         </div>
                         ` : ''}
-                        ${!isPremium && !isOwner ? `
+                        
+                        ${currentUser && !isPremium && !isOwner ? `
                         <div class="nav-item" onclick="window.showUpgrade(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-crown"></i> Upgrade to Premium
                         </div>
                         ` : ''}
+                        
+                        ${currentUser ? `
                         <div class="nav-item" onclick="window.showSettings(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-cog"></i> Settings
                         </div>
                         <div class="nav-item" onclick="window.handleLogout(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </div>
+                        ` : `
+                        <div class="nav-item" onclick="window.location.hash=''">
+                            <i class="fas fa-sign-in-alt"></i> Login / Sign Up
+                        </div>
+                        `}
                     </div>
                     
                     <main class="content" id="main-content">
@@ -2290,15 +2328,26 @@
                             </span>
                         </h1>
                         
+                        ${currentUser && currentScripts.length > 0 ? `
+                        <h2 style="margin: 30px 0 15px;">My Unlockers</h2>
                         <div class="dashboard-grid">
-                            ${dashboardScriptsHTML || '<p style="color: var(--text-dim); text-align: center; grid-column: 1/-1;">No public scripts available yet.</p>'}
+                            ${myScriptsHTML}
                         </div>
                         
+                        <h2 style="margin: 40px 0 15px;">Community Unlockers</h2>
+                        ` : ''}
+                        
+                        <div class="dashboard-grid">
+                            ${publicScriptsHTML || '<p style="color: var(--text-dim); text-align: center; grid-column: 1/-1;">No public scripts available yet.</p>'}
+                        </div>
+                        
+                        ${currentUser ? `
                         <div style="margin-top: 40px; text-align: center;">
                             <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showCreator()">
                                 <i class="fas fa-plus-circle"></i> Create New Unlocker
                             </button>
                         </div>
+                        ` : ''}
                     </main>
                 </div>
             `;
@@ -2306,577 +2355,6 @@
 
         window.showDashboard = function() {
             renderDashboard();
-        };
-
-        // ============ SHOW CREATOR ============
-        window.showCreator = function() {
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            const timeLimits = getTimeLimits();
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title" style="margin-bottom: 32px;">
-                        <i class="fas fa-magic" style="color: #6366f1;"></i>
-                        Create New Unlocker
-                    </h1>
-                    
-                    ${isOwner ? `
-                    <div class="owner-warning">
-                        <i class="fas fa-crown"></i>
-                        <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
-                    </div>
-                    ` : ''}
-                    
-                    <div style="margin-bottom: 20px; background: var(--dark-card); padding: 16px; border-radius: 16px;">
-                        <h3 style="color: var(--accent); margin-bottom: 8px;">⏱️ Your Time Limits</h3>
-                        <p style="color: var(--text-dim);">
-                            Max Wait Time: ${timeLimits.max}s | Max Watch Time: ${timeLimits.max}s
-                        </p>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 24px; padding: 40px; margin-bottom: 32px; text-align: center;">
-                        <i class="fas fa-layer-group" style="font-size: 64px; color: #6366f1; margin-bottom: 16px;"></i>
-                        <h2 style="margin-bottom: 16px;">Start with a Template</h2>
-                        <p style="color: var(--text-dim); margin-bottom: 24px;">Choose from templates for TikTok, YouTube, Instagram, and more</p>
-                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
-                            <i class="fas fa-layer-group"></i> Browse Templates
-                        </button>
-                    </div>
-                    
-                    <div style="margin-top: 32px;">
-                        <h2>Manual Creation</h2>
-                        
-                        <div id="steps-container"></div>
-                        
-                        <div class="add-step-btn" onclick="window.addManualStep()" style="background: rgba(99,102,241,0.1); border: 2px dashed var(--primary); border-radius: 24px; padding: 32px; text-align: center; cursor: pointer; margin: 32px 0;">
-                            <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
-                            <h3>Add First Step</h3>
-                            <p style="color: var(--text-dim);">Max: ${isPremium ? 20 : 8} steps</p>
-                        </div>
-                        
-                        <div style="margin-top: 32px;">
-                            <h2>Visibility Settings</h2>
-                            <div class="visibility-selector">
-                                <div class="visibility-option public ${selectedVisibility === 'public' ? 'selected' : ''}" onclick="window.setVisibility('public')">
-                                    <i class="fas fa-globe"></i> Public
-                                </div>
-                                <div class="visibility-option unlisted ${selectedVisibility === 'unlisted' ? 'selected' : ''}" onclick="window.setVisibility('unlisted')">
-                                    <i class="fas fa-link"></i> Unlisted
-                                </div>
-                                <div class="visibility-option private ${selectedVisibility === 'private' ? 'selected' : ''}" onclick="window.setVisibility('private')">
-                                    <i class="fas fa-lock"></i> Private
-                                </div>
-                            </div>
-                            <p style="color: var(--text-dim); font-size: 13px; margin-top: 8px;">
-                                <strong>Public:</strong> Shows in dashboard · <strong>Unlisted:</strong> Only via direct link · <strong>Private:</strong> Only you can view
-                            </p>
-                        </div>
-                        
-                        <div style="margin-top: 32px;">
-                            <h2>Unlock Destination</h2>
-                            <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-link.com">
-                            
-                            <div style="display: flex; gap: 24px; margin: 24px 0;">
-                                <label style="display: flex; align-items: center; gap: 8px;">
-                                    <input type="checkbox" id="sequential-steps" style="width: 18px; height: 18px;" checked>
-                                    <i class="fas fa-sort-amount-down"></i> Sequential completion
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <button class="btn-primary" style="padding: 20px;" onclick="window.createScript()">
-                            <i class="fas fa-bolt"></i> Generate Unlocker
-                        </button>
-                    </div>
-                </div>
-            `;
-        };
-
-        window.setVisibility = function(visibility) {
-            selectedVisibility = visibility;
-            window.showCreator();
-        };
-
-        // ============ SHOW CREATOR WITH TEMPLATE ============
-        window.showCreatorWithTemplate = function(template) {
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            const timeLimits = getTimeLimits();
-            
-            let stepsHTML = '';
-            template.steps.forEach((step, index) => {
-                stepsHTML += `
-                    <div class="step-card" data-step-index="${index}">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                            <span class="step-badge">
-                                <i class="fas ${getStepIcon(step.type)}"></i> 
-                                Step ${index + 1}
-                            </span>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="edit-step-btn" onclick="window.editStepName(this, ${index})">
-                                    <i class="fas fa-pencil-alt"></i> Edit
-                                </button>
-                                ${index > 0 ? `
-                                <button class="delete-step-btn" onclick="window.removeTemplateStep(this, ${index})">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                        
-                        <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
-                        
-                        <div class="step-url-container" style="margin-bottom: 8px;">
-                            <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                            <div class="wait-time-control" style="margin: 0;">
-                                <span class="wait-time-badge">
-                                    <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
-                                </span>
-                                <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="${timeLimits.max}" step="1">
-                            </div>
-                            
-                            ${step.type === 'watch' ? `
-                            <div class="wait-time-control" style="margin: 0;">
-                                <span class="wait-time-badge">
-                                    <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
-                                </span>
-                                <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.wait}" min="0" max="${timeLimits.max}" step="1">
-                            </div>
-                            ` : ''}
-                        </div>
-                        
-                        <input type="hidden" class="step-type" value="${step.type}">
-                        <input type="hidden" id="step-watch-hidden-${index}" value="${step.watchTime || step.wait}">
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = `
-                <div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
-                        <h1 class="section-title">
-                            <i class="fab fa-${template.name.toLowerCase()}" style="color: ${getTemplateColor(template.name)}; margin-right: 12px;"></i>
-                            Create ${template.name} Unlocker
-                        </h1>
-                        <span class="badge-premium">${template.steps.length} Steps</span>
-                    </div>
-                    
-                    ${isOwner ? `
-                    <div class="owner-warning">
-                        <i class="fas fa-crown"></i>
-                        <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
-                    </div>
-                    ` : ''}
-                    
-                    <div style="margin-bottom: 20px; background: var(--dark-card); padding: 16px; border-radius: 16px;">
-                        <h3 style="color: var(--accent); margin-bottom: 8px;">⏱️ Your Time Limits</h3>
-                        <p style="color: var(--text-dim);">
-                            Max Wait Time: ${timeLimits.max}s | Max Watch Time: ${timeLimits.max}s
-                        </p>
-                    </div>
-                    
-                    <h2 style="margin-bottom: 20px;">Required Steps</h2>
-                    <div id="steps-container">${stepsHTML}</div>
-                    
-                    <div class="add-step-btn" onclick="window.addManualStep()" style="background: rgba(99,102,241,0.1); border: 2px dashed var(--primary); border-radius: 24px; padding: 32px; text-align: center; cursor: pointer; margin: 32px 0;">
-                        <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
-                        <h3>Add Custom Step</h3>
-                        <p style="color: var(--text-dim);">Max: ${isPremium ? 20 : 8} steps</p>
-                    </div>
-                    
-                    <div style="margin-top: 32px;">
-                        <h2>Visibility Settings</h2>
-                        <div class="visibility-selector">
-                            <div class="visibility-option public ${selectedVisibility === 'public' ? 'selected' : ''}" onclick="window.setVisibility('public')">
-                                <i class="fas fa-globe"></i> Public
-                            </div>
-                            <div class="visibility-option unlisted ${selectedVisibility === 'unlisted' ? 'selected' : ''}" onclick="window.setVisibility('unlisted')">
-                                <i class="fas fa-link"></i> Unlisted
-                            </div>
-                            <div class="visibility-option private ${selectedVisibility === 'private' ? 'selected' : ''}" onclick="window.setVisibility('private')">
-                                <i class="fas fa-lock"></i> Private
-                            </div>
-                        </div>
-                        <p style="color: var(--text-dim); font-size: 13px; margin-top: 8px;">
-                            <strong>Public:</strong> Shows in dashboard · <strong>Unlisted:</strong> Only via direct link · <strong>Private:</strong> Only you can view
-                        </p>
-                    </div>
-                    
-                    <div style="margin-top: 32px;">
-                        <h2>Unlock Destination</h2>
-                        <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-download-link.com" required>
-                        
-                        <div style="display: flex; gap: 24px; margin: 24px 0;">
-                            <label style="display: flex; align-items: center; gap: 8px;">
-                                <input type="checkbox" id="sequential-steps" style="width: 18px; height: 18px;" checked>
-                                <i class="fas fa-sort-amount-down"></i> Sequential completion
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <button class="btn-primary" style="padding: 20px;" onclick="window.createScript()">
-                        <i class="fas fa-bolt"></i> Generate ${template.name} Unlocker
-                    </button>
-                </div>
-            `;
-        };
-
-        // ============ ADD MANUAL STEP ============
-        window.addManualStep = function() {
-            const stepsContainer = document.getElementById('steps-container');
-            if (!stepsContainer) return;
-            
-            const stepCount = stepsContainer.children.length;
-            const maxSteps = isPremium ? 20 : 8;
-            const timeLimits = getTimeLimits();
-            
-            if (stepCount >= maxSteps) {
-                showCopyNotification(`⚠️ Maximum ${maxSteps} steps reached`, true);
-                return;
-            }
-            
-            const stepIndex = stepCount;
-            
-            const stepHTML = `
-                <div class="step-card" data-step-index="${stepCount}">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <span class="step-badge">
-                            <i class="fas fa-link"></i> 
-                            Step ${stepCount + 1}
-                        </span>
-                        ${stepCount > 0 ? `
-                        <button class="delete-step-btn" onclick="this.closest('.step-card').remove(); renumberSteps()">
-                            <i class="fas fa-trash"></i> Remove
-                        </button>
-                        ` : ''}
-                    </div>
-                    
-                    <input type="text" class="step-name-input" placeholder="Step Name" value="Step ${stepCount + 1}" style="margin-bottom: 12px;">
-                    
-                    <select class="step-select" onchange="window.updateStepType(this, ${stepCount})" style="margin-bottom: 12px;">
-                        <option value="like">👍 Like & Subscribe</option>
-                        <option value="follow">👥 Follow Channel</option>
-                        <option value="comment">💬 Comment</option>
-                        <option value="watch" selected>🎬 Watch Video</option>
-                        <option value="join">🚪 Join Server</option>
-                        <option value="custom">🔗 Custom Link</option>
-                    </select>
-                    
-                    <div class="step-url-container" style="margin-bottom: 8px;">
-                        <input type="url" class="step-url-input" placeholder="Enter URL" required>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                        <div class="wait-time-control" style="margin: 0;">
-                            <span class="wait-time-badge">
-                                <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
-                            </span>
-                            <input type="number" class="wait-time-input" value="20" min="0" max="${timeLimits.max}" step="1">
-                        </div>
-                        
-                        <div class="wait-time-control" style="margin: 0;" id="watch-time-container-${stepIndex}">
-                            <span class="wait-time-badge">
-                                <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
-                            </span>
-                            <input type="number" class="watch-time-input" id="watch-time-${stepIndex}" value="20" min="0" max="${timeLimits.max}" step="1">
-                        </div>
-                    </div>
-                    
-                    <input type="hidden" class="step-type" value="watch">
-                </div>
-            `;
-            
-            stepsContainer.insertAdjacentHTML('beforeend', stepHTML);
-        };
-
-        window.renumberSteps = function() {
-            const stepsContainer = document.getElementById('steps-container');
-            if (!stepsContainer) return;
-            
-            const stepCards = stepsContainer.querySelectorAll('.step-card');
-            stepCards.forEach((card, index) => {
-                const badge = card.querySelector('.step-badge');
-                if (badge) {
-                    badge.innerHTML = `<i class="fas fa-link"></i> Step ${index + 1}`;
-                }
-                card.setAttribute('data-step-index', index);
-                
-                const deleteBtn = card.querySelector('.delete-step-btn');
-                if (deleteBtn) {
-                    if (index === 0) {
-                        deleteBtn.style.display = 'none';
-                    } else {
-                        deleteBtn.style.display = 'inline-flex';
-                    }
-                }
-            });
-        };
-
-        window.editStepName = function(button, index) {
-            const nameInput = document.getElementById(`step-name-${index}`);
-            if (nameInput) nameInput.focus();
-        };
-
-        window.removeTemplateStep = function(button, index) {
-            const stepCard = button.closest('.step-card');
-            const stepsContainer = document.getElementById('steps-container');
-            const stepCards = stepsContainer.querySelectorAll('.step-card');
-            
-            if (stepCards.length <= 1) {
-                showCopyNotification('⚠️ Cannot remove the last step', true);
-                return;
-            }
-            
-            stepCard.remove();
-            renumberSteps();
-        };
-
-        window.updateStepType = function(select, index) {
-            const stepCard = select.closest('.step-card');
-            const typeInput = stepCard.querySelector('.step-type');
-            const watchContainer = document.getElementById(`watch-time-container-${index}`);
-            
-            if (typeInput) typeInput.value = select.value;
-            
-            if (watchContainer) {
-                if (select.value === 'watch') {
-                    watchContainer.style.display = 'flex';
-                } else {
-                    watchContainer.style.display = 'none';
-                }
-            }
-        };
-
-        // ============ CREATE SCRIPT ============
-        window.createScript = async function() {
-            if (!currentUser) {
-                showCopyNotification('⚠️ Please login first', true);
-                return;
-            }
-            
-            const steps = [];
-            const stepCards = document.querySelectorAll('.step-card');
-            const timeLimits = getTimeLimits();
-            
-            stepCards.forEach((card, index) => {
-                const nameInput = card.querySelector('.step-name-input');
-                const urlInput = card.querySelector('.step-url-input');
-                const typeInput = card.querySelector('.step-type');
-                const waitInput = card.querySelector('.wait-time-input');
-                const watchInput = card.querySelector('.watch-time-input');
-                
-                const waitTime = waitInput ? parseInt(waitInput.value) || 20 : 20;
-                const validWaitTime = Math.min(timeLimits.max, Math.max(0, waitTime));
-                
-                let validWatchTime = validWaitTime;
-                if (watchInput) {
-                    const watchTime = parseInt(watchInput.value) || validWaitTime;
-                    validWatchTime = Math.min(timeLimits.max, Math.max(0, watchTime));
-                }
-                
-                if (urlInput && urlInput.value) {
-                    steps.push({
-                        order: index + 1,
-                        type: typeInput ? typeInput.value : 'watch',
-                        label: nameInput ? nameInput.value : `Step ${index + 1}`,
-                        url: urlInput.value,
-                        waitTime: validWaitTime,
-                        watchTime: validWatchTime,
-                        completed: false,
-                        locked: index > 0
-                    });
-                }
-            });
-            
-            if (steps.length === 0) {
-                showCopyNotification('⚠️ Please add at least one step', true);
-                return;
-            }
-            
-            const unlockUrl = document.getElementById('unlock-url')?.value;
-            if (!unlockUrl) {
-                showCopyNotification('⚠️ Please enter an unlock URL', true);
-                return;
-            }
-            
-            const scriptId = 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-            const templateName = currentTemplate?.name || 'Manual';
-            
-            const scriptData = {
-                scriptId: scriptId,
-                ownerId: currentUser.uid,
-                ownerName: currentUser.displayName || 'Anonymous',
-                title: `${templateName} Unlocker ${new Date().toLocaleDateString()}`,
-                template: templateName,
-                steps: steps,
-                unlockUrl: unlockUrl,
-                visibility: selectedVisibility, // public, private, or unlisted
-                sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                status: 'active',
-                views: {
-                    total: 0,
-                    unique: []
-                },
-                unlocks: 0
-            };
-            
-            await db.collection('scripts').add(scriptData);
-            
-            await db.collection('users').doc(currentUser.uid).update({
-                totalScripts: firebase.firestore.FieldValue.increment(1)
-            });
-            
-            const shareableLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
-            
-            let visibilityMessage = '';
-            if (selectedVisibility === 'public') {
-                visibilityMessage = 'Public - visible to everyone';
-            } else if (selectedVisibility === 'unlisted') {
-                visibilityMessage = 'Unlisted - only via direct link';
-            } else {
-                visibilityMessage = 'Private - only you can view';
-            }
-            
-            showCopyNotification(`✅ Script created! ${visibilityMessage}`);
-            
-            currentTemplate = null;
-            selectedVisibility = 'public'; // Reset to default
-            await loadAllScripts();
-            renderDashboard();
-            
-            setTimeout(() => {
-                if (confirm('Script created! Copy share link?')) {
-                    window.copyToClipboard(shareableLink);
-                }
-            }, 500);
-        };
-
-        // ============ SHOW MY SCRIPTS ============
-        window.showMyScripts = async function() {
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            const scriptsSnapshot = await db.collection('scripts')
-                .where('ownerId', '==', currentUser.uid)
-                .orderBy('createdAt', 'desc')
-                .get();
-            
-            currentScripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
-            
-            if (currentScripts.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 80px 20px;">
-                        <i class="fas fa-code" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
-                        <h2 style="margin: 20px 0;">No scripts yet</h2>
-                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
-                            <i class="fas fa-layer-group"></i> Use Template
-                        </button>
-                    </div>
-                `;
-                return;
-            }
-            
-            let scriptsHTML = '';
-            for (const script of currentScripts) {
-                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
-                
-                const analyticsSnapshot = await db.collection('analytics')
-                    .where('scriptId', '==', script.id)
-                    .get();
-                
-                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
-                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
-                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
-                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
-                
-                let visibilityClass = 'badge-public';
-                let visibilityIcon = 'fa-globe';
-                let visibilityText = 'PUBLIC';
-                
-                if (script.visibility === 'private') {
-                    visibilityClass = 'badge-private';
-                    visibilityIcon = 'fa-lock';
-                    visibilityText = 'PRIVATE';
-                } else if (script.visibility === 'unlisted') {
-                    visibilityClass = 'badge-unlisted';
-                    visibilityIcon = 'fa-link';
-                    visibilityText = 'UNLISTED';
-                }
-                
-                scriptsHTML += `
-                    <div class="script-card">
-                        <div class="script-stats">
-                            <div class="stat-item">
-                                <div class="stat-value">${scriptViews}</div>
-                                <div class="stat-label">Views</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${uniqueDevices}</div>
-                                <div class="stat-label">Unique</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${scriptUnlocks}</div>
-                                <div class="stat-label">Unlocks</div>
-                            </div>
-                        </div>
-                        <div style="padding: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <span class="${visibilityClass}"><i class="fas ${visibilityIcon}"></i> ${visibilityText}</span>
-                            </div>
-                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-                                <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
-                                    <i class="fas fa-share-alt"></i> Share
-                                </button>
-                                <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
-                                    <i class="fas fa-play"></i> Test
-                                </button>
-                            </div>
-                            <div style="display: flex; gap: 12px;">
-                                ${isOwner ? `
-                                <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1;">
-                                    <i class="fas fa-copy"></i> Duplicate
-                                </button>
-                                ` : ''}
-                                <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </div>
-                            <div class="share-link" id="share-${script.id}" style="display: none;">
-                                <input type="text" class="share-input" value="${shareableLink}" readonly>
-                                <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
-                                    <i class="fas fa-copy"></i> Copy
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title">My Unlockers</h1>
-                    <div style="margin: 20px 0;">
-                        <button class="btn-primary" style="width: auto;" onclick="window.showTemplates()">
-                            <i class="fas fa-plus-circle"></i> Create New
-                        </button>
-                    </div>
-                    <div class="scripts-grid">${scriptsHTML}</div>
-                </div>
-            `;
         };
 
         // ============ SHOW ADMIN PANEL ============
@@ -3341,6 +2819,564 @@
             
             currentTemplate = template;
             window.showCreatorWithTemplate(template);
+        };
+
+        // ============ SHOW CREATOR WITH TEMPLATE ============
+        window.showCreatorWithTemplate = function(template) {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            
+            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            const timeLimits = getTimeLimits();
+            
+            let stepsHTML = '';
+            template.steps.forEach((step, index) => {
+                stepsHTML += `
+                    <div class="step-card" data-step-index="${index}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <span class="step-badge">
+                                <i class="fas ${getStepIcon(step.type)}"></i> 
+                                Step ${index + 1}
+                            </span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="edit-step-btn" onclick="window.editStepName(this, ${index})">
+                                    <i class="fas fa-pencil-alt"></i> Edit
+                                </button>
+                                ${index > 0 ? `
+                                <button class="delete-step-btn" onclick="window.removeTemplateStep(this, ${index})">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
+                        
+                        <div class="step-url-container" style="margin-bottom: 8px;">
+                            <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="wait-time-control" style="margin: 0;">
+                                <span class="wait-time-badge">
+                                    <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                                </span>
+                                <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="${timeLimits.max}" step="1">
+                            </div>
+                            
+                            ${step.type === 'watch' ? `
+                            <div class="wait-time-control" style="margin: 0;">
+                                <span class="wait-time-badge">
+                                    <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                                </span>
+                                <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.wait}" min="0" max="${timeLimits.max}" step="1">
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <input type="hidden" class="step-type" value="${step.type}">
+                        <input type="hidden" id="step-watch-hidden-${index}" value="${step.watchTime || step.wait}">
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = `
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
+                        <h1 class="section-title">
+                            <i class="fab fa-${template.name.toLowerCase()}" style="color: ${getTemplateColor(template.name)}; margin-right: 12px;"></i>
+                            Create ${template.name} Unlocker
+                        </h1>
+                        <span class="badge-premium">${template.steps.length} Steps</span>
+                    </div>
+                    
+                    ${isOwner ? `
+                    <div class="owner-warning">
+                        <i class="fas fa-crown"></i>
+                        <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-bottom: 20px; background: var(--dark-card); padding: 16px; border-radius: 16px;">
+                        <h3 style="color: var(--accent); margin-bottom: 8px;">⏱️ Your Time Limits</h3>
+                        <p style="color: var(--text-dim);">
+                            Max Wait Time: ${timeLimits.max}s | Max Watch Time: ${timeLimits.max}s
+                        </p>
+                    </div>
+                    
+                    <h2 style="margin-bottom: 20px;">Required Steps</h2>
+                    <div id="steps-container">${stepsHTML}</div>
+                    
+                    <div class="add-step-btn" onclick="window.addManualStep()" style="background: rgba(99,102,241,0.1); border: 2px dashed var(--primary); border-radius: 24px; padding: 32px; text-align: center; cursor: pointer; margin: 32px 0;">
+                        <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
+                        <h3>Add Custom Step</h3>
+                        <p style="color: var(--text-dim);">Max: ${isPremium ? 20 : 8} steps</p>
+                    </div>
+                    
+                    <div style="margin-top: 32px;">
+                        <h2>Unlock Destination</h2>
+                        <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-download-link.com" required>
+                        
+                        <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="public-script" style="width: 18px; height: 18px;" checked>
+                                <i class="fas fa-globe"></i> Public (shows in dashboard)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="unlisted-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false">
+                                <i class="fas fa-eye-slash"></i> Unlisted (hidden from dashboard, link only)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="private-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false; document.getElementById('unlisted-script').checked = false">
+                                <i class="fas fa-lock"></i> Private (only you can view)
+                            </label>
+                        </div>
+                        
+                        <div style="display: flex; gap: 24px; margin: 24px 0;">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="sequential-steps" style="width: 18px; height: 18px;" checked>
+                                <i class="fas fa-sort-amount-down"></i> Sequential completion
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-primary" style="padding: 20px;" onclick="window.createScript()">
+                        <i class="fas fa-bolt"></i> Generate ${template.name} Unlocker
+                    </button>
+                </div>
+            `;
+        };
+
+        // ============ SHOW CREATOR ============
+        window.showCreator = function() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            
+            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            const timeLimits = getTimeLimits();
+            
+            container.innerHTML = `
+                <div>
+                    <h1 class="section-title" style="margin-bottom: 32px;">
+                        <i class="fas fa-magic" style="color: #6366f1;"></i>
+                        Create New Unlocker
+                    </h1>
+                    
+                    ${isOwner ? `
+                    <div class="owner-warning">
+                        <i class="fas fa-crown"></i>
+                        <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-bottom: 20px; background: var(--dark-card); padding: 16px; border-radius: 16px;">
+                        <h3 style="color: var(--accent); margin-bottom: 8px;">⏱️ Your Time Limits</h3>
+                        <p style="color: var(--text-dim);">
+                            Max Wait Time: ${timeLimits.max}s | Max Watch Time: ${timeLimits.max}s
+                        </p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 24px; padding: 40px; margin-bottom: 32px; text-align: center;">
+                        <i class="fas fa-layer-group" style="font-size: 64px; color: #6366f1; margin-bottom: 16px;"></i>
+                        <h2 style="margin-bottom: 16px;">Start with a Template</h2>
+                        <p style="color: var(--text-dim); margin-bottom: 24px;">Choose from templates for TikTok, YouTube, Instagram, and more</p>
+                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
+                            <i class="fas fa-layer-group"></i> Browse Templates
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 32px;">
+                        <h2>Manual Creation</h2>
+                        
+                        <div id="steps-container"></div>
+                        
+                        <div class="add-step-btn" onclick="window.addManualStep()" style="background: rgba(99,102,241,0.1); border: 2px dashed var(--primary); border-radius: 24px; padding: 32px; text-align: center; cursor: pointer; margin: 32px 0;">
+                            <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
+                            <h3>Add First Step</h3>
+                            <p style="color: var(--text-dim);">Max: ${isPremium ? 20 : 8} steps</p>
+                        </div>
+                        
+                        <div style="margin-top: 32px;">
+                            <h2>Unlock Destination</h2>
+                            <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-link.com">
+                            
+                            <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="public-script" style="width: 18px; height: 18px;" checked>
+                                    <i class="fas fa-globe"></i> Public (shows in dashboard)
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="unlisted-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false">
+                                    <i class="fas fa-eye-slash"></i> Unlisted (hidden from dashboard, link only)
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="private-script" style="width: 18px; height: 18px;" onclick="document.getElementById('public-script').checked = false; document.getElementById('unlisted-script').checked = false">
+                                    <i class="fas fa-lock"></i> Private (only you can view)
+                                </label>
+                            </div>
+                            
+                            <div style="display: flex; gap: 24px; margin: 24px 0;">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="sequential-steps" style="width: 18px; height: 18px;" checked>
+                                    <i class="fas fa-sort-amount-down"></i> Sequential completion
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-primary" style="padding: 20px;" onclick="window.createScript()">
+                            <i class="fas fa-bolt"></i> Generate Unlocker
+                        </button>
+                    </div>
+                </div>
+            `;
+        };
+
+        // ============ ADD MANUAL STEP ============
+        window.addManualStep = function() {
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const stepCount = stepsContainer.children.length;
+            const maxSteps = isPremium ? 20 : 8;
+            const timeLimits = getTimeLimits();
+            
+            if (stepCount >= maxSteps) {
+                showCopyNotification(`⚠️ Maximum ${maxSteps} steps reached`, true);
+                return;
+            }
+            
+            const stepIndex = stepCount;
+            
+            const stepHTML = `
+                <div class="step-card" data-step-index="${stepCount}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span class="step-badge">
+                            <i class="fas fa-link"></i> 
+                            Step ${stepCount + 1}
+                        </span>
+                        ${stepCount > 0 ? `
+                        <button class="delete-step-btn" onclick="this.closest('.step-card').remove(); renumberSteps()">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
+                        ` : ''}
+                    </div>
+                    
+                    <input type="text" class="step-name-input" placeholder="Step Name" value="Step ${stepCount + 1}" style="margin-bottom: 12px;">
+                    
+                    <select class="step-select" onchange="window.updateStepType(this, ${stepCount})" style="margin-bottom: 12px;">
+                        <option value="like">👍 Like & Subscribe</option>
+                        <option value="follow">👥 Follow Channel</option>
+                        <option value="comment">💬 Comment</option>
+                        <option value="watch" selected>🎬 Watch Video</option>
+                        <option value="join">🚪 Join Server</option>
+                        <option value="custom">🔗 Custom Link</option>
+                    </select>
+                    
+                    <div class="step-url-container" style="margin-bottom: 8px;">
+                        <input type="url" class="step-url-input" placeholder="Enter URL" required>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="wait-time-control" style="margin: 0;">
+                            <span class="wait-time-badge">
+                                <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                            </span>
+                            <input type="number" class="wait-time-input" value="20" min="0" max="${timeLimits.max}" step="1">
+                        </div>
+                        
+                        <div class="wait-time-control" style="margin: 0;" id="watch-time-container-${stepIndex}">
+                            <span class="wait-time-badge">
+                                <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                            </span>
+                            <input type="number" class="watch-time-input" id="watch-time-${stepIndex}" value="20" min="0" max="${timeLimits.max}" step="1">
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" class="step-type" value="watch">
+                </div>
+            `;
+            
+            stepsContainer.insertAdjacentHTML('beforeend', stepHTML);
+        };
+
+        window.renumberSteps = function() {
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const stepCards = stepsContainer.querySelectorAll('.step-card');
+            stepCards.forEach((card, index) => {
+                const badge = card.querySelector('.step-badge');
+                if (badge) {
+                    badge.innerHTML = `<i class="fas fa-link"></i> Step ${index + 1}`;
+                }
+                card.setAttribute('data-step-index', index);
+                
+                const deleteBtn = card.querySelector('.delete-step-btn');
+                if (deleteBtn) {
+                    if (index === 0) {
+                        deleteBtn.style.display = 'none';
+                    } else {
+                        deleteBtn.style.display = 'inline-flex';
+                    }
+                }
+            });
+        };
+
+        window.editStepName = function(button, index) {
+            const nameInput = document.getElementById(`step-name-${index}`);
+            if (nameInput) nameInput.focus();
+        };
+
+        window.removeTemplateStep = function(button, index) {
+            const stepCard = button.closest('.step-card');
+            const stepsContainer = document.getElementById('steps-container');
+            const stepCards = stepsContainer.querySelectorAll('.step-card');
+            
+            if (stepCards.length <= 1) {
+                showCopyNotification('⚠️ Cannot remove the last step', true);
+                return;
+            }
+            
+            stepCard.remove();
+            renumberSteps();
+        };
+
+        window.updateStepType = function(select, index) {
+            const stepCard = select.closest('.step-card');
+            const typeInput = stepCard.querySelector('.step-type');
+            const watchContainer = document.getElementById(`watch-time-container-${index}`);
+            
+            if (typeInput) typeInput.value = select.value;
+            
+            if (watchContainer) {
+                if (select.value === 'watch') {
+                    watchContainer.style.display = 'flex';
+                } else {
+                    watchContainer.style.display = 'none';
+                }
+            }
+        };
+
+        // ============ CREATE SCRIPT ============
+        window.createScript = async function() {
+            if (!currentUser) {
+                showCopyNotification('⚠️ Please login first', true);
+                return;
+            }
+            
+            const steps = [];
+            const stepCards = document.querySelectorAll('.step-card');
+            const timeLimits = getTimeLimits();
+            
+            stepCards.forEach((card, index) => {
+                const nameInput = card.querySelector('.step-name-input');
+                const urlInput = card.querySelector('.step-url-input');
+                const typeInput = card.querySelector('.step-type');
+                const waitInput = card.querySelector('.wait-time-input');
+                const watchInput = card.querySelector('.watch-time-input');
+                
+                const waitTime = waitInput ? parseInt(waitInput.value) || 20 : 20;
+                const validWaitTime = Math.min(timeLimits.max, Math.max(0, waitTime));
+                
+                let validWatchTime = validWaitTime;
+                if (watchInput) {
+                    const watchTime = parseInt(watchInput.value) || validWaitTime;
+                    validWatchTime = Math.min(timeLimits.max, Math.max(0, watchTime));
+                }
+                
+                if (urlInput && urlInput.value) {
+                    steps.push({
+                        order: index + 1,
+                        type: typeInput ? typeInput.value : 'watch',
+                        label: nameInput ? nameInput.value : `Step ${index + 1}`,
+                        url: urlInput.value,
+                        waitTime: validWaitTime,
+                        watchTime: validWatchTime,
+                        completed: false,
+                        locked: index > 0
+                    });
+                }
+            });
+            
+            if (steps.length === 0) {
+                showCopyNotification('⚠️ Please add at least one step', true);
+                return;
+            }
+            
+            const unlockUrl = document.getElementById('unlock-url')?.value;
+            if (!unlockUrl) {
+                showCopyNotification('⚠️ Please enter an unlock URL', true);
+                return;
+            }
+            
+            // Determine visibility
+            const isPrivate = document.getElementById('private-script')?.checked || false;
+            const isUnlisted = document.getElementById('unlisted-script')?.checked || false;
+            const isPublic = document.getElementById('public-script')?.checked || (!isPrivate && !isUnlisted);
+            
+            const scriptId = 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            const templateName = currentTemplate?.name || 'Manual';
+            
+            const scriptData = {
+                scriptId: scriptId,
+                ownerId: currentUser.uid,
+                ownerName: currentUser.displayName || 'Anonymous',
+                title: `${templateName} Unlocker ${new Date().toLocaleDateString()}`,
+                template: templateName,
+                steps: steps,
+                unlockUrl: unlockUrl,
+                isPrivate: isPrivate,
+                isUnlisted: isUnlisted,
+                sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'active',
+                views: {
+                    total: 0,
+                    unique: []
+                },
+                unlocks: 0
+            };
+            
+            try {
+                await db.collection('scripts').add(scriptData);
+                
+                await db.collection('users').doc(currentUser.uid).update({
+                    totalScripts: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
+                
+                let visibilityMessage = '✅ Script created! ';
+                if (isPrivate) visibilityMessage += '(Private)';
+                else if (isUnlisted) visibilityMessage += '(Unlisted)';
+                else visibilityMessage += '(Public)';
+                
+                showCopyNotification(visibilityMessage);
+                
+                currentTemplate = null;
+                await loadPublicScripts();
+                renderDashboard();
+                
+                setTimeout(() => {
+                    if (confirm('Script created! Copy share link?')) {
+                        window.copyToClipboard(shareableLink);
+                    }
+                }, 500);
+            } catch (error) {
+                console.error('Error creating script:', error);
+                showCopyNotification('❌ Error creating script: ' + error.message, true);
+            }
+        };
+
+        // ============ SHOW MY SCRIPTS ============
+        window.showMyScripts = async function() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            
+            const scriptsSnapshot = await db.collection('scripts')
+                .where('ownerId', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            currentScripts = scriptsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
+            
+            if (currentScripts.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 80px 20px;">
+                        <i class="fas fa-code" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
+                        <h2 style="margin: 20px 0;">No scripts yet</h2>
+                        <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
+                            <i class="fas fa-layer-group"></i> Use Template
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let scriptsHTML = '';
+            for (const script of currentScripts) {
+                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
+                
+                const analyticsSnapshot = await db.collection('analytics')
+                    .where('scriptId', '==', script.id)
+                    .get();
+                
+                const scriptAnalytics = analyticsSnapshot.docs.map(doc => doc.data());
+                const scriptViews = scriptAnalytics.filter(a => a.type === 'view').length;
+                const scriptUnlocks = scriptAnalytics.filter(a => a.type === 'unlock').length;
+                const uniqueDevices = [...new Set(scriptAnalytics.map(a => a.deviceId))].length;
+                
+                const visibilityClass = script.isPrivate ? 'visibility-private' : (script.isUnlisted ? 'visibility-unlisted' : 'visibility-public');
+                const visibilityIcon = script.isPrivate ? 'fa-lock' : (script.isUnlisted ? 'fa-eye-slash' : 'fa-globe');
+                const visibilityText = script.isPrivate ? 'Private' : (script.isUnlisted ? 'Unlisted' : 'Public');
+                
+                scriptsHTML += `
+                    <div class="script-card">
+                        <div class="script-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${scriptViews}</div>
+                                <div class="stat-label">Views</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${uniqueDevices}</div>
+                                <div class="stat-label">Unique</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${scriptUnlocks}</div>
+                                <div class="stat-label">Unlocks</div>
+                            </div>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                <span class="${visibilityClass}" style="padding: 4px 12px; border-radius: 100px; font-size: 11px;">
+                                    <i class="fas ${visibilityIcon}"></i> ${visibilityText}
+                                </span>
+                            </div>
+                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
+                                    <i class="fas fa-share-alt"></i> Share
+                                </button>
+                                <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
+                                    <i class="fas fa-play"></i> Test
+                                </button>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                ${isOwner ? `
+                                <button onclick="window.duplicateScript('${script.id}')" class="copy-btn" style="flex: 1;">
+                                    <i class="fas fa-copy"></i> Duplicate
+                                </button>
+                                ` : ''}
+                                <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                            <div class="share-link" id="share-${script.id}" style="display: none;">
+                                <input type="text" class="share-input" value="${shareableLink}" readonly>
+                                <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = `
+                <div>
+                    <h1 class="section-title">My Unlockers</h1>
+                    <div style="margin: 20px 0;">
+                        <button class="btn-primary" style="width: auto;" onclick="window.showTemplates()">
+                            <i class="fas fa-plus-circle"></i> Create New
+                        </button>
+                    </div>
+                    <div class="scripts-grid">${scriptsHTML}</div>
+                </div>
+            `;
         };
 
         // ============ SHOW UPGRADE ============
