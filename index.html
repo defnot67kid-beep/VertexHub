@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VertexHub 9.0 · Firebase · plastealme2</title>
+    <title>VertexHub 9.5 · Vertex Required</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -1281,6 +1281,48 @@
             box-shadow: none;
             border-color: var(--border);
         }
+        /* New styles for premium step removal feature */
+        .premium-step-control {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .step-removed-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .step-auto-return-timer {
+            color: var(--accent);
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 18px;
+        }
+        .mandatory-step-badge {
+            background: rgba(99,102,241,0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -1327,8 +1369,21 @@
         let currentVideoModal = null;
         let deviceInteractions = {};
         
-        // Premium video ID
-        const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs';
+        // ============ NEW FEATURE: Track removed mandatory steps for premium users ============
+        let removedMandatorySteps = {}; // Structure: { scriptId: { removalTime: timestamp, stepIndex: 0 } }
+        
+        // Premium video ID (UPDATED to the new video URL)
+        const PREMIUM_VIDEO_ID = 'u0jrlB7hAk0'; // Extracted from https://www.youtube.com/watch?v=u0jrlB7hAk0&t=6s
+        
+        // Mandatory Vertex subscription step details (ALWAYS FIRST STEP)
+        const MANDATORY_STEP = {
+            type: 'subscribe',
+            label: '🚀 MUST SUBSCRIBE TO VERTEX',
+            url: 'https://www.youtube.com/@VertexR_S?sub_confirmation=1',
+            waitTime: 10, // Short wait to confirm
+            isMandatory: true,
+            order: 0 // Always first
+        };
         
         // ============ TIME LIMITS ============
         const TIME_LIMITS = {
@@ -1349,6 +1404,12 @@
             const storedInteractions = localStorage.getItem('vertexhub_interactions');
             if (storedInteractions) {
                 deviceInteractions = JSON.parse(storedInteractions);
+            }
+            
+            // Load removed mandatory steps from localStorage
+            const storedRemovedSteps = localStorage.getItem('vertexhub_removed_steps');
+            if (storedRemovedSteps) {
+                removedMandatorySteps = JSON.parse(storedRemovedSteps);
             }
 
             auth.onAuthStateChanged(async (user) => {
@@ -1419,6 +1480,34 @@
                     handleRouting();
                 }
             });
+            
+            // Check for expired step removals every minute
+            setInterval(checkExpiredStepRemovals, 60000);
+        }
+
+        // ============ CHECK FOR EXPIRED MANDATORY STEP REMOVALS ============
+        function checkExpiredStepRemovals() {
+            const now = Date.now();
+            let changed = false;
+            
+            for (const scriptId in removedMandatorySteps) {
+                const removal = removedMandatorySteps[scriptId];
+                // 24 hours = 86400000 milliseconds
+                if (now - removal.removalTime > 86400000) {
+                    delete removedMandatorySteps[scriptId];
+                    changed = true;
+                    
+                    // If we're currently viewing this script, refresh the view
+                    if (window.currentUnlockScript && window.currentUnlockScript.id === scriptId) {
+                        showCopyNotification('⚠️ 24-hour period expired. Vertex subscription step is now required again.', true);
+                        loadScriptView(scriptId); // Reload the script
+                    }
+                }
+            }
+            
+            if (changed) {
+                localStorage.setItem('vertexhub_removed_steps', JSON.stringify(removedMandatorySteps));
+            }
         }
 
         // ============ LOAD ALL SCRIPTS FOR DASHBOARD (WITH PERMISSIONS) ============
@@ -1441,7 +1530,7 @@
             }
         }
 
-        // ============ LOAD SINGLE SCRIPT BY ID (WITH ACCESS CONTROL) ============
+        // ============ LOAD SINGLE SCRIPT BY ID (WITH ACCESS CONTROL AND MANDATORY STEP INJECTION) ============
         async function loadScriptById(scriptId) {
             try {
                 // Try to get the script directly
@@ -1467,8 +1556,34 @@
                     return { error: 'already_unlocked', script };
                 }
                 
-                // Public or unlisted scripts are accessible to everyone who hasn't unlocked
-                return { success: true, script };
+                // ============ INJECT MANDATORY SUBSCRIPTION STEP ============
+                // Always ensure the mandatory step is first, unless removed by premium user
+                let steps = script.steps || [];
+                const isStepRemoved = removedMandatorySteps[scriptId] && isPremium;
+                
+                if (!isStepRemoved) {
+                    // Create a copy of the mandatory step with script-specific timing
+                    const mandatoryStepWithSettings = {
+                        ...MANDATORY_STEP,
+                        // Use script's wait time if available, otherwise default
+                        waitTime: (steps[0] && steps[0].waitTime) ? steps[0].waitTime : MANDATORY_STEP.waitTime
+                    };
+                    
+                    // Insert mandatory step at the beginning
+                    steps = [mandatoryStepWithSettings, ...steps];
+                }
+                
+                // Update the script with modified steps
+                const modifiedScript = {
+                    ...script,
+                    steps: steps,
+                    // Add flag to indicate if mandatory step is present
+                    mandatoryStepPresent: !isStepRemoved,
+                    mandatoryStepRemoved: isStepRemoved,
+                    mandatoryStepRemovalTime: isStepRemoved ? removedMandatorySteps[scriptId]?.removalTime : null
+                };
+                
+                return { success: true, script: modifiedScript };
                 
             } catch (error) {
                 console.error('Error loading script:', error);
@@ -1480,6 +1595,29 @@
                 return { error: 'unknown', message: error.message };
             }
         }
+
+        // ============ PREMIUM FEATURE: REMOVE MANDATORY STEP FOR 24 HOURS ============
+        window.removeMandatoryStep = async function(scriptId) {
+            if (!isPremium) {
+                showCopyNotification('⚠️ Premium feature only!', true);
+                return;
+            }
+            
+            const now = Date.now();
+            removedMandatorySteps[scriptId] = {
+                removalTime: now,
+                stepIndex: 0 // The mandatory step is always index 0
+            };
+            
+            localStorage.setItem('vertexhub_removed_steps', JSON.stringify(removedMandatorySteps));
+            
+            showCopyNotification('✅ Vertex subscription step removed for 24 hours!', false);
+            
+            // Reload the script to reflect changes
+            if (window.currentUnlockScript && window.currentUnlockScript.id === scriptId) {
+                loadScriptView(scriptId);
+            }
+        };
 
         // ============ CHECK IF DEVICE HAS UNLOCKED SCRIPT ============
         async function hasDeviceUnlocked(scriptId) {
@@ -1701,6 +1839,18 @@
             // Check if current user is the owner
             const isOwner = currentUser && currentUser.uid === script.ownerId;
             
+            // Calculate remaining time if step was removed
+            let removalTimeRemaining = null;
+            if (script.mandatoryStepRemoved && script.mandatoryStepRemovalTime) {
+                const elapsed = Date.now() - script.mandatoryStepRemovalTime;
+                const remainingMs = 86400000 - elapsed; // 24 hours in ms
+                if (remainingMs > 0) {
+                    const remainingHours = Math.floor(remainingMs / 3600000);
+                    const remainingMinutes = Math.floor((remainingMs % 3600000) / 60000);
+                    removalTimeRemaining = `${remainingHours}h ${remainingMinutes}m`;
+                }
+            }
+            
             app.innerHTML = `
                 <div class="unlocker-container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
@@ -1711,6 +1861,10 @@
                                 <p style="color: var(--text-dim);">
                                     <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'} · 
                                     <i class="fas fa-list"></i> ${script.steps.length} steps
+                                    ${script.mandatoryStepPresent ? 
+                                        '<span class="mandatory-step-badge"><i class="fas fa-star"></i> Vertex Step Required</span>' : 
+                                        script.mandatoryStepRemoved ? 
+                                        '<span class="step-removed-badge"><i class="fas fa-clock"></i> Vertex Step Removed</span>' : ''}
                                     ${script.isPrivate ? 
                                         '<span style="margin-left: 10px; color: #ef4444;"><i class="fas fa-lock"></i> Private</span>' : 
                                         script.isUnlisted ?
@@ -1730,6 +1884,30 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Premium Step Removal Control -->
+                    ${isPremium && script.mandatoryStepPresent ? `
+                    <div class="premium-step-control">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-crown" style="color: var(--accent); font-size: 20px;"></i>
+                            <span><strong>Premium Feature:</strong> Remove the Vertex subscription step for 24 hours</span>
+                        </div>
+                        <button class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="window.removeMandatoryStep('${script.id}')">
+                            <i class="fas fa-clock"></i> Remove for 24h
+                        </button>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Step Removal Timer Display -->
+                    ${script.mandatoryStepRemoved && removalTimeRemaining ? `
+                    <div class="premium-step-control" style="background: rgba(239, 68, 68, 0.1); border-color: #ef4444;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-hourglass-half" style="color: #ef4444;"></i>
+                            <span><strong>Vertex step removed.</strong> Returns in:</span>
+                            <span class="step-auto-return-timer">${removalTimeRemaining}</span>
+                        </div>
+                    </div>
+                    ` : ''}
                     
                     <div class="progress-container">
                         <div class="progress-bar" id="unlock-progress" style="width: 0%;"></div>
@@ -1792,6 +1970,9 @@
                     statusClass = 'visited';
                 }
                 
+                // Add special indicator for mandatory step
+                const isMandatoryStep = step.isMandatory === true;
+                
                 stepsHTML += `
                     <div class="${stepClass}" data-step="${index}">
                         <div class="step-header">
@@ -1799,6 +1980,7 @@
                                 <i class="fas ${getStepIcon(step.type)}"></i> 
                                 Step ${index + 1}: ${step.label || `Step ${index + 1}`}
                                 ${step.type === 'watch' ? `<span class="auto-redirect-badge"><i class="fas fa-redo-alt"></i> Auto-start</span>` : ''}
+                                ${isMandatoryStep ? `<span class="mandatory-step-badge" style="margin-left: 8px;"><i class="fas fa-star"></i> VERTEX REQUIRED</span>` : ''}
                             </span>
                             ${step.type === 'watch' && step.waitTime > 0 ? `
                             <span class="step-timer">
@@ -3743,13 +3925,13 @@
                     </div>
                     
                     <div style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.1)); border-radius: 32px; padding: 32px;">
-                        <h2 style="color: #f59e0b; margin-bottom: 20px;">⚠️ Watch This Short to Upgrade</h2>
+                        <h2 style="color: #f59e0b; margin-bottom: 20px;">⚠️ Watch This Video to Upgrade</h2>
                         
-                        <div class="custom-shorts-container">
+                        <div class="custom-video-container">
                             <div id="premium-video-player"></div>
                             <div class="video-overlay" id="premium-overlay"></div>
                             <div class="video-timer-progress" id="premium-progress"></div>
-                            <div class="video-timer-display" id="premium-timer">0:00 / 0:30</div>
+                            <div class="video-timer-display" id="premium-timer">0:00 / 0:00</div>
                         </div>
                         
                         <div style="margin: 20px 0;">
@@ -3766,23 +3948,23 @@
                 </div>
             `;
             
-            loadPremiumShort();
+            loadPremiumVideo();
         };
 
-        function loadPremiumShort() {
+        function loadPremiumVideo() {
             const overlay = document.getElementById('premium-overlay');
             if (overlay) {
                 overlay.style.pointerEvents = 'all';
             }
             
             let videoCompleted = false;
-            let shortPlayer = null;
+            let premiumPlayer = null;
             let skipAttempts = 0;
             
             setTimeout(() => {
                 try {
-                    shortPlayer = new YT.Player('premium-video-player', {
-                        videoId: PREMIUM_SHORTS_ID,
+                    premiumPlayer = new YT.Player('premium-video-player', {
+                        videoId: PREMIUM_VIDEO_ID,
                         width: '100%',
                         height: '100%',
                         playerVars: {
@@ -3796,7 +3978,8 @@
                             iv_load_policy: 3,
                             playsinline: 1,
                             loop: 0,
-                            enablejsapi: 1
+                            enablejsapi: 1,
+                            start: 6 // Start at 6 seconds as per URL
                         },
                         events: {
                             'onReady': (event) => {
@@ -3806,8 +3989,8 @@
                             'onStateChange': (event) => {
                                 if (event.data === YT.PlayerState.PAUSED) {
                                     setTimeout(() => {
-                                        if (shortPlayer && !videoCompleted) {
-                                            shortPlayer.playVideo();
+                                        if (premiumPlayer && !videoCompleted) {
+                                            premiumPlayer.playVideo();
                                         }
                                     }, 100);
                                 }
@@ -3830,11 +4013,11 @@
             }, 100);
             
             const timerInterval = setInterval(() => {
-                if (!shortPlayer || videoCompleted) return;
+                if (!premiumPlayer || videoCompleted) return;
                 
                 try {
-                    const currentTime = shortPlayer.getCurrentTime();
-                    const duration = shortPlayer.getDuration();
+                    const currentTime = premiumPlayer.getCurrentTime();
+                    const duration = premiumPlayer.getDuration();
                     
                     if (duration) {
                         const timerDisplay = document.getElementById('premium-timer');
