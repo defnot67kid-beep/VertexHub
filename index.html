@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VertexHub 10.0 · Global Dashboard · plastealme2</title>
+    <title>VertexHub 9.0 · Firebase · plastealme2</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -80,7 +80,7 @@
                 padding: 32px 40px;
             }
 
-            .dashboard-grid {
+            .scripts-grid {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 24px;
             }
@@ -140,7 +140,7 @@
                 cursor: pointer;
             }
 
-            .dashboard-grid {
+            .scripts-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
@@ -375,7 +375,7 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
 
-        .dashboard-grid {
+        .scripts-grid {
             display: grid;
             margin-top: 28px;
         }
@@ -1077,96 +1077,6 @@
             color: var(--text-dim);
             margin-top: 4px;
         }
-
-        .script-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border);
-        }
-
-        .trending-badge {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .script-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .script-action-btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: var(--dark-input);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-
-        .script-action-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .script-action-btn.share:hover {
-            background: var(--success);
-            border-color: var(--success);
-        }
-
-        .filter-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .filter-tab {
-            padding: 8px 20px;
-            border-radius: 100px;
-            background: var(--dark-card);
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .filter-tab.active {
-            background: var(--gradient-primary);
-            color: white;
-            border-color: transparent;
-        }
-
-        .filter-tab:hover {
-            border-color: var(--primary);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: var(--dark-card);
-            border-radius: 24px;
-        }
     </style>
 </head>
 <body>
@@ -1209,7 +1119,6 @@
         let viewedScripts = {};
         let deviceId = null;
         let autoCloseTimer = null;
-        let currentFilter = 'trending';
         
         // Premium video ID (YouTube Short)
         const PREMIUM_SHORTS_ID = 'C1eQlFWX0Cs';
@@ -1348,118 +1257,87 @@
                 return;
             }
             
-            const step = script.steps[parseInt(stepIndex)];
-            
-            // Check if this device already completed this step
-            const stepKey = `${scriptId}_${stepIndex}`;
-            const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-            
-            if (completedSteps[stepKey]) {
-                // Already completed, go back to script with completion flag
-                sessionStorage.setItem('return_to_script', scriptId);
-                sessionStorage.setItem('completed_step', stepIndex);
-                sessionStorage.setItem('watch_completed', 'true');
-                window.location.hash = `#script-${scriptId}`;
-                return;
-            }
-            
             // Open video player with auto-return
             setTimeout(() => {
-                openVideoPlayer(step.url, parseInt(stepIndex), scriptId, step.watchTime || step.waitTime || 20);
+                const step = script.steps[parseInt(stepIndex)];
+                openVideoPlayer(step.url, parseInt(stepIndex), scriptId, step.watchTime || 20);
             }, 500);
         }
 
         // ============ LOAD SCRIPT VIEW ============
         async function loadScriptView(scriptId) {
-            const scriptDoc = await db.collection('scripts').doc(scriptId).get();
-            
-            if (!scriptDoc.exists) {
+            try {
+                const scriptDoc = await db.collection('scripts').doc(scriptId).get();
+                
+                if (!scriptDoc.exists) {
+                    document.getElementById('app').innerHTML = `
+                        <div class="auth-container">
+                            <div class="auth-card text-center">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
+                                <h2 style="margin-bottom: 16px;">Script Not Found</h2>
+                                <p style="color: var(--text-dim); margin-bottom: 24px;">The unlocker doesn't exist or has been deleted.</p>
+                                <button class="btn-primary" onclick="window.location.hash='#creator'">
+                                    <i class="fas fa-plus-circle"></i> Create Your Own
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const script = { id: scriptDoc.id, ...scriptDoc.data() };
+                
+                // Track view
+                await db.collection('analytics').add({
+                    scriptId: scriptId,
+                    type: 'view',
+                    userId: currentUser?.uid || 'anonymous',
+                    deviceId: deviceId,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Increment view count
+                if (script.views) {
+                    await db.collection('scripts').doc(scriptId).update({
+                        'views.total': firebase.firestore.FieldValue.increment(1)
+                    });
+                }
+                
+                renderUnlocker(script);
+            } catch (error) {
+                console.error('Error loading script:', error);
                 document.getElementById('app').innerHTML = `
                     <div class="auth-container">
                         <div class="auth-card text-center">
                             <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
-                            <h2 style="margin-bottom: 16px;">Script Not Found</h2>
-                            <p style="color: var(--text-dim); margin-bottom: 24px;">The unlocker doesn't exist or has been deleted.</p>
-                            <a href="/" class="btn-primary" style="text-decoration: none;">
-                                <i class="fas fa-home"></i> Go to Dashboard
-                            </a>
+                            <h2 style="margin-bottom: 16px;">Error Loading Script</h2>
+                            <p style="color: var(--text-dim); margin-bottom: 24px;">${error.message}</p>
+                            <button class="btn-primary" onclick="window.location.hash='#creator'">
+                                <i class="fas fa-plus-circle"></i> Back to Dashboard
+                            </button>
                         </div>
                     </div>
                 `;
-                return;
             }
-            
-            const script = { id: scriptDoc.id, ...scriptDoc.data() };
-            
-            // Check for return from video
-            const returnScriptId = sessionStorage.getItem('return_to_script');
-            const completedStep = sessionStorage.getItem('completed_step');
-            const watchCompleted = sessionStorage.getItem('watch_completed');
-            
-            if (returnScriptId === scriptId && completedStep !== null && watchCompleted === 'true') {
-                // Clear session storage
-                sessionStorage.removeItem('return_to_script');
-                sessionStorage.removeItem('completed_step');
-                sessionStorage.removeItem('watch_completed');
-                
-                // Mark step as video completed in local storage
-                const stepKey = `${scriptId}_${completedStep}`;
-                const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-                completedSteps[stepKey] = { videoCompleted: true, timestamp: Date.now() };
-                localStorage.setItem('completed_steps', JSON.stringify(completedSteps));
-                
-                // Show notification
-                setTimeout(() => {
-                    showCopyNotification(`✅ Video completed! Timer will start automatically`, false);
-                }, 500);
-            }
-            
-            // Track view
-            await db.collection('analytics').add({
-                scriptId: scriptId,
-                type: 'view',
-                userId: currentUser?.uid || 'anonymous',
-                deviceId: deviceId,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Increment view count
-            await db.collection('scripts').doc(scriptId).update({
-                'views.total': firebase.firestore.FieldValue.increment(1),
-                'views.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
-            });
-            
-            renderUnlocker(script);
         }
 
         // ============ RENDER UNLOCKER ============
         function renderUnlocker(script) {
             const app = document.getElementById('app');
             
-            // Load completed steps from localStorage
-            const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-            
             // Initialize step states
             activeStepStates = {};
             script.steps.forEach((step, index) => {
-                const stepKey = `${script.id}_${index}`;
-                const savedState = completedSteps[stepKey];
-                
                 activeStepStates[index] = {
-                    linkClicked: savedState?.videoCompleted ? true : false,
-                    timerStarted: savedState?.timerComplete ? true : false,
-                    timerComplete: savedState?.timerComplete || false,
+                    linkClicked: false,
+                    timerStarted: false,
+                    timerComplete: false,
                     timeLeft: step.waitTime || 20,
-                    watchStarted: savedState?.videoCompleted ? false : false,
-                    watchComplete: savedState?.videoCompleted || false,
-                    videoCompleted: savedState?.videoCompleted || false
+                    watchStarted: false,
+                    watchComplete: false,
+                    videoCompleted: false,
+                    videoRequiredTime: step.watchTime || 20
                 };
-                
-                // If video was completed but timer not started, mark as ready for timer
-                if (savedState?.videoCompleted && !savedState?.timerComplete) {
-                    activeStepStates[index].watchComplete = true;
-                    activeStepStates[index].videoCompleted = true;
-                }
             });
             
             app.innerHTML = `
@@ -1469,24 +1347,23 @@
                             <i class="fas fa-cube" style="font-size: 40px; color: #6366f1;"></i>
                             <div>
                                 <h1 style="font-size: 28px; margin-bottom: 4px;">${script.title || 'Content Unlocker'}</h1>
-                                <p style="color: var(--text-dim);">By ${script.ownerName || 'Unknown'}</p>
+                                <p style="color: var(--text-dim);">Complete all steps to unlock your content</p>
                             </div>
                         </div>
                         <div style="background: var(--dark-card); padding: 12px 24px; border-radius: 100px;">
                             <i class="fas fa-clock" style="color: var(--accent);"></i>
-                            <span id="total-progress-text">${Object.values(activeStepStates).filter(s => s.timerComplete).length}/${script.steps.length} Steps</span>
+                            <span id="total-progress-text">0/${script.steps.length} Steps</span>
                         </div>
                     </div>
                     
                     <div class="progress-container">
-                        <div class="progress-bar" id="unlock-progress" style="width: ${(Object.values(activeStepStates).filter(s => s.timerComplete).length / script.steps.length) * 100}%;"></div>
+                        <div class="progress-bar" id="unlock-progress" style="width: 0%;"></div>
                     </div>
                     
                     <div id="unlock-steps"></div>
                     
-                    <button class="btn-primary" id="final-unlock-btn" onclick="window.finalUnlock('${script.id}')" ${Object.values(activeStepStates).every(s => s.timerComplete) ? '' : 'disabled'} style="margin-top: 32px; padding: 18px;">
-                        <i class="fas ${Object.values(activeStepStates).every(s => s.timerComplete) ? 'fa-unlock' : 'fa-lock'}"></i> 
-                        ${Object.values(activeStepStates).every(s => s.timerComplete) ? 'Unlock Content Now' : 'Complete All Steps to Unlock'}
+                    <button class="btn-primary" id="final-unlock-btn" disabled onclick="window.finalUnlock('${script.id}')" style="margin-top: 32px; padding: 18px;">
+                        <i class="fas fa-lock"></i> Complete All Steps to Unlock
                     </button>
                     
                     <div class="device-info">
@@ -1498,13 +1375,23 @@
             window.currentUnlockScript = script;
             renderUnlockSteps(script);
             
-            // Start any timers that were in progress
-            script.steps.forEach((step, index) => {
-                const state = activeStepStates[index];
-                if (state.linkClicked && !state.timerComplete && state.timeLeft > 0 && state.timeLeft < step.waitTime) {
-                    startStepTimer(index);
-                }
-            });
+            // Check for any pending watch completions from localStorage
+            const pendingWatchKey = `watch_completed_${script.id}`;
+            const pendingWatch = localStorage.getItem(pendingWatchKey);
+            if (pendingWatch) {
+                try {
+                    const [savedScriptId, savedStepIndex] = pendingWatch.split(':');
+                    if (savedScriptId === script.id) {
+                        const stepIndex = parseInt(savedStepIndex);
+                        if (activeStepStates[stepIndex] && !activeStepStates[stepIndex].videoCompleted) {
+                            activeStepStates[stepIndex].videoCompleted = true;
+                            activeStepStates[stepIndex].watchStarted = false;
+                            localStorage.removeItem(pendingWatchKey);
+                            renderUnlockSteps(script);
+                        }
+                    }
+                } catch (e) {}
+            }
         }
 
         // ============ RENDER UNLOCK STEPS ============
@@ -1526,15 +1413,22 @@
                     statusIcon = 'fa-check-circle';
                     statusText = 'Completed';
                     statusClass = 'completed';
-                } else if (state.watchStarted) {
+                } else if (state.watchStarted && !state.videoCompleted) {
                     statusIcon = 'fa-eye';
                     statusText = `Watching video...`;
                     statusClass = 'watching';
                 } else if (state.videoCompleted && !state.linkClicked) {
                     statusIcon = 'fa-check-circle';
-                    statusText = `Video completed! Click Watch to start timer`;
+                    statusText = `Video completed! Starting timer...`;
                     statusClass = 'visited';
-                } else if (state.linkClicked && !state.timerComplete) {
+                    
+                    // Auto-start timer when video is completed
+                    setTimeout(() => {
+                        if (activeStepStates[index] && activeStepStates[index].videoCompleted && !activeStepStates[index].linkClicked) {
+                            window.handleStepLinkClick(index, true);
+                        }
+                    }, 500);
+                } else if (state.linkClicked) {
                     statusIcon = 'fa-clock';
                     statusText = `Timer running (${state.timeLeft}s remaining)`;
                     statusClass = 'visited';
@@ -1559,7 +1453,7 @@
                         <div class="step-url-container">
                             <input type="url" id="step-url-${index}" class="step-url-input" value="${step.url}" readonly>
                             <button class="visit-link-btn" id="visit-btn-${index}" onclick="window.handleStepLinkClick(${index})" ${state.linkClicked || state.timerComplete ? 'disabled' : ''}>
-                                <i class="fas ${step.type === 'watch' ? (state.videoCompleted ? 'fa-clock' : 'fa-eye') : 'fa-external-link-alt'}"></i> 
+                                <i class="fas ${step.type === 'watch' ? 'fa-eye' : 'fa-external-link-alt'}"></i> 
                                 ${step.type === 'watch' ? (state.videoCompleted ? 'Start Timer' : 'Watch Video') : 'Visit Link'}
                             </button>
                         </div>
@@ -1577,7 +1471,7 @@
                                 ` : ''}
                                 ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
                                     <div style="color: #10b981; margin-top: 8px;">
-                                        <i class="fas fa-check-circle"></i> Video completed! Click "Start Timer" to continue
+                                        <i class="fas fa-check-circle"></i> Video completed! Starting timer...
                                     </div>
                                 ` : ''}
                                 ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
@@ -1602,7 +1496,7 @@
         }
 
         // ============ HANDLE STEP LINK CLICK ============
-        window.handleStepLinkClick = function(stepIndex) {
+        window.handleStepLinkClick = function(stepIndex, fromVideoComplete = false) {
             const script = window.currentUnlockScript;
             if (!script) return;
             
@@ -1620,18 +1514,7 @@
             if (state.linkClicked || state.timerComplete) return;
             
             if (step.type === 'watch') {
-                if (!state.videoCompleted) {
-                    // Check if video was already completed from localStorage
-                    const stepKey = `${script.id}_${stepIndex}`;
-                    const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-                    
-                    if (completedSteps[stepKey]?.videoCompleted) {
-                        state.videoCompleted = true;
-                        state.watchComplete = true;
-                        renderUnlockSteps(script);
-                        return;
-                    }
-                    
+                if (!state.videoCompleted && !fromVideoComplete) {
                     // Generate unique watch ID
                     const watchId = `${script.id}.${stepIndex}`;
                     const watchUrl = `${window.location.origin}${window.location.pathname}#watch-${watchId}`;
@@ -1642,18 +1525,13 @@
                     state.watchStarted = true;
                     
                     renderUnlockSteps(script);
-                    showCopyNotification(`✅ Video opened! Watch for ${step.watchTime || step.waitTime}s`, false);
+                    showCopyNotification(`✅ Video opened! Will auto-return after watching required time`, false);
                 } else {
-                    // Video completed, now start timer
+                    // Video completed OR forced start, now start timer
                     state.linkClicked = true;
-                    state.timeLeft = step.waitTime || 0;
+                    state.timeLeft = step.waitTime || 20; // Default to 20 if not set
                     
-                    // Save to localStorage
-                    const stepKey = `${script.id}_${stepIndex}`;
-                    const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-                    completedSteps[stepKey] = { ...completedSteps[stepKey], timerStarted: true };
-                    localStorage.setItem('completed_steps', JSON.stringify(completedSteps));
-                    
+                    // Force timer to start
                     if (step.waitTime > 0) {
                         startStepTimer(stepIndex);
                     } else {
@@ -1663,6 +1541,14 @@
                             window.completeStep(stepIndex);
                         }, 500);
                     }
+                    
+                    // Update button state
+                    const visitBtn = document.getElementById(`visit-btn-${stepIndex}`);
+                    if (visitBtn) {
+                        visitBtn.disabled = true;
+                        visitBtn.innerHTML = `<i class="fas fa-clock"></i> Timer Running...`;
+                    }
+                    
                     renderUnlockSteps(script);
                     showCopyNotification(step.waitTime > 0 ? `✅ Timer started (${step.waitTime}s)` : `✅ Step completed!`, false);
                 }
@@ -1670,14 +1556,9 @@
                 // Regular link steps - only open link, timer starts automatically
                 window.open(step.url, '_blank');
                 state.linkClicked = true;
-                state.timeLeft = step.waitTime || 0;
+                state.timeLeft = step.waitTime || 20; // Default to 20 if not set
                 
-                // Save to localStorage
-                const stepKey = `${script.id}_${stepIndex}`;
-                const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-                completedSteps[stepKey] = { ...completedSteps[stepKey], timerStarted: true };
-                localStorage.setItem('completed_steps', JSON.stringify(completedSteps));
-                
+                // Force timer to start
                 if (step.waitTime > 0) {
                     startStepTimer(stepIndex);
                 } else {
@@ -1687,6 +1568,14 @@
                         window.completeStep(stepIndex);
                     }, 500);
                 }
+                
+                // Update button state
+                const visitBtn = document.getElementById(`visit-btn-${stepIndex}`);
+                if (visitBtn) {
+                    visitBtn.disabled = true;
+                    visitBtn.innerHTML = `<i class="fas fa-clock"></i> Timer Running...`;
+                }
+                
                 renderUnlockSteps(script);
                 showCopyNotification(step.waitTime > 0 ? `✅ Link opened! Timer started (${step.waitTime}s)` : `✅ Step completed!`, false);
             }
@@ -1731,7 +1620,7 @@
                 <div style="width: 100%; max-width: ${isShorts ? '400px' : '1000px'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 20px;">
                         <h2 style="color: white;">${isShorts ? 'YouTube Short' : 'Watch Required Video'}</h2>
-                        <div style="color: var(--accent);" id="return-countdown">Watch ${requiredWatchTime}s to complete</div>
+                        <div style="color: var(--accent);" id="return-countdown">Auto-return after watching ${requiredWatchTime}s</div>
                     </div>
                     
                     <div class="${isShorts ? 'custom-shorts-container' : 'custom-video-container'}">
@@ -1750,8 +1639,11 @@
                         <p style="color: var(--accent); margin-top: 5px;" id="video-complete-message"></p>
                         <p style="color: var(--text-dim); margin-top: 10px;">
                             <i class="fas fa-shield"></i> 
-                            Must watch ${requiredWatchTime} seconds (skipping not allowed)
+                            Must watch ${requiredWatchTime} seconds (not the whole video)
                         </p>
+                        <div class="timer-progress-bar" style="margin-top: 15px;">
+                            <div id="watch-time-progress" class="timer-progress-fill" style="width: 0%;"></div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1770,7 +1662,7 @@
                 requiredWatchTime: requiredWatchTime,
                 watchedSeconds: 0,
                 autoReturnTimer: null,
-                watchStartTime: Date.now()
+                watchCompleted: false
             };
             
             // Load YouTube player
@@ -1822,7 +1714,7 @@
                         watchState.videoDuration = player.getDuration();
                         const timerDisplay = document.getElementById('video-timer');
                         if (timerDisplay) {
-                            timerDisplay.innerHTML = `0:00 / ${formatTime(watchState.requiredWatchTime)}s required`;
+                            timerDisplay.innerHTML = `0:00 / ${formatTime(watchState.videoDuration)} (need ${watchState.requiredWatchTime}s)`;
                         }
                     } catch (e) {}
                 }, 1000);
@@ -1853,14 +1745,23 @@
                     const currentTime = player.getCurrentTime();
                     const playerState = player.getPlayerState();
                     
+                    if (!currentTime) return;
+                    
                     // Force play if not playing
                     if (playerState !== YT.PlayerState.PLAYING && playerState !== YT.PlayerState.BUFFERING) {
                         player.playVideo();
                     }
                     
-                    // Track watched seconds
-                    if (playerState === YT.PlayerState.PLAYING && !watchState.videoCompleted) {
-                        watchState.watchedSeconds = Math.floor((Date.now() - watchState.watchStartTime) / 1000);
+                    // Track watched seconds (only count if playing)
+                    if (playerState === YT.PlayerState.PLAYING && !watchState.watchCompleted) {
+                        watchState.watchedSeconds = currentTime;
+                        
+                        // Update progress for required watch time
+                        const watchProgress = document.getElementById('watch-time-progress');
+                        if (watchProgress) {
+                            const progressPercent = Math.min((currentTime / watchState.requiredWatchTime) * 100, 100);
+                            watchProgress.style.width = progressPercent + '%';
+                        }
                     }
                     
                     // Check for skipping
@@ -1885,34 +1786,31 @@
                     // Update timer display
                     const timerDisplay = document.getElementById('video-timer');
                     if (timerDisplay) {
-                        timerDisplay.innerHTML = `${formatTime(watchState.watchedSeconds)} / ${formatTime(watchState.requiredWatchTime)}s required`;
+                        timerDisplay.innerHTML = `${formatTime(currentTime)} / ${formatTime(watchState.videoDuration)} (need ${watchState.requiredWatchTime}s)`;
                     }
                     
                     // Update progress bar
                     const progressBar = document.getElementById('video-progress-bar');
                     if (progressBar) {
-                        const progressPercent = (watchState.watchedSeconds / watchState.requiredWatchTime) * 100;
-                        progressBar.style.width = Math.min(progressPercent, 100) + '%';
+                        const progressPercent = (currentTime / watchState.videoDuration) * 100;
+                        progressBar.style.width = progressPercent + '%';
                     }
                     
-                    // Check if required watch time completed
-                    if (watchState.watchedSeconds >= watchState.requiredWatchTime && !watchState.videoCompleted) {
-                        watchState.videoCompleted = true;
+                    // Check if required watch time is completed
+                    if (currentTime >= watchState.requiredWatchTime && !watchState.watchCompleted) {
+                        watchState.watchCompleted = true;
                         
                         const completeMessage = document.getElementById('video-complete-message');
                         if (completeMessage) {
-                            completeMessage.innerHTML = '✅ Required time completed! Returning to unlocker...';
+                            completeMessage.innerHTML = `✅ Watched ${watchState.requiredWatchTime}s! Returning to unlocker in 3 seconds...`;
                             completeMessage.style.color = '#10b981';
                         }
                         
-                        // Save completion to localStorage
-                        const stepKey = `${watchState.scriptId}_${watchState.stepIndex}`;
-                        const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-                        completedSteps[stepKey] = { videoCompleted: true, timestamp: Date.now() };
-                        localStorage.setItem('completed_steps', JSON.stringify(completedSteps));
+                        // Store completion in localStorage for cross-tab communication
+                        localStorage.setItem(`watch_completed_${watchState.scriptId}`, `${watchState.scriptId}:${watchState.stepIndex}`);
                         
                         // Start auto-return countdown
-                        let countdown = 2;
+                        let countdown = 3;
                         const countdownElement = document.getElementById('return-countdown');
                         
                         watchState.autoReturnTimer = setInterval(() => {
@@ -1924,13 +1822,7 @@
                             if (countdown <= 0) {
                                 clearInterval(watchState.autoReturnTimer);
                                 
-                                // Set return flags in sessionStorage
-                                sessionStorage.setItem('return_to_script', watchState.scriptId);
-                                sessionStorage.setItem('completed_step', watchState.stepIndex);
-                                sessionStorage.setItem('watch_completed', 'true');
-                                
-                                // Close this window/tab and redirect
-                                window.opener?.location.reload();
+                                // Close this window/tab
                                 window.close();
                             }
                         }, 1000);
@@ -1982,10 +1874,23 @@
                     } catch (e) {}
                 }, 500);
             }
+            
+            // Handle video ended
+            if (event.data === YT.PlayerState.ENDED) {
+                // If video ended but required watch time not met, loop it
+                if (!watchState.watchCompleted) {
+                    setTimeout(() => {
+                        try {
+                            player.playVideo();
+                            player.seekTo(0, true);
+                        } catch (e) {}
+                    }, 500);
+                }
+            }
         }
 
         function handleWatchSkipAttempt(reason, watchState, amount = 0) {
-            if (watchState.completed) return;
+            if (watchState.completed || watchState.watchCompleted) return;
             
             watchState.skipAttempts++;
             
@@ -2039,12 +1944,6 @@
                     if (state.timeLeft <= 0) {
                         state.timerComplete = true;
                         clearInterval(state.interval);
-                        
-                        // Save to localStorage
-                        const stepKey = `${script.id}_${stepIndex}`;
-                        const completedSteps = JSON.parse(localStorage.getItem('completed_steps') || '{}');
-                        completedSteps[stepKey] = { ...completedSteps[stepKey], timerComplete: true, completedAt: Date.now() };
-                        localStorage.setItem('completed_steps', JSON.stringify(completedSteps));
                         
                         setTimeout(() => {
                             window.completeStep(stepIndex);
@@ -2117,7 +2016,7 @@
             
             // Increment unlock count
             await db.collection('scripts').doc(scriptId).update({
-                unlocks: firebase.firestore.FieldValue.increment(1)
+                'unlocks': firebase.firestore.FieldValue.increment(1)
             });
             
             window.location.href = script.unlockUrl;
@@ -2334,12 +2233,12 @@
             const app = document.getElementById('app');
             
             // Get user's scripts from Firestore
-            const userScriptsSnapshot = await db.collection('scripts')
+            const scriptsSnapshot = await db.collection('scripts')
                 .where('ownerId', '==', currentUser.uid)
                 .orderBy('createdAt', 'desc')
                 .get();
             
-            currentScripts = userScriptsSnapshot.docs.map(doc => ({
+            currentScripts = scriptsSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
@@ -2397,10 +2296,7 @@
                             </div>
                         </div>
                         
-                        <div class="nav-item active" onclick="window.showGlobalDashboard(); document.querySelector('.sidebar')?.classList.remove('active');">
-                            <i class="fas fa-globe"></i> Global Dashboard
-                        </div>
-                        <div class="nav-item" onclick="window.showCreator(); document.querySelector('.sidebar')?.classList.remove('active');">
+                        <div class="nav-item active" onclick="window.showCreator(); document.querySelector('.sidebar')?.classList.remove('active');">
                             <i class="fas fa-plus-circle"></i> Create Unlocker
                         </div>
                         <div class="nav-item" onclick="window.showMyScripts(); document.querySelector('.sidebar')?.classList.remove('active');">
@@ -2434,213 +2330,8 @@
                 </div>
             `;
             
-            window.showGlobalDashboard();
+            window.showCreator();
         }
-
-        // ============ SHOW GLOBAL DASHBOARD ============
-        window.showGlobalDashboard = async function() {
-            const container = document.getElementById('main-content');
-            if (!container) return;
-            
-            // Get all public scripts from Firestore
-            const scriptsSnapshot = await db.collection('scripts')
-                .where('isPrivate', '==', false)
-                .orderBy('createdAt', 'desc')
-                .get();
-            
-            const allScripts = scriptsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            
-            // Calculate trending score (views + unlocks * 2)
-            allScripts.forEach(script => {
-                script.trendingScore = (script.views?.total || 0) + ((script.unlocks || 0) * 2);
-            });
-            
-            // Sort by different criteria
-            const trendingScripts = [...allScripts].sort((a, b) => b.trendingScore - a.trendingScore);
-            const newestScripts = [...allScripts].sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-            const mostViewedScripts = [...allScripts].sort((a, b) => (b.views?.total || 0) - (a.views?.total || 0));
-            
-            const currentUserId = currentUser?.uid;
-            
-            function renderScriptGrid(scripts) {
-                if (scripts.length === 0) {
-                    return `
-                        <div class="empty-state">
-                            <i class="fas fa-cube" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
-                            <h3 style="margin: 20px 0;">No scripts yet</h3>
-                            <p style="color: var(--text-dim);">Be the first to create an unlocker!</p>
-                            <button class="btn-primary" style="width: auto; margin-top: 20px;" onclick="window.showCreator()">
-                                <i class="fas fa-plus-circle"></i> Create Unlocker
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                return scripts.map(script => {
-                    const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
-                    const isOwner = script.ownerId === currentUserId;
-                    
-                    return `
-                        <div class="script-card">
-                            <div class="script-stats">
-                                <div class="stat-item">
-                                    <div class="stat-value">${script.views?.total || 0}</div>
-                                    <div class="stat-label">Views</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${script.views?.unique?.length || 0}</div>
-                                    <div class="stat-label">Unique</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${script.unlocks || 0}</div>
-                                    <div class="stat-label">Unlocks</div>
-                                </div>
-                            </div>
-                            
-                            <div style="padding: 20px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                    <h3 style="font-size: 18px;">${script.title || 'Untitled'}</h3>
-                                    ${isOwner ? '<span class="badge-premium" style="background: var(--gradient-primary);"><i class="fas fa-check-circle"></i> Owner</span>' : ''}
-                                </div>
-                                
-                                <div class="script-meta">
-                                    <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'}
-                                    <i class="fas fa-layer-group"></i> ${script.steps?.length || 0} steps
-                                    <i class="fas fa-clock"></i> ${script.template || 'Custom'}
-                                </div>
-                                
-                                <div class="script-actions">
-                                    <button class="script-action-btn" onclick="window.openScript('${script.id}')">
-                                        <i class="fas fa-play"></i> Open
-                                    </button>
-                                    <button class="script-action-btn share" onclick="window.copyToClipboard('${shareableLink}', this)">
-                                        <i class="fas fa-share-alt"></i> Share
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            container.innerHTML = `
-                <div>
-                    <h1 class="section-title" style="margin-bottom: 32px;">
-                        <i class="fas fa-globe" style="color: #6366f1;"></i>
-                        Global Dashboard
-                    </h1>
-                    
-                    <div class="filter-tabs">
-                        <button class="filter-tab ${currentFilter === 'trending' ? 'active' : ''}" onclick="window.filterDashboard('trending')">
-                            <i class="fas fa-fire"></i> Trending
-                        </button>
-                        <button class="filter-tab ${currentFilter === 'newest' ? 'active' : ''}" onclick="window.filterDashboard('newest')">
-                            <i class="fas fa-clock"></i> Newest
-                        </button>
-                        <button class="filter-tab ${currentFilter === 'most_viewed' ? 'active' : ''}" onclick="window.filterDashboard('most_viewed')">
-                            <i class="fas fa-eye"></i> Most Viewed
-                        </button>
-                    </div>
-                    
-                    <div class="dashboard-grid" id="dashboard-grid">
-                        ${renderScriptGrid(currentFilter === 'trending' ? trendingScripts : 
-                                          currentFilter === 'newest' ? newestScripts : 
-                                          mostViewedScripts)}
-                    </div>
-                </div>
-            `;
-            
-            // Store scripts for filtering
-            window.dashboardScripts = { trendingScripts, newestScripts, mostViewedScripts };
-        };
-
-        window.filterDashboard = function(filter) {
-            currentFilter = filter;
-            const container = document.getElementById('dashboard-grid');
-            if (!container || !window.dashboardScripts) return;
-            
-            const scripts = window.dashboardScripts[
-                filter === 'trending' ? 'trendingScripts' :
-                filter === 'newest' ? 'newestScripts' :
-                'mostViewedScripts'
-            ];
-            
-            function renderScriptGrid(scripts) {
-                if (scripts.length === 0) {
-                    return `
-                        <div class="empty-state">
-                            <i class="fas fa-cube" style="font-size: 64px; color: #6366f1; opacity: 0.5;"></i>
-                            <h3 style="margin: 20px 0;">No scripts yet</h3>
-                            <p style="color: var(--text-dim);">Be the first to create an unlocker!</p>
-                            <button class="btn-primary" style="width: auto; margin-top: 20px;" onclick="window.showCreator()">
-                                <i class="fas fa-plus-circle"></i> Create Unlocker
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                return scripts.map(script => {
-                    const shareableLink = `${window.location.origin}${window.location.pathname}#script-${script.id}`;
-                    const isOwner = script.ownerId === currentUser?.uid;
-                    
-                    return `
-                        <div class="script-card">
-                            <div class="script-stats">
-                                <div class="stat-item">
-                                    <div class="stat-value">${script.views?.total || 0}</div>
-                                    <div class="stat-label">Views</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${script.views?.unique?.length || 0}</div>
-                                    <div class="stat-label">Unique</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${script.unlocks || 0}</div>
-                                    <div class="stat-label">Unlocks</div>
-                                </div>
-                            </div>
-                            
-                            <div style="padding: 20px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                    <h3 style="font-size: 18px;">${script.title || 'Untitled'}</h3>
-                                    ${isOwner ? '<span class="badge-premium" style="background: var(--gradient-primary);"><i class="fas fa-check-circle"></i> Owner</span>' : ''}
-                                </div>
-                                
-                                <div class="script-meta">
-                                    <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'}
-                                    <i class="fas fa-layer-group"></i> ${script.steps?.length || 0} steps
-                                    <i class="fas fa-clock"></i> ${script.template || 'Custom'}
-                                </div>
-                                
-                                <div class="script-actions">
-                                    <button class="script-action-btn" onclick="window.openScript('${script.id}')">
-                                        <i class="fas fa-play"></i> Open
-                                    </button>
-                                    <button class="script-action-btn share" onclick="window.copyToClipboard('${shareableLink}', this)">
-                                        <i class="fas fa-share-alt"></i> Share
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            container.innerHTML = renderScriptGrid(scripts);
-            
-            // Update active filter tab
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-        };
-
-        window.openScript = function(scriptId) {
-            window.location.hash = `#script-${scriptId}`;
-        };
 
         // ============ SHOW ADMIN PANEL ============
         window.showAdminPanel = async function() {
@@ -3452,7 +3143,7 @@
                 const waitInput = card.querySelector('.wait-time-input');
                 const watchInput = card.querySelector('.watch-time-input');
                 
-                const waitTime = waitInput ? parseInt(waitInput.value) || 0 : 0;
+                const waitTime = waitInput ? parseInt(waitInput.value) || 20 : 20;
                 const validWaitTime = Math.min(timeLimits.max, Math.max(0, waitTime));
                 
                 let validWatchTime = validWaitTime;
@@ -3522,7 +3213,7 @@
             showCopyNotification(`✅ Script created! ${steps.length} steps`);
             
             window.currentTemplate = null;
-            window.showGlobalDashboard();
+            window.showMyScripts();
             
             setTimeout(() => {
                 if (confirm('Script created! Copy share link?')) {
