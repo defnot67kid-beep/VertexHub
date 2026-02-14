@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VertexHub 9.5 · Vertex Required</title>
+    <title>VertexHub 10.0 · Community Uploads</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -1281,6 +1281,7 @@
             box-shadow: none;
             border-color: var(--border);
         }
+        
         /* New styles for premium step removal feature */
         .premium-step-control {
             background: rgba(245, 158, 11, 0.1);
@@ -1294,6 +1295,7 @@
             flex-wrap: wrap;
             gap: 16px;
         }
+        
         .step-removed-badge {
             background: rgba(239, 68, 68, 0.2);
             color: #ef4444;
@@ -1305,12 +1307,14 @@
             align-items: center;
             gap: 6px;
         }
+        
         .step-auto-return-timer {
             color: var(--accent);
             font-weight: 600;
             font-family: monospace;
             font-size: 18px;
         }
+        
         .mandatory-step-badge {
             background: rgba(99,102,241,0.2);
             border: 1px solid var(--primary);
@@ -1322,6 +1326,18 @@
             align-items: center;
             gap: 6px;
             margin-right: 10px;
+        }
+        
+        .owner-only-badge {
+            background: rgba(245,158,11,0.2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
     </style>
 </head>
@@ -1369,13 +1385,13 @@
         let currentVideoModal = null;
         let deviceInteractions = {};
         
-        // ============ NEW FEATURE: Track removed mandatory steps for premium users ============
-        let removedMandatorySteps = {}; // Structure: { scriptId: { removalTime: timestamp, stepIndex: 0 } }
+        // ============ NEW FEATURE: Track removed mandatory steps for premium users (only affects their own scripts) ============
+        let scriptStepRemovals = {}; // Structure: { scriptId: { removedBy: userId, removalTime: timestamp, stepIndex: 0 } }
         
         // Premium video ID (UPDATED to the new video URL)
         const PREMIUM_VIDEO_ID = 'u0jrlB7hAk0'; // Extracted from https://www.youtube.com/watch?v=u0jrlB7hAk0&t=6s
         
-        // Mandatory Vertex subscription step details (ALWAYS FIRST STEP)
+        // Mandatory Vertex subscription step details (ALWAYS FIRST STEP - only for scripts OWNED by premium users)
         const MANDATORY_STEP = {
             type: 'subscribe',
             label: '🚀 MUST SUBSCRIBE TO VERTEX',
@@ -1406,10 +1422,10 @@
                 deviceInteractions = JSON.parse(storedInteractions);
             }
             
-            // Load removed mandatory steps from localStorage
-            const storedRemovedSteps = localStorage.getItem('vertexhub_removed_steps');
-            if (storedRemovedSteps) {
-                removedMandatorySteps = JSON.parse(storedRemovedSteps);
+            // Load script step removals from localStorage
+            const storedRemovals = localStorage.getItem('vertexhub_script_removals');
+            if (storedRemovals) {
+                scriptStepRemovals = JSON.parse(storedRemovals);
             }
 
             auth.onAuthStateChanged(async (user) => {
@@ -1490,11 +1506,11 @@
             const now = Date.now();
             let changed = false;
             
-            for (const scriptId in removedMandatorySteps) {
-                const removal = removedMandatorySteps[scriptId];
+            for (const scriptId in scriptStepRemovals) {
+                const removal = scriptStepRemovals[scriptId];
                 // 24 hours = 86400000 milliseconds
                 if (now - removal.removalTime > 86400000) {
-                    delete removedMandatorySteps[scriptId];
+                    delete scriptStepRemovals[scriptId];
                     changed = true;
                     
                     // If we're currently viewing this script, refresh the view
@@ -1506,14 +1522,14 @@
             }
             
             if (changed) {
-                localStorage.setItem('vertexhub_removed_steps', JSON.stringify(removedMandatorySteps));
+                localStorage.setItem('vertexhub_script_removals', JSON.stringify(scriptStepRemovals));
             }
         }
 
-        // ============ LOAD ALL SCRIPTS FOR DASHBOARD (WITH PERMISSIONS) ============
+        // ============ LOAD ALL SCRIPTS FOR DASHBOARD ============
         async function loadAllScripts() {
             try {
-                // Get all scripts
+                // Get all scripts - NOW ANYONE CAN CREATE SCRIPTS
                 const scriptsSnapshot = await db.collection('scripts')
                     .orderBy('createdAt', 'desc')
                     .get();
@@ -1530,7 +1546,7 @@
             }
         }
 
-        // ============ LOAD SINGLE SCRIPT BY ID (WITH ACCESS CONTROL AND MANDATORY STEP INJECTION) ============
+        // ============ LOAD SINGLE SCRIPT BY ID (WITH ACCESS CONTROL) ============
         async function loadScriptById(scriptId) {
             try {
                 // Try to get the script directly
@@ -1557,11 +1573,19 @@
                 }
                 
                 // ============ INJECT MANDATORY SUBSCRIPTION STEP ============
-                // Always ensure the mandatory step is first, unless removed by premium user
+                // Only add mandatory step if the script owner is a premium user
+                // AND the step hasn't been removed by the owner
                 let steps = script.steps || [];
-                const isStepRemoved = removedMandatorySteps[scriptId] && isPremium;
                 
-                if (!isStepRemoved) {
+                // Check if this script belongs to a premium user
+                const isOwnerPremium = script.ownerIsPremium === true;
+                const isCurrentUserOwner = currentUser && currentUser.uid === script.ownerId;
+                
+                // Check if this script has the mandatory step removed by its owner
+                const isStepRemoved = scriptStepRemovals[scriptId] && 
+                                     scriptStepRemovals[scriptId].removedBy === script.ownerId;
+                
+                if (isOwnerPremium && !isStepRemoved) {
                     // Create a copy of the mandatory step with script-specific timing
                     const mandatoryStepWithSettings = {
                         ...MANDATORY_STEP,
@@ -1577,10 +1601,12 @@
                 const modifiedScript = {
                     ...script,
                     steps: steps,
-                    // Add flag to indicate if mandatory step is present
-                    mandatoryStepPresent: !isStepRemoved,
+                    // Add flags to indicate mandatory step status
+                    mandatoryStepPresent: isOwnerPremium && !isStepRemoved,
                     mandatoryStepRemoved: isStepRemoved,
-                    mandatoryStepRemovalTime: isStepRemoved ? removedMandatorySteps[scriptId]?.removalTime : null
+                    mandatoryStepRemovalTime: isStepRemoved ? scriptStepRemovals[scriptId]?.removalTime : null,
+                    isOwnerPremium: isOwnerPremium,
+                    canRemoveMandatoryStep: isPremium && isCurrentUserOwner // Only owner can remove
                 };
                 
                 return { success: true, script: modifiedScript };
@@ -1596,22 +1622,32 @@
             }
         }
 
-        // ============ PREMIUM FEATURE: REMOVE MANDATORY STEP FOR 24 HOURS ============
+        // ============ PREMIUM FEATURE: REMOVE MANDATORY STEP FROM OWNER'S SCRIPT FOR 24 HOURS ============
         window.removeMandatoryStep = async function(scriptId) {
             if (!isPremium) {
                 showCopyNotification('⚠️ Premium feature only!', true);
                 return;
             }
             
+            const script = window.currentUnlockScript;
+            if (!script) return;
+            
+            // Only allow script owner to remove the mandatory step from their own script
+            if (!currentUser || currentUser.uid !== script.ownerId) {
+                showCopyNotification('⚠️ Only the script owner can remove this step!', true);
+                return;
+            }
+            
             const now = Date.now();
-            removedMandatorySteps[scriptId] = {
+            scriptStepRemovals[scriptId] = {
+                removedBy: currentUser.uid,
                 removalTime: now,
                 stepIndex: 0 // The mandatory step is always index 0
             };
             
-            localStorage.setItem('vertexhub_removed_steps', JSON.stringify(removedMandatorySteps));
+            localStorage.setItem('vertexhub_script_removals', JSON.stringify(scriptStepRemovals));
             
-            showCopyNotification('✅ Vertex subscription step removed for 24 hours!', false);
+            showCopyNotification('✅ Vertex subscription step removed from YOUR script for 24 hours!', false);
             
             // Reload the script to reflect changes
             if (window.currentUnlockScript && window.currentUnlockScript.id === scriptId) {
@@ -1861,10 +1897,11 @@
                                 <p style="color: var(--text-dim);">
                                     <i class="fas fa-user"></i> ${script.ownerName || 'Anonymous'} · 
                                     <i class="fas fa-list"></i> ${script.steps.length} steps
+                                    ${script.ownerIsPremium ? '<span class="owner-only-badge"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
                                     ${script.mandatoryStepPresent ? 
                                         '<span class="mandatory-step-badge"><i class="fas fa-star"></i> Vertex Step Required</span>' : 
                                         script.mandatoryStepRemoved ? 
-                                        '<span class="step-removed-badge"><i class="fas fa-clock"></i> Vertex Step Removed</span>' : ''}
+                                        '<span class="step-removed-badge"><i class="fas fa-clock"></i> Vertex Step Removed (24h)</span>' : ''}
                                     ${script.isPrivate ? 
                                         '<span style="margin-left: 10px; color: #ef4444;"><i class="fas fa-lock"></i> Private</span>' : 
                                         script.isUnlisted ?
@@ -1885,12 +1922,12 @@
                         </div>
                     </div>
                     
-                    <!-- Premium Step Removal Control -->
-                    ${isPremium && script.mandatoryStepPresent ? `
+                    <!-- Premium Step Removal Control - ONLY SHOW TO SCRIPT OWNER -->
+                    ${isPremium && script.mandatoryStepPresent && isOwner ? `
                     <div class="premium-step-control">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-crown" style="color: var(--accent); font-size: 20px;"></i>
-                            <span><strong>Premium Feature:</strong> Remove the Vertex subscription step for 24 hours</span>
+                            <span><strong>Premium Owner Feature:</strong> Remove the Vertex subscription step from YOUR script for 24 hours</span>
                         </div>
                         <button class="btn-primary" style="width: auto; padding: 10px 24px;" onclick="window.removeMandatoryStep('${script.id}')">
                             <i class="fas fa-clock"></i> Remove for 24h
@@ -1898,12 +1935,12 @@
                     </div>
                     ` : ''}
                     
-                    <!-- Step Removal Timer Display -->
+                    <!-- Step Removal Timer Display - Visible to ALL users when step is removed -->
                     ${script.mandatoryStepRemoved && removalTimeRemaining ? `
                     <div class="premium-step-control" style="background: rgba(239, 68, 68, 0.1); border-color: #ef4444;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-hourglass-half" style="color: #ef4444;"></i>
-                            <span><strong>Vertex step removed.</strong> Returns in:</span>
+                            <span><strong>Vertex step removed by creator.</strong> Returns in:</span>
                             <span class="step-auto-return-timer">${removalTimeRemaining}</span>
                         </div>
                     </div>
@@ -2557,7 +2594,7 @@
             let publicScriptsHTML = '';
             
             if (currentUser) {
-                // Get user's own scripts
+                // Get user's own scripts - ANYONE CAN CREATE NOW
                 const scriptsSnapshot = await db.collection('scripts')
                     .where('ownerId', '==', currentUser.uid)
                     .orderBy('createdAt', 'desc')
@@ -2580,6 +2617,7 @@
                             <div class="visibility-badge ${visibilityClass}">
                                 <i class="fas ${visibilityIcon}"></i> ${visibilityText}
                             </div>
+                            ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
                             <div class="dashboard-script-title">
                                 <i class="fas fa-cube" style="color: #6366f1; margin-right: 8px;"></i>
                                 ${script.title || 'Unlocker'}
@@ -2640,12 +2678,13 @@
                         <div class="visibility-badge ${visibilityClass}">
                             <i class="fas ${visibilityIcon}"></i> ${visibilityText}
                         </div>
+                        ${script.ownerIsPremium ? '<span class="owner-only-badge" style="position: absolute; top: 15px; left: 15px;"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
                         ${hasUnlocked ? `
-                        <div class="already-unlocked-badge" style="position: absolute; top: 15px; left: 15px;">
+                        <div class="already-unlocked-badge" style="position: absolute; top: 45px; left: 15px;">
                             <i class="fas fa-check-circle"></i> Already Unlocked
                         </div>
                         ` : hasViewed ? `
-                        <div class="already-viewed-badge" style="position: absolute; top: 15px; left: 15px;">
+                        <div class="already-viewed-badge" style="position: absolute; top: 45px; left: 15px;">
                             <i class="fas fa-eye"></i> Viewed
                         </div>
                         ` : ''}
@@ -3278,6 +3317,7 @@
                                 <span class="${visibilityClass}" style="padding: 4px 12px; border-radius: 100px; font-size: 11px;">
                                     <i class="fas ${visibilityIcon}"></i> ${visibilityText}
                                 </span>
+                                ${script.ownerIsPremium ? '<span class="owner-only-badge"><i class="fas fa-crown"></i> Premium Creator</span>' : ''}
                             </div>
                             <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                                 <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
@@ -3840,6 +3880,7 @@
                 scriptId: scriptId,
                 ownerId: currentUser.uid,
                 ownerName: currentUser.displayName || 'Anonymous',
+                ownerIsPremium: isPremium, // Mark if creator is premium
                 title: `${templateName} Unlocker ${new Date().toLocaleDateString()}`,
                 template: templateName,
                 steps: steps,
@@ -3921,6 +3962,16 @@
                             <i class="fas fa-clock" style="font-size: 32px;"></i>
                             <h3>50s Watch Time</h3>
                             <p>Longer video requirements</p>
+                        </div>
+                        <div class="premium-feature-card">
+                            <i class="fas fa-star" style="font-size: 32px;"></i>
+                            <h3>Vertex Required Step</h3>
+                            <p>Added to all your scripts automatically</p>
+                        </div>
+                        <div class="premium-feature-card">
+                            <i class="fas fa-clock" style="font-size: 32px;"></i>
+                            <h3>Remove Step for 24h</h3>
+                            <p>Temporarily remove Vertex step from your scripts</p>
                         </div>
                     </div>
                     
