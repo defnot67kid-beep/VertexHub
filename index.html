@@ -49,6 +49,14 @@
             
             --pc-sidebar-width: 280px;
             --mobile-sidebar-width: 85vw;
+            
+            /* Platform colors */
+            --tiktok: #000000;
+            --youtube: #ff0000;
+            --instagram: #e4405f;
+            --twitter: #1da1f2;
+            --discord: #5865f2;
+            --twitch: #9146ff;
         }
 
         body {
@@ -277,6 +285,19 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .badge-editing {
+            background: var(--accent);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            animation: pulse 2s infinite;
         }
 
         .nav-item {
@@ -533,6 +554,81 @@
             color: white;
         }
 
+        /* Platform Block Styles */
+        .platform-blocks {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            padding: 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+        }
+
+        .platform-block {
+            flex: 1;
+            min-width: 100px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .platform-block:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            background: rgba(99,102,241,0.1);
+        }
+
+        .platform-block i {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .platform-block.tiktok i { color: var(--tiktok); }
+        .platform-block.youtube i { color: var(--youtube); }
+        .platform-block.instagram i { color: var(--instagram); }
+        .platform-block.twitter i { color: var(--twitter); }
+        .platform-block.discord i { color: var(--discord); }
+        .platform-block.twitch i { color: var(--twitch); }
+
+        .action-blocks {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .action-block {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-block:hover {
+            background: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .action-block i {
+            font-size: 24px;
+        }
+
+        .action-block span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
         .step-card {
             background: var(--dark-card);
             border-radius: 20px;
@@ -540,7 +636,19 @@
             margin-bottom: 20px;
             border: 1px solid var(--border);
             transition: all 0.3s ease;
+            position: relative;
         }
+
+        .step-card:hover {
+            border-color: var(--primary);
+        }
+
+        .step-card.tiktok { border-left: 4px solid var(--tiktok); }
+        .step-card.youtube { border-left: 4px solid var(--youtube); }
+        .step-card.instagram { border-left: 4px solid var(--instagram); }
+        .step-card.twitter { border-left: 4px solid var(--twitter); }
+        .step-card.discord { border-left: 4px solid var(--discord); }
+        .step-card.twitch { border-left: 4px solid var(--twitch); }
 
         .step-card.completed {
             border-color: var(--success);
@@ -930,6 +1038,20 @@
             padding: 8px 16px;
             border-radius: 100px;
             color: #ef4444;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .save-step-btn {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            padding: 8px 16px;
+            border-radius: 100px;
+            color: #10b981;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -1617,6 +1739,26 @@
             font-size: 11px;
             color: var(--text-dim);
         }
+
+        /* Editing mode styles */
+        .editing-mode {
+            position: relative;
+        }
+
+        .editing-mode::before {
+            content: '✎ EDITING MODE';
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: black;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-weight: 700;
+            z-index: 10000;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 20px var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -1663,6 +1805,10 @@
         let currentVideoModal = null;
         let deviceInteractions = {};
         
+        // NEW: Editing mode state
+        let editingScript = null;
+        let isEditing = false;
+        
         // NEW: Subscription system
         let subscriptions = {}; // Structure: { creatorId: { subscribedAt: timestamp, deviceId: deviceId } }
         let notificationPermission = false;
@@ -1691,6 +1837,88 @@
             regular: { min: 0, max: 20 },
             premium: { min: 0, max: 50 },
             owner: { min: 0, max: 9999 }
+        };
+
+        // ============ PLATFORM TEMPLATES WITH FULL STEP BLOCKS ============
+        const PLATFORM_TEMPLATES = {
+            tiktok: {
+                name: 'TikTok',
+                icon: 'fab fa-tiktok',
+                color: '#000000',
+                steps: [
+                    { type: 'follow', label: 'Follow TikTok Channel', url: 'https://tiktok.com/@', platform: 'tiktok', defaultWait: 10 },
+                    { type: 'like', label: 'Like TikTok Video', url: 'https://tiktok.com/', platform: 'tiktok', defaultWait: 5 },
+                    { type: 'comment', label: 'Comment on TikTok', url: 'https://tiktok.com/', platform: 'tiktok', defaultWait: 15 },
+                    { type: 'watch', label: 'Watch TikTok Video', url: 'https://tiktok.com/', platform: 'tiktok', defaultWait: 20, watchTime: 20 },
+                    { type: 'share', label: 'Share TikTok Video', url: 'https://tiktok.com/', platform: 'tiktok', defaultWait: 10 },
+                    { type: 'save', label: 'Save TikTok Video', url: 'https://tiktok.com/', platform: 'tiktok', defaultWait: 5 }
+                ]
+            },
+            youtube: {
+                name: 'YouTube',
+                icon: 'fab fa-youtube',
+                color: '#ff0000',
+                steps: [
+                    { type: 'subscribe', label: 'Subscribe to Channel', url: 'https://youtube.com/@', platform: 'youtube', defaultWait: 10 },
+                    { type: 'like', label: 'Like Video', url: 'https://youtube.com/watch', platform: 'youtube', defaultWait: 5 },
+                    { type: 'comment', label: 'Post Comment', url: 'https://youtube.com/watch', platform: 'youtube', defaultWait: 15 },
+                    { type: 'watch', label: 'Watch Video', url: 'https://youtube.com/watch', platform: 'youtube', defaultWait: 20, watchTime: 20 },
+                    { type: 'share', label: 'Share Video', url: 'https://youtube.com/', platform: 'youtube', defaultWait: 10 },
+                    { type: 'notification', label: 'Turn on Notifications', url: 'https://youtube.com/', platform: 'youtube', defaultWait: 5 }
+                ]
+            },
+            instagram: {
+                name: 'Instagram',
+                icon: 'fab fa-instagram',
+                color: '#e4405f',
+                steps: [
+                    { type: 'follow', label: 'Follow Instagram Profile', url: 'https://instagram.com/', platform: 'instagram', defaultWait: 10 },
+                    { type: 'like', label: 'Like Post', url: 'https://instagram.com/p/', platform: 'instagram', defaultWait: 5 },
+                    { type: 'comment', label: 'Comment on Post', url: 'https://instagram.com/p/', platform: 'instagram', defaultWait: 15 },
+                    { type: 'watch', label: 'Watch Story', url: 'https://instagram.com/stories/', platform: 'instagram', defaultWait: 20, watchTime: 20 },
+                    { type: 'save', label: 'Save Post', url: 'https://instagram.com/p/', platform: 'instagram', defaultWait: 5 },
+                    { type: 'share', label: 'Share to Story', url: 'https://instagram.com/', platform: 'instagram', defaultWait: 10 }
+                ]
+            },
+            twitter: {
+                name: 'X',
+                icon: 'fab fa-twitter',
+                color: '#1da1f2',
+                steps: [
+                    { type: 'follow', label: 'Follow X Account', url: 'https://twitter.com/', platform: 'twitter', defaultWait: 10 },
+                    { type: 'like', label: 'Like Post', url: 'https://twitter.com/', platform: 'twitter', defaultWait: 5 },
+                    { type: 'retweet', label: 'Retweet', url: 'https://twitter.com/', platform: 'twitter', defaultWait: 10 },
+                    { type: 'reply', label: 'Reply to Post', url: 'https://twitter.com/', platform: 'twitter', defaultWait: 15 },
+                    { type: 'quote', label: 'Quote Tweet', url: 'https://twitter.com/', platform: 'twitter', defaultWait: 15 },
+                    { type: 'bookmark', label: 'Bookmark', url: 'https://twitter.com/', platform: 'twitter', defaultWait: 5 }
+                ]
+            },
+            discord: {
+                name: 'Discord',
+                icon: 'fab fa-discord',
+                color: '#5865f2',
+                steps: [
+                    { type: 'join', label: 'Join Discord Server', url: 'https://discord.gg/', platform: 'discord', defaultWait: 10 },
+                    { type: 'verify', label: 'Verify Account', url: 'https://discord.com/', platform: 'discord', defaultWait: 15 },
+                    { type: 'react', label: 'React to Message', url: 'https://discord.com/', platform: 'discord', defaultWait: 5 },
+                    { type: 'message', label: 'Send Message', url: 'https://discord.com/', platform: 'discord', defaultWait: 10 },
+                    { type: 'role', label: 'Select Role', url: 'https://discord.com/', platform: 'discord', defaultWait: 5 },
+                    { type: 'boost', label: 'Boost Server', url: 'https://discord.com/', platform: 'discord', defaultWait: 20 }
+                ]
+            },
+            twitch: {
+                name: 'Twitch',
+                icon: 'fab fa-twitch',
+                color: '#9146ff',
+                steps: [
+                    { type: 'follow', label: 'Follow Twitch Channel', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 10 },
+                    { type: 'subscribe', label: 'Subscribe (Free)', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 15 },
+                    { type: 'watch', label: 'Watch Stream', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 20, watchTime: 20 },
+                    { type: 'host', label: 'Host Channel', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 10 },
+                    { type: 'raid', label: 'Raid Channel', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 10 },
+                    { type: 'cheer', label: 'Cheer with Bits', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 5 }
+                ]
+            }
         };
 
         // ============ INITIALIZE ============
@@ -2046,6 +2274,513 @@
             }
         }
 
+        // ============ LOAD SCRIPT FOR EDITING ============
+        async function loadScriptForEditing(scriptId) {
+            try {
+                const scriptDoc = await db.collection('scripts').doc(scriptId).get();
+                
+                if (!scriptDoc.exists) {
+                    showCopyNotification('❌ Script not found', true);
+                    return null;
+                }
+                
+                const script = { id: scriptDoc.id, ...scriptDoc.data() };
+                
+                // Check if user is the owner
+                if (!currentUser || currentUser.uid !== script.ownerId) {
+                    showCopyNotification('⚠️ Only the owner can edit this script', true);
+                    return null;
+                }
+                
+                editingScript = script;
+                isEditing = true;
+                
+                // Determine which platform template to use based on steps
+                let detectedPlatform = 'custom';
+                if (script.steps && script.steps.length > 0) {
+                    // Try to detect platform from first step's URL or type
+                    const firstStep = script.steps[0];
+                    if (firstStep.url) {
+                        if (firstStep.url.includes('tiktok.com')) detectedPlatform = 'tiktok';
+                        else if (firstStep.url.includes('youtube.com')) detectedPlatform = 'youtube';
+                        else if (firstStep.url.includes('instagram.com')) detectedPlatform = 'instagram';
+                        else if (firstStep.url.includes('twitter.com') || firstStep.url.includes('x.com')) detectedPlatform = 'twitter';
+                        else if (firstStep.url.includes('discord.com') || firstStep.url.includes('discord.gg')) detectedPlatform = 'discord';
+                        else if (firstStep.url.includes('twitch.tv')) detectedPlatform = 'twitch';
+                    }
+                }
+                
+                // Show the edit interface
+                showEditScriptInterface(script, detectedPlatform);
+                
+                return script;
+            } catch (error) {
+                console.error('Error loading script for edit:', error);
+                showCopyNotification('❌ Error loading script for editing', true);
+                return null;
+            }
+        }
+
+        // ============ SHOW EDIT SCRIPT INTERFACE ============
+        function showEditScriptInterface(script, platform = 'custom') {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            
+            const timeLimits = getTimeLimits();
+            const platformData = PLATFORM_TEMPLATES[platform] || null;
+            
+            // Add editing mode indicator to body
+            document.body.classList.add('editing-mode');
+            
+            let stepsHTML = '';
+            if (script.steps) {
+                script.steps.forEach((step, index) => {
+                    const stepPlatform = step.platform || platform;
+                    stepsHTML += generateStepEditHTML(step, index, stepPlatform, timeLimits);
+                });
+            }
+            
+            let platformBlocksHTML = '';
+            if (platformData) {
+                platformBlocksHTML = generatePlatformBlocksHTML(platform, platformData);
+            }
+            
+            container.innerHTML = `
+                <div style="max-width: 1000px; margin: 0 auto;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
+                        <h1 class="section-title">
+                            <i class="fas fa-edit" style="color: var(--accent);"></i>
+                            Editing: ${script.title || 'Unlocker'}
+                        </h1>
+                        <div style="display: flex; gap: 12px;">
+                            <span class="badge-editing">
+                                <i class="fas fa-pencil-alt"></i> EDIT MODE
+                            </span>
+                            <button class="copy-btn" onclick="window.cancelEditing()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--dark-card); border-radius: 24px; padding: 24px; margin-bottom: 24px;">
+                        <h2 style="margin-bottom: 16px;">Quick Add Steps</h2>
+                        <div class="platform-blocks">
+                            <div class="platform-block tiktok" onclick="window.switchPlatform('tiktok')">
+                                <i class="fab fa-tiktok"></i>
+                                <div>TikTok</div>
+                            </div>
+                            <div class="platform-block youtube" onclick="window.switchPlatform('youtube')">
+                                <i class="fab fa-youtube"></i>
+                                <div>YouTube</div>
+                            </div>
+                            <div class="platform-block instagram" onclick="window.switchPlatform('instagram')">
+                                <i class="fab fa-instagram"></i>
+                                <div>Instagram</div>
+                            </div>
+                            <div class="platform-block twitter" onclick="window.switchPlatform('twitter')">
+                                <i class="fab fa-twitter"></i>
+                                <div>X (Twitter)</div>
+                            </div>
+                            <div class="platform-block discord" onclick="window.switchPlatform('discord')">
+                                <i class="fab fa-discord"></i>
+                                <div>Discord</div>
+                            </div>
+                            <div class="platform-block twitch" onclick="window.switchPlatform('twitch')">
+                                <i class="fab fa-twitch"></i>
+                                <div>Twitch</div>
+                            </div>
+                        </div>
+                        
+                        ${platformBlocksHTML}
+                    </div>
+                    
+                    <h2 style="margin-bottom: 20px;">Script Steps</h2>
+                    <div id="steps-container">
+                        ${stepsHTML}
+                    </div>
+                    
+                    <div class="add-step-btn" onclick="window.addManualStep()" style="background: rgba(99,102,241,0.1); border: 2px dashed var(--primary); border-radius: 24px; padding: 32px; text-align: center; cursor: pointer; margin: 32px 0;">
+                        <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
+                        <h3>Add Custom Step</h3>
+                        <p style="color: var(--text-dim);">Max: ${isPremium ? 20 : 8} steps</p>
+                    </div>
+                    
+                    <div style="margin-top: 32px; background: var(--dark-card); border-radius: 24px; padding: 24px;">
+                        <h2>Script Details</h2>
+                        
+                        <div style="margin-top: 20px;">
+                            <label style="display: block; margin-bottom: 8px;">Script Title</label>
+                            <input type="text" id="edit-script-title" class="auth-input" value="${script.title || ''}" required>
+                            
+                            <label style="display: block; margin-bottom: 8px; margin-top: 16px;">Unlock Destination</label>
+                            <input type="url" id="edit-unlock-url" class="auth-input" value="${script.unlockUrl || ''}" required>
+                            
+                            <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="edit-public-script" style="width: 18px; height: 18px;" ${!script.isPrivate && !script.isUnlisted ? 'checked' : ''}>
+                                    <i class="fas fa-globe"></i> Public
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="edit-unlisted-script" style="width: 18px; height: 18px;" ${script.isUnlisted ? 'checked' : ''} onclick="document.getElementById('edit-public-script').checked = false; document.getElementById('edit-private-script').checked = false">
+                                    <i class="fas fa-eye-slash"></i> Unlisted
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="edit-private-script" style="width: 18px; height: 18px;" ${script.isPrivate ? 'checked' : ''} onclick="document.getElementById('edit-public-script').checked = false; document.getElementById('edit-unlisted-script').checked = false">
+                                    <i class="fas fa-lock"></i> Private
+                                </label>
+                            </div>
+                            
+                            <div style="display: flex; gap: 24px; margin: 24px 0;">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="edit-sequential-steps" style="width: 18px; height: 18px;" ${script.sequentialRequired ? 'checked' : ''}>
+                                    <i class="fas fa-sort-amount-down"></i> Sequential completion
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 16px; margin-top: 32px;">
+                        <button class="btn-primary" style="flex: 2;" onclick="window.saveEditedScript()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button class="copy-btn" style="flex: 1;" onclick="window.cancelEditing()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============ GENERATE PLATFORM BLOCKS HTML ============
+        function generatePlatformBlocksHTML(platform, platformData) {
+            const steps = platformData.steps;
+            let blocksHTML = '';
+            
+            steps.forEach((step, index) => {
+                blocksHTML += `
+                    <div class="action-block" onclick="window.addPlatformStep('${platform}', ${index})">
+                        <i class="fas ${getStepIcon(step.type)}" style="color: ${platformData.color};"></i>
+                        <span>${step.label}</span>
+                        <span style="font-size: 11px; color: var(--text-dim);">${step.defaultWait}s</span>
+                    </div>
+                `;
+            });
+            
+            return `
+                <div style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 12px;">${platformData.name} Actions</h3>
+                    <div class="action-blocks">
+                        ${blocksHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============ GENERATE STEP EDIT HTML ============
+        function generateStepEditHTML(step, index, platform, timeLimits) {
+            const platformColor = PLATFORM_TEMPLATES[platform]?.color || '#6366f1';
+            const isWatchStep = step.type === 'watch';
+            
+            return `
+                <div class="step-card ${platform}" data-step-index="${index}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span class="step-badge">
+                            <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
+                            Step ${index + 1}: ${step.label || `Step ${index + 1}`}
+                        </span>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="save-step-btn" onclick="window.saveStepChanges(this, ${index})">
+                                <i class="fas fa-check"></i> Save
+                            </button>
+                            <button class="delete-step-btn" onclick="window.deleteStep(${index})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text-dim);">Step Label</label>
+                        <input type="text" class="step-name-input" id="edit-step-name-${index}" value="${step.label || ''}" style="margin-bottom: 12px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text-dim);">Step Type</label>
+                        <select class="step-select" id="edit-step-type-${index}" onchange="window.updateEditStepType(this, ${index})">
+                            <option value="like" ${step.type === 'like' ? 'selected' : ''}>👍 Like</option>
+                            <option value="follow" ${step.type === 'follow' ? 'selected' : ''}>👥 Follow</option>
+                            <option value="subscribe" ${step.type === 'subscribe' ? 'selected' : ''}>🔔 Subscribe</option>
+                            <option value="comment" ${step.type === 'comment' ? 'selected' : ''}>💬 Comment</option>
+                            <option value="watch" ${step.type === 'watch' ? 'selected' : ''}>🎬 Watch Video</option>
+                            <option value="join" ${step.type === 'join' ? 'selected' : ''}>🚪 Join Server</option>
+                            <option value="share" ${step.type === 'share' ? 'selected' : ''}>📤 Share</option>
+                            <option value="save" ${step.type === 'save' ? 'selected' : ''}>💾 Save</option>
+                            <option value="retweet" ${step.type === 'retweet' ? 'selected' : ''}>🔄 Retweet</option>
+                            <option value="reply" ${step.type === 'reply' ? 'selected' : ''}>↩️ Reply</option>
+                            <option value="custom" ${step.type === 'custom' ? 'selected' : ''}>🔗 Custom</option>
+                        </select>
+                    </div>
+                    
+                    <div class="step-url-container" style="margin-bottom: 8px;">
+                        <input type="url" id="edit-step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url || ''}">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="wait-time-control" style="margin: 0;">
+                            <span class="wait-time-badge">
+                                <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                            </span>
+                            <input type="number" id="edit-step-wait-${index}" class="wait-time-input" value="${step.waitTime || 20}" min="0" max="${timeLimits.max}" step="1">
+                        </div>
+                        
+                        <div class="wait-time-control" style="margin: 0; ${!isWatchStep ? 'display: none;' : ''}" id="edit-watch-container-${index}">
+                            <span class="wait-time-badge">
+                                <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                            </span>
+                            <input type="number" id="edit-step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.waitTime || 20}" min="0" max="${timeLimits.max}" step="1">
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="edit-step-platform-${index}" value="${platform}">
+                </div>
+            `;
+        }
+
+        // ============ SWITCH PLATFORM ============
+        window.switchPlatform = function(platform) {
+            const platformData = PLATFORM_TEMPLATES[platform];
+            if (!platformData) return;
+            
+            const container = document.querySelector('.platform-blocks').parentElement;
+            const existingBlocks = container.querySelector('.action-blocks');
+            if (existingBlocks) existingBlocks.remove();
+            
+            container.insertAdjacentHTML('beforeend', generatePlatformBlocksHTML(platform, platformData));
+        };
+
+        // ============ ADD PLATFORM STEP ============
+        window.addPlatformStep = function(platform, stepIndex) {
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const platformData = PLATFORM_TEMPLATES[platform];
+            if (!platformData) return;
+            
+            const step = platformData.steps[stepIndex];
+            const timeLimits = getTimeLimits();
+            const currentStepCount = stepsContainer.children.length;
+            const maxSteps = isPremium ? 20 : 8;
+            
+            if (currentStepCount >= maxSteps) {
+                showCopyNotification(`⚠️ Maximum ${maxSteps} steps reached`, true);
+                return;
+            }
+            
+            const newIndex = currentStepCount;
+            const stepHTML = generateStepEditHTML(
+                {
+                    type: step.type,
+                    label: step.label,
+                    url: step.url,
+                    waitTime: step.defaultWait,
+                    watchTime: step.defaultWait,
+                    platform: platform
+                },
+                newIndex,
+                platform,
+                timeLimits
+            );
+            
+            stepsContainer.insertAdjacentHTML('beforeend', stepHTML);
+            renumberEditSteps();
+        };
+
+        // ============ UPDATE EDIT STEP TYPE ============
+        window.updateEditStepType = function(select, index) {
+            const watchContainer = document.getElementById(`edit-watch-container-${index}`);
+            if (watchContainer) {
+                watchContainer.style.display = select.value === 'watch' ? 'grid' : 'none';
+            }
+        };
+
+        // ============ SAVE STEP CHANGES ============
+        window.saveStepChanges = function(button, index) {
+            // Visual feedback
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i> Saved!';
+            button.style.background = 'rgba(16,185,129,0.3)';
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.background = 'rgba(16,185,129,0.1)';
+            }, 1500);
+            
+            showCopyNotification(`✅ Step ${index + 1} changes saved`, false);
+        };
+
+        // ============ DELETE STEP ============
+        window.deleteStep = function(index) {
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const stepCards = stepsContainer.querySelectorAll('.step-card');
+            if (stepCards.length <= 1) {
+                showCopyNotification('⚠️ Cannot delete the last step', true);
+                return;
+            }
+            
+            if (confirm('Delete this step?')) {
+                stepCards[index].remove();
+                renumberEditSteps();
+                showCopyNotification('✅ Step deleted', false);
+            }
+        };
+
+        // ============ RENUMBER EDIT STEPS ============
+        function renumberEditSteps() {
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const stepCards = stepsContainer.querySelectorAll('.step-card');
+            stepCards.forEach((card, newIndex) => {
+                const badge = card.querySelector('.step-badge');
+                if (badge) {
+                    const icon = badge.querySelector('i').cloneNode(true);
+                    badge.innerHTML = '';
+                    badge.appendChild(icon);
+                    badge.appendChild(document.createTextNode(` Step ${newIndex + 1}:`));
+                }
+                card.setAttribute('data-step-index', newIndex);
+            });
+        }
+
+        // ============ ADD MANUAL STEP (EDIT MODE) ============
+        window.addManualStep = function() {
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const timeLimits = getTimeLimits();
+            const currentStepCount = stepsContainer.children.length;
+            const maxSteps = isPremium ? 20 : 8;
+            
+            if (currentStepCount >= maxSteps) {
+                showCopyNotification(`⚠️ Maximum ${maxSteps} steps reached`, true);
+                return;
+            }
+            
+            const newIndex = currentStepCount;
+            const stepHTML = generateStepEditHTML(
+                {
+                    type: 'custom',
+                    label: `Step ${newIndex + 1}`,
+                    url: '',
+                    waitTime: 20,
+                    watchTime: 20,
+                    platform: 'custom'
+                },
+                newIndex,
+                'custom',
+                timeLimits
+            );
+            
+            stepsContainer.insertAdjacentHTML('beforeend', stepHTML);
+        };
+
+        // ============ SAVE EDITED SCRIPT ============
+        window.saveEditedScript = async function() {
+            if (!editingScript) {
+                showCopyNotification('❌ No script being edited', true);
+                return;
+            }
+            
+            // Gather all steps
+            const stepsContainer = document.getElementById('steps-container');
+            const stepCards = stepsContainer.querySelectorAll('.step-card');
+            const steps = [];
+            
+            stepCards.forEach((card, index) => {
+                const nameInput = document.getElementById(`edit-step-name-${index}`);
+                const urlInput = document.getElementById(`edit-step-url-${index}`);
+                const typeSelect = document.getElementById(`edit-step-type-${index}`);
+                const waitInput = document.getElementById(`edit-step-wait-${index}`);
+                const watchInput = document.getElementById(`edit-step-watch-${index}`);
+                const platformInput = document.getElementById(`edit-step-platform-${index}`);
+                
+                if (urlInput && urlInput.value) {
+                    const waitTime = waitInput ? parseInt(waitInput.value) || 20 : 20;
+                    const watchTime = watchInput ? parseInt(watchInput.value) || waitTime : waitTime;
+                    
+                    steps.push({
+                        order: index + 1,
+                        type: typeSelect ? typeSelect.value : 'custom',
+                        label: nameInput ? nameInput.value : `Step ${index + 1}`,
+                        url: urlInput.value,
+                        waitTime: waitTime,
+                        watchTime: watchTime,
+                        platform: platformInput ? platformInput.value : 'custom',
+                        completed: false,
+                        locked: index > 0
+                    });
+                }
+            });
+            
+            if (steps.length === 0) {
+                showCopyNotification('⚠️ Please add at least one step', true);
+                return;
+            }
+            
+            const scriptTitle = document.getElementById('edit-script-title')?.value;
+            if (!scriptTitle) {
+                showCopyNotification('⚠️ Please enter a script title', true);
+                return;
+            }
+            
+            const unlockUrl = document.getElementById('edit-unlock-url')?.value;
+            if (!unlockUrl) {
+                showCopyNotification('⚠️ Please enter an unlock URL', true);
+                return;
+            }
+            
+            // Determine visibility
+            const isPrivate = document.getElementById('edit-private-script')?.checked || false;
+            const isUnlisted = document.getElementById('edit-unlisted-script')?.checked || false;
+            const isPublic = document.getElementById('edit-public-script')?.checked || (!isPrivate && !isUnlisted);
+            const sequentialRequired = document.getElementById('edit-sequential-steps')?.checked || true;
+            
+            try {
+                // Update the script in Firestore
+                await db.collection('scripts').doc(editingScript.id).update({
+                    title: scriptTitle,
+                    steps: steps,
+                    unlockUrl: unlockUrl,
+                    isPrivate: isPrivate,
+                    isUnlisted: isUnlisted,
+                    isPublic: isPublic,
+                    sequentialRequired: sequentialRequired,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showCopyNotification('✅ Script updated successfully!');
+                
+                // Exit editing mode
+                cancelEditing();
+                
+                // Refresh the dashboard
+                renderDashboard();
+                
+            } catch (error) {
+                console.error('Error updating script:', error);
+                showCopyNotification('❌ Error updating script: ' + error.message, true);
+            }
+        };
+
+        // ============ CANCEL EDITING ============
+        window.cancelEditing = function() {
+            editingScript = null;
+            isEditing = false;
+            document.body.classList.remove('editing-mode');
+            renderDashboard();
+        };
+
         // ============ PREMIUM FEATURE: REMOVE MANDATORY STEP FROM OWNER'S SCRIPT FOR 24 HOURS (AFFECTS ALL VIEWERS) ============
         window.removeMandatoryStep = async function(scriptId) {
             if (!isPremium) {
@@ -2154,6 +2889,17 @@
                 return true;
             }
             
+            if (hash.startsWith('#edit-')) {
+                const scriptId = hash.replace('#edit-', '');
+                if (currentUser) {
+                    loadScriptForEditing(scriptId);
+                } else {
+                    showCopyNotification('⚠️ Please login to edit scripts', true);
+                    window.location.hash = '';
+                }
+                return true;
+            }
+            
             if (hash === '#creator' || hash === '#dashboard') {
                 if (currentUser) {
                     renderDashboard();
@@ -2164,7 +2910,11 @@
             }
             
             if (hash === '#subscriptions') {
-                renderSubscriptions();
+                if (currentUser) {
+                    renderSubscriptions();
+                } else {
+                    renderAuth();
+                }
                 return true;
             }
             
@@ -2372,49 +3122,49 @@
             const hasViewed = hasDeviceViewed(scriptId);
             
             if (!hasViewed) {
-    // Track view (only once per device)
-    try {
-        await db.collection('analytics').add({
-            scriptId: scriptId,
-            type: 'view',
-            userId: currentUser?.uid || 'anonymous',
-            deviceId: deviceId,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        // FIX: Update view count using separate operations
-        const scriptRef = db.collection('scripts').doc(scriptId);
-        
-        // First update: increment total views
-        await scriptRef.update({
-            'views.total': firebase.firestore.FieldValue.increment(1)
-        });
-        
-        // Second update: add device to unique views array
-        await scriptRef.update({
-            'views.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
-        });
-        
-        // Update creator's total views
-        if (script.ownerId) {
-            await db.collection('users').doc(script.ownerId).update({
-                totalViews: firebase.firestore.FieldValue.increment(1)
-            }).catch(e => console.log('Creator stats update error:', e));
-        }
-        
-        // Mark as viewed for this device
-        if (currentUser) {
-            viewedScripts[scriptId] = true;
-            await saveUserViews();
-        } else {
-            if (!deviceInteractions.viewedScripts) deviceInteractions.viewedScripts = {};
-            deviceInteractions.viewedScripts[scriptId] = true;
-            saveDeviceInteractions();
-        }
-    } catch (error) {
-        console.error('Error tracking view:', error);
-    }
-}
+                // Track view (only once per device)
+                try {
+                    await db.collection('analytics').add({
+                        scriptId: scriptId,
+                        type: 'view',
+                        userId: currentUser?.uid || 'anonymous',
+                        deviceId: deviceId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // FIX: Update view count using separate operations
+                    const scriptRef = db.collection('scripts').doc(scriptId);
+                    
+                    // First update: increment total views
+                    await scriptRef.update({
+                        'views.total': firebase.firestore.FieldValue.increment(1)
+                    });
+                    
+                    // Second update: add device to unique views array
+                    await scriptRef.update({
+                        'views.unique': firebase.firestore.FieldValue.arrayUnion(deviceId)
+                    });
+                    
+                    // Update creator's total views
+                    if (script.ownerId) {
+                        await db.collection('users').doc(script.ownerId).update({
+                            totalViews: firebase.firestore.FieldValue.increment(1)
+                        }).catch(e => console.log('Creator stats update error:', e));
+                    }
+                    
+                    // Mark as viewed for this device
+                    if (currentUser) {
+                        viewedScripts[scriptId] = true;
+                        await saveUserViews();
+                    } else {
+                        if (!deviceInteractions.viewedScripts) deviceInteractions.viewedScripts = {};
+                        deviceInteractions.viewedScripts[scriptId] = true;
+                        saveDeviceInteractions();
+                    }
+                } catch (error) {
+                    console.error('Error tracking view:', error);
+                }
+            }
             
             renderUnlocker(script);
         }
@@ -2514,6 +3264,11 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px;">
+                            ${isOwner ? `
+                            <button class="copy-btn" onclick="window.location.hash='#edit-${script.id}'">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            ` : ''}
                             <button class="copy-btn" onclick="window.location.hash='#dashboard'">
                                 <i class="fas fa-home"></i> Dashboard
                             </button>
@@ -3310,6 +4065,14 @@ window.finalUnlock = async function(scriptId) {
                                 <span><i class="fas fa-mobile-alt"></i> Unique: ${script.views?.unique?.length || 0}</span>
                                 <span><i class="fas fa-check-circle"></i> Unlocked: ${script.unlocks?.unique?.length || 0}</span>
                             </div>
+                            <div style="padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px;">
+                                <button class="copy-btn" style="flex: 1; padding: 8px;" onclick="event.stopPropagation(); window.location.hash='#edit-${script.id}'">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="copy-btn" style="flex: 1; padding: 8px;" onclick="event.stopPropagation(); window.copyToClipboard('${window.location.origin}${window.location.pathname}#script-${script.id}')">
+                                    <i class="fas fa-share-alt"></i> Share
+                                </button>
+                            </div>
                         </div>
                     `;
                 });
@@ -4033,6 +4796,9 @@ window.finalUnlock = async function(scriptId) {
                         </div>
                         <div style="padding: 20px;">
                             <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                <button onclick="window.location.hash='#edit-${script.id}'" class="copy-btn" style="flex: 1;">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
                                 <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
                                     <i class="fas fa-share-alt"></i> Share
                                 </button>
@@ -4082,19 +4848,19 @@ window.finalUnlock = async function(scriptId) {
             const timeLimits = getTimeLimits();
             
             const templates = [
-                { id: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', desc: 'Follow, Like, Comment, Watch', color: '#000000', steps: ['follow', 'like', 'comment', 'watch'] },
-                { id: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', desc: 'Subscribe, Like, Comment, Watch', color: '#FF0000', steps: ['subscribe', 'like', 'comment', 'watch'] },
-                { id: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', desc: 'Follow, Like, Comment, Watch Story', color: '#E4405F', steps: ['follow', 'like', 'comment', 'watch'] },
-                { id: 'twitter', name: 'X', icon: 'fab fa-twitter', desc: 'Follow, Like, Retweet, Reply', color: '#1DA1F2', steps: ['follow', 'like', 'retweet', 'reply'] },
-                { id: 'discord', name: 'Discord', icon: 'fab fa-discord', desc: 'Join Server, Verify, React', color: '#5865F2', steps: ['join', 'verify', 'react'] },
-                { id: 'twitch', name: 'Twitch', icon: 'fab fa-twitch', desc: 'Follow, Subscribe, Watch', color: '#9146FF', steps: ['follow', 'subscribe', 'watch'] }
+                { id: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', desc: 'Follow, Like, Comment, Watch, Share, Save', color: '#000000', steps: 6 },
+                { id: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', desc: 'Subscribe, Like, Comment, Watch, Share, Notifications', color: '#FF0000', steps: 6 },
+                { id: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', desc: 'Follow, Like, Comment, Watch Story, Save, Share', color: '#E4405F', steps: 6 },
+                { id: 'twitter', name: 'X', icon: 'fab fa-twitter', desc: 'Follow, Like, Retweet, Reply, Quote, Bookmark', color: '#1DA1F2', steps: 6 },
+                { id: 'discord', name: 'Discord', icon: 'fab fa-discord', desc: 'Join, Verify, React, Message, Role, Boost', color: '#5865F2', steps: 6 },
+                { id: 'twitch', name: 'Twitch', icon: 'fab fa-twitch', desc: 'Follow, Subscribe, Watch, Host, Raid, Cheer', color: '#9146FF', steps: 6 }
             ];
             
             let templatesHTML = '';
             templates.forEach(template => {
                 templatesHTML += `
                     <div class="template-card" onclick="window.applyTemplate('${template.id}')">
-                        <div class="template-badge">${template.steps.length} Steps</div>
+                        <div class="template-badge">${template.steps} Steps</div>
                         <i class="${template.icon}" style="font-size: 48px; margin-bottom: 16px; color: ${template.color};"></i>
                         <div class="template-name">${template.name}</div>
                         <div class="template-desc">${template.desc}</div>
@@ -4128,69 +4894,28 @@ window.finalUnlock = async function(scriptId) {
                 return;
             }
             
-            const timeLimits = getTimeLimits();
-            const defaultWait = Math.min(20, timeLimits.max);
-            
-            const templates = {
-                tiktok: {
-                    name: 'TikTok',
-                    steps: [
-                        { type: 'follow', label: 'Follow TikTok Channel', url: 'https://tiktok.com/@', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'like', label: 'Like TikTok Video', url: 'https://tiktok.com/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'comment', label: 'Comment on TikTok', url: 'https://tiktok.com/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'watch', label: 'Watch TikTok Video', url: 'https://tiktok.com/', wait: defaultWait, watchTime: defaultWait }
-                    ]
-                },
-                youtube: {
-                    name: 'YouTube',
-                    steps: [
-                        { type: 'subscribe', label: 'Subscribe to Channel', url: 'https://youtube.com/@', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'like', label: 'Like Video', url: 'https://youtube.com/watch', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'comment', label: 'Post Comment', url: 'https://youtube.com/watch', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'watch', label: 'Watch Video', url: 'https://youtube.com/watch', wait: defaultWait, watchTime: defaultWait }
-                    ]
-                },
-                instagram: {
-                    name: 'Instagram',
-                    steps: [
-                        { type: 'follow', label: 'Follow Instagram Profile', url: 'https://instagram.com/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'like', label: 'Like Post', url: 'https://instagram.com/p/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'comment', label: 'Comment on Post', url: 'https://instagram.com/p/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'watch', label: 'Watch Story', url: 'https://instagram.com/stories/', wait: defaultWait, watchTime: defaultWait }
-                    ]
-                },
-                twitter: {
-                    name: 'X',
-                    steps: [
-                        { type: 'follow', label: 'Follow X Account', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'like', label: 'Like Post', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'retweet', label: 'Retweet', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'reply', label: 'Reply to Post', url: 'https://twitter.com/', wait: defaultWait, watchTime: defaultWait }
-                    ]
-                },
-                discord: {
-                    name: 'Discord',
-                    steps: [
-                        { type: 'join', label: 'Join Discord Server', url: 'https://discord.gg/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'verify', label: 'Verify Account', url: 'https://discord.com/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'react', label: 'React to Message', url: 'https://discord.com/', wait: defaultWait, watchTime: defaultWait }
-                    ]
-                },
-                twitch: {
-                    name: 'Twitch',
-                    steps: [
-                        { type: 'follow', label: 'Follow Twitch Channel', url: 'https://twitch.tv/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'subscribe', label: 'Subscribe (Free)', url: 'https://twitch.tv/', wait: defaultWait, watchTime: defaultWait },
-                        { type: 'watch', label: 'Watch Stream', url: 'https://twitch.tv/', wait: defaultWait, watchTime: defaultWait }
-                    ]
-                }
-            };
-            
-            const template = templates[templateId];
+            const template = PLATFORM_TEMPLATES[templateId];
             if (!template) return;
             
-            currentTemplate = template;
-            window.showCreatorWithTemplate(template);
+            // Create a new script with all steps from the template
+            const timeLimits = getTimeLimits();
+            const steps = template.steps.map((step, index) => ({
+                order: index + 1,
+                type: step.type,
+                label: step.label,
+                url: step.url,
+                waitTime: Math.min(step.defaultWait, timeLimits.max),
+                watchTime: Math.min(step.defaultWait, timeLimits.max),
+                platform: templateId,
+                completed: false,
+                locked: index > 0
+            }));
+            
+            // Show creator with template pre-filled
+            window.showCreatorWithTemplate({
+                name: template.name,
+                steps: steps
+            });
         };
 
         // ============ SHOW CREATOR WITH TEMPLATE ============
@@ -4203,11 +4928,14 @@ window.finalUnlock = async function(scriptId) {
             
             let stepsHTML = '';
             template.steps.forEach((step, index) => {
+                const platform = step.platform || 'custom';
+                const platformColor = PLATFORM_TEMPLATES[platform]?.color || '#6366f1';
+                
                 stepsHTML += `
-                    <div class="step-card" data-step-index="${index}">
+                    <div class="step-card ${platform}" data-step-index="${index}">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <span class="step-badge">
-                                <i class="fas ${getStepIcon(step.type)}"></i> 
+                                <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
                                 Step ${index + 1}
                             </span>
                             <div style="display: flex; gap: 8px;">
@@ -4233,7 +4961,7 @@ window.finalUnlock = async function(scriptId) {
                                 <span class="wait-time-badge">
                                     <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
                                 </span>
-                                <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.wait}" min="0" max="${timeLimits.max}" step="1">
+                                <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.waitTime}" min="0" max="${timeLimits.max}" step="1">
                             </div>
                             
                             ${step.type === 'watch' ? `
@@ -4241,13 +4969,13 @@ window.finalUnlock = async function(scriptId) {
                                 <span class="wait-time-badge">
                                     <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
                                 </span>
-                                <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.wait}" min="0" max="${timeLimits.max}" step="1">
+                                <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.waitTime}" min="0" max="${timeLimits.max}" step="1">
                             </div>
                             ` : ''}
                         </div>
                         
                         <input type="hidden" class="step-type" value="${step.type}">
-                        <input type="hidden" id="step-watch-hidden-${index}" value="${step.watchTime || step.wait}">
+                        <input type="hidden" class="step-platform" value="${platform}">
                     </div>
                 `;
             });
@@ -4354,7 +5082,7 @@ window.finalUnlock = async function(scriptId) {
                     <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 24px; padding: 40px; margin-bottom: 32px; text-align: center;">
                         <i class="fas fa-layer-group" style="font-size: 64px; color: #6366f1; margin-bottom: 16px;"></i>
                         <h2 style="margin-bottom: 16px;">Start with a Template</h2>
-                        <p style="color: var(--text-dim); margin-bottom: 24px;">Choose from templates for TikTok, YouTube, Instagram, and more</p>
+                        <p style="color: var(--text-dim); margin-bottom: 24px;">Choose from templates for TikTok, YouTube, Instagram, and more with all available actions</p>
                         <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
                             <i class="fas fa-layer-group"></i> Browse Templates
                         </button>
@@ -4447,6 +5175,10 @@ window.finalUnlock = async function(scriptId) {
                         <option value="comment">💬 Comment</option>
                         <option value="watch" selected>🎬 Watch Video</option>
                         <option value="join">🚪 Join Server</option>
+                        <option value="share">📤 Share</option>
+                        <option value="save">💾 Save</option>
+                        <option value="retweet">🔄 Retweet</option>
+                        <option value="reply">↩️ Reply</option>
                         <option value="custom">🔗 Custom Link</option>
                     </select>
                     
@@ -4471,6 +5203,7 @@ window.finalUnlock = async function(scriptId) {
                     </div>
                     
                     <input type="hidden" class="step-type" value="watch">
+                    <input type="hidden" class="step-platform" value="custom">
                 </div>
             `;
             
@@ -4528,7 +5261,7 @@ window.finalUnlock = async function(scriptId) {
             
             if (watchContainer) {
                 if (select.value === 'watch') {
-                    watchContainer.style.display = 'flex';
+                    watchContainer.style.display = 'grid';
                 } else {
                     watchContainer.style.display = 'none';
                 }
@@ -4550,6 +5283,7 @@ window.finalUnlock = async function(scriptId) {
                 const nameInput = card.querySelector('.step-name-input');
                 const urlInput = card.querySelector('.step-url-input');
                 const typeInput = card.querySelector('.step-type');
+                const platformInput = card.querySelector('.step-platform');
                 const waitInput = card.querySelector('.wait-time-input');
                 const watchInput = card.querySelector('.watch-time-input');
                 
@@ -4570,6 +5304,7 @@ window.finalUnlock = async function(scriptId) {
                         url: urlInput.value,
                         waitTime: validWaitTime,
                         watchTime: validWatchTime,
+                        platform: platformInput ? platformInput.value : 'custom',
                         completed: false,
                         locked: index > 0
                     });
@@ -4601,32 +5336,30 @@ window.finalUnlock = async function(scriptId) {
             const scriptId = 'vx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
             const templateName = currentTemplate?.name || 'Manual';
             
-           // In createScript function, when creating scriptData:
-
-const scriptData = {
-    scriptId: scriptId,
-    ownerId: currentUser.uid,
-    ownerName: currentUser.displayName || 'Anonymous',
-    ownerIsPremium: isPremium || false,
-    title: scriptTitle,
-    template: templateName,
-    steps: steps,
-    unlockUrl: unlockUrl,
-    isPrivate: isPrivate,
-    isUnlisted: isUnlisted,
-    isPublic: isPublic,
-    sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    status: 'active',
-    views: {
-        total: 0,
-        unique: []  // Initialize as empty array
-    },
-    unlocks: {
-        total: 0,
-        unique: []  // Initialize as empty array
-    }
-};
+            const scriptData = {
+                scriptId: scriptId,
+                ownerId: currentUser.uid,
+                ownerName: currentUser.displayName || 'Anonymous',
+                ownerIsPremium: isPremium || false,
+                title: scriptTitle,
+                template: templateName,
+                steps: steps,
+                unlockUrl: unlockUrl,
+                isPrivate: isPrivate,
+                isUnlisted: isUnlisted,
+                isPublic: isPublic,
+                sequentialRequired: document.getElementById('sequential-steps')?.checked || true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'active',
+                views: {
+                    total: 0,
+                    unique: []  // Initialize as empty array
+                },
+                unlocks: {
+                    total: 0,
+                    unique: []  // Initialize as empty array
+                }
+            };
             
             try {
                 const docRef = await db.collection('scripts').add(scriptData);
@@ -5022,6 +5755,17 @@ const scriptData = {
                 join: 'fa-door-open',
                 verify: 'fa-check-circle',
                 react: 'fa-smile',
+                share: 'fa-share-alt',
+                save: 'fa-bookmark',
+                notification: 'fa-bell',
+                quote: 'fa-quote-right',
+                bookmark: 'fa-bookmark',
+                message: 'fa-comment-dots',
+                role: 'fa-tag',
+                boost: 'fa-rocket',
+                host: 'fa-tv',
+                raid: 'fa-users',
+                cheer: 'fa-smile-wink',
                 custom: 'fa-link'
             };
             return icons[type] || 'fa-link';
