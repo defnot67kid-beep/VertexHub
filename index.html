@@ -2434,9 +2434,10 @@
 
             showCopyNotification(`✅ Subscribed to ${creatorName}!`);
 
+            // Ask for notification permission if not already set
             if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
                 setTimeout(() => {
-                    if (confirm('🔔 Allow notifications to get alerts when this creator uploads new scripts?')) {
+                    if (confirm('🔔 Would you like to enable notifications to get alerts when this creator uploads new scripts?')) {
                         requestNotificationPermission();
                     }
                 }, 1000);
@@ -2468,11 +2469,31 @@
                 showCopyNotification('❌ Notifications not supported in this browser', true);
                 return;
             }
-
+            
+            if (Notification.permission === 'granted') {
+                showCopyNotification('✅ Notifications already enabled!');
+                return;
+            }
+            
+            if (Notification.permission === 'denied') {
+                showCopyNotification('❌ Notifications blocked. Please enable them in your browser settings.', true);
+                return;
+            }
+            
             Notification.requestPermission().then(permission => {
-                notificationPermission = permission === 'granted';
-                if (notificationPermission) {
-                    showCopyNotification('✅ Notifications enabled!');
+                if (permission === 'granted') {
+                    notificationPermission = true;
+                    showCopyNotification('✅ Notifications enabled! You\'ll get alerts from creators you subscribe to.');
+                    
+                    // Send a test notification
+                    setTimeout(() => {
+                        new Notification('🔔 VertexHub Notifications', {
+                            body: 'You\'ll now receive notifications when creators upload new scripts!',
+                            icon: '/favicon.ico'
+                        });
+                    }, 1000);
+                } else {
+                    showCopyNotification('❌ Notification permission denied', true);
                 }
             });
         }
@@ -4021,18 +4042,34 @@
             }, 100);
         }
 
-        // ============ OPEN RUMBLE VIDEO IN MODAL ============
+        // ============ OPEN RUMBLE VIDEO IN MODAL (FIXED) ============
         function openRumbleVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
             let videoId = '';
+            
+            // Improved Rumble URL parsing
             if (videoUrl.includes('rumble.com/')) {
-                const parts = videoUrl.split('rumble.com/');
-                if (parts.length > 1) {
-                    videoId = parts[1].split('.html')[0].split('/').pop();
+                // Handle different Rumble URL formats
+                const matches = videoUrl.match(/rumble\.com\/(?:v|embed|video)\/([a-zA-Z0-9\-_]+)/i);
+                if (matches && matches[1]) {
+                    videoId = matches[1];
+                } else {
+                    // Fallback: try to extract the ID from various URL patterns
+                    const urlParts = videoUrl.split('rumble.com/')[1];
+                    if (urlParts) {
+                        // Remove any query parameters or trailing slashes
+                        const cleanPath = urlParts.split('?')[0].split('#')[0].replace(/\/$/, '');
+                        // Get the last segment which should be the video ID
+                        const segments = cleanPath.split('/');
+                        videoId = segments[segments.length - 1];
+                        
+                        // Remove common prefixes if present
+                        videoId = videoId.replace(/^(v|embed|video)-/, '');
+                    }
                 }
             }
             
             if (!videoId) {
-                showCopyNotification('❌ Invalid Rumble URL', true);
+                showCopyNotification('❌ Could not extract Rumble video ID. Please check the URL format.', true);
                 return;
             }
             
@@ -4057,6 +4094,7 @@
                             height="100%" 
                             frameborder="0" 
                             allowfullscreen
+                            allow="autoplay; encrypted-media"
                             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
                             id="modal-rumble-player"
                         ></iframe>
@@ -4090,22 +4128,21 @@
                 stepIndex: stepIndex,
                 scriptId: scriptId,
                 completed: false,
-                lastVideoTime: 0,
-                skipAttempts: 0,
-                videoDuration: 0,
                 requiredWatchTime: requiredWatchTime,
                 watchedSeconds: 0,
                 watchCompleted: false,
-                player: null
+                skipAttempts: 0
             };
             
-            // Rumble doesn't have a direct API, so we'll use a timer-based approach
+            // Start timer-based watching
             startRumbleWatchTimer(watchState, requiredWatchTime);
         }
 
+        // Improved timer function with better Rumble support
         function startRumbleWatchTimer(watchState, requiredWatchTime) {
             let startTime = Date.now();
             let elapsedSeconds = 0;
+            let warningTimeout = null;
             
             const overlay = document.getElementById('modal-overlay');
             if (overlay) {
@@ -4117,6 +4154,19 @@
                 };
             }
             
+            // Block keyboard shortcuts
+            const keyHandler = (e) => {
+                // Block spacebar, arrow keys, page up/down, home, end
+                if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleModalSkipAttempt('keyboard', watchState);
+                    return false;
+                }
+            };
+            
+            window.addEventListener('keydown', keyHandler, true);
+            
             const timerInterval = setInterval(() => {
                 if (watchState.completed || !document.getElementById('video-modal')) {
                     clearInterval(timerInterval);
@@ -4124,8 +4174,15 @@
                 }
                 
                 elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                
+                // Check for skipping (if time jumps too fast)
+                if (elapsedSeconds > watchState.watchedSeconds + 2) {
+                    handleModalSkipAttempt('timejump', watchState);
+                }
+                
                 watchState.watchedSeconds = elapsedSeconds;
                 
+                // Update UI elements
                 const timerDisplay = document.getElementById('modal-timer');
                 if (timerDisplay) {
                     timerDisplay.innerHTML = `${formatTime(elapsedSeconds)} / ${formatTime(requiredWatchTime)} (need ${requiredWatchTime}s)`;
@@ -4143,10 +4200,12 @@
                     watchProgress.style.width = progressPercent + '%';
                 }
                 
+                // Check if watch time completed
                 if (elapsedSeconds >= requiredWatchTime && !watchState.watchCompleted) {
                     watchState.watchCompleted = true;
                     watchState.completed = true;
                     
+                    // Show completion message
                     const completeMessage = document.getElementById('modal-complete-message');
                     if (completeMessage) {
                         completeMessage.innerHTML = `✅ Watched ${requiredWatchTime}s!`;
@@ -4158,127 +4217,47 @@
                         countdown.innerHTML = '✓ Completed! Closing...';
                     }
                     
+                    // Update step state
                     const script = window.currentUnlockScript;
                     if (script) {
                         activeStepStates[watchState.stepIndex].videoCompleted = true;
                         activeStepStates[watchState.stepIndex].showingVideo = false;
                         renderUnlockSteps(script);
                         
+                        // Start timer after video completion
                         setTimeout(() => {
                             startStepTimerAfterVideo(watchState.stepIndex);
                         }, 500);
                     }
                     
+                    // Show warning before closing
+                    const warning = document.getElementById('modal-warning');
+                    if (warning) {
+                        warning.innerHTML = '✅ Video watched! Closing...';
+                        warning.style.background = '#10b981';
+                        warning.style.display = 'block';
+                    }
+                    
+                    // Close modal
                     setTimeout(() => {
                         window.closeVideoModal();
                     }, 1500);
                 }
             }, 100);
             
-            const keyHandler = (e) => {
-                if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleModalSkipAttempt('keyboard', watchState);
-                    return false;
-                }
-            };
-            
-            window.addEventListener('keydown', keyHandler, true);
-            
+            // Clean up on modal close
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (!document.body.contains(document.getElementById('video-modal'))) {
                         window.removeEventListener('keydown', keyHandler, true);
-                        observer.disconnect();
                         clearInterval(timerInterval);
+                        if (warningTimeout) clearTimeout(warningTimeout);
+                        observer.disconnect();
                     }
                 });
             });
             
             observer.observe(document.body, { childList: true, subtree: true });
-        }
-
-        // ============ OPEN TIKTOK VIDEO IN MODAL ============
-        function openTikTokVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
-            let videoId = '';
-            if (videoUrl.includes('tiktok.com/')) {
-                const parts = videoUrl.split('tiktok.com/');
-                if (parts.length > 1) {
-                    videoId = parts[1].split('?')[0];
-                }
-            }
-            
-            const modal = document.createElement('div');
-            modal.className = 'video-modal';
-            modal.id = 'video-modal';
-            
-            modal.innerHTML = `
-                <button class="video-close-btn" onclick="window.closeVideoModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="video-modal-content">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="color: white;">Watch Required TikTok Video</h2>
-                        <div style="color: var(--accent);" id="modal-countdown">Need to watch ${requiredWatchTime}s</div>
-                    </div>
-                    
-                    <div class="custom-tiktok-container">
-                        <blockquote 
-                            class="tiktok-embed" 
-                            cite="${videoUrl}" 
-                            data-video-id="${videoId}" 
-                            style="max-width: 605px;min-width: 325px; position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-                            id="modal-tiktok-embed"
-                        >
-                            <section></section>
-                        </blockquote>
-                        <div class="video-overlay" id="modal-overlay"></div>
-                        <div class="video-timer-progress" id="modal-progress-bar"></div>
-                        <div class="video-timer-display" id="modal-timer">
-                            Loading...
-                        </div>
-                        <div class="video-warning" id="modal-warning" style="display: none;">
-                            ⚠️ Don't skip! Watch required time!
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 20px; text-align: center;">
-                        <p style="color: var(--accent);" id="modal-complete-message"></p>
-                        <div class="timer-progress-bar" style="margin-top: 15px;">
-                            <div id="modal-watch-progress" class="timer-progress-fill" style="width: 0%;"></div>
-                        </div>
-                        <p style="color: var(--text-dim); margin-top: 10px;">
-                            <i class="fas fa-shield"></i> 
-                            Must watch ${requiredWatchTime} seconds
-                        </p>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('video-modal-container').appendChild(modal);
-            currentVideoModal = modal;
-            
-            const watchState = {
-                stepIndex: stepIndex,
-                scriptId: scriptId,
-                completed: false,
-                lastVideoTime: 0,
-                skipAttempts: 0,
-                videoDuration: 0,
-                requiredWatchTime: requiredWatchTime,
-                watchedSeconds: 0,
-                watchCompleted: false,
-                player: null
-            };
-            
-            // Load TikTok embed
-            if (window.tiktok && window.tiktok.loadEmbeds) {
-                window.tiktok.loadEmbeds();
-            }
-            
-            // TikTok doesn't have a direct API, so use timer-based approach
-            startRumbleWatchTimer(watchState, requiredWatchTime); // Reuse the same timer logic
         }
 
         function onModalPlayerReady(event, watchState) {
@@ -4485,6 +4464,88 @@
                 renderUnlockSteps(script);
             }
         };
+
+        // ============ OPEN TIKTOK VIDEO IN MODAL ============
+        function openTikTokVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
+            let videoId = '';
+            if (videoUrl.includes('tiktok.com/')) {
+                const parts = videoUrl.split('tiktok.com/');
+                if (parts.length > 1) {
+                    videoId = parts[1].split('?')[0];
+                }
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'video-modal';
+            modal.id = 'video-modal';
+            
+            modal.innerHTML = `
+                <button class="video-close-btn" onclick="window.closeVideoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="video-modal-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="color: white;">Watch Required TikTok Video</h2>
+                        <div style="color: var(--accent);" id="modal-countdown">Need to watch ${requiredWatchTime}s</div>
+                    </div>
+                    
+                    <div class="custom-tiktok-container">
+                        <blockquote 
+                            class="tiktok-embed" 
+                            cite="${videoUrl}" 
+                            data-video-id="${videoId}" 
+                            style="max-width: 605px;min-width: 325px; position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                            id="modal-tiktok-embed"
+                        >
+                            <section></section>
+                        </blockquote>
+                        <div class="video-overlay" id="modal-overlay"></div>
+                        <div class="video-timer-progress" id="modal-progress-bar"></div>
+                        <div class="video-timer-display" id="modal-timer">
+                            Loading...
+                        </div>
+                        <div class="video-warning" id="modal-warning" style="display: none;">
+                            ⚠️ Don't skip! Watch required time!
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <p style="color: var(--accent);" id="modal-complete-message"></p>
+                        <div class="timer-progress-bar" style="margin-top: 15px;">
+                            <div id="modal-watch-progress" class="timer-progress-fill" style="width: 0%;"></div>
+                        </div>
+                        <p style="color: var(--text-dim); margin-top: 10px;">
+                            <i class="fas fa-shield"></i> 
+                            Must watch ${requiredWatchTime} seconds
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('video-modal-container').appendChild(modal);
+            currentVideoModal = modal;
+            
+            const watchState = {
+                stepIndex: stepIndex,
+                scriptId: scriptId,
+                completed: false,
+                lastVideoTime: 0,
+                skipAttempts: 0,
+                videoDuration: 0,
+                requiredWatchTime: requiredWatchTime,
+                watchedSeconds: 0,
+                watchCompleted: false,
+                player: null
+            };
+            
+            // Load TikTok embed
+            if (window.tiktok && window.tiktok.loadEmbeds) {
+                window.tiktok.loadEmbeds();
+            }
+            
+            // TikTok doesn't have a direct API, so use timer-based approach
+            startRumbleWatchTimer(watchState, requiredWatchTime); // Reuse the same timer logic
+        }
 
         // ============ START STEP TIMER ============
         function startStepTimer(stepIndex) {
@@ -6708,4 +6769,4 @@
         };
     </script>
 </body>
-    </html>
+</html>
