@@ -4042,101 +4042,119 @@
             }, 100);
         }
 
-        // ============ OPEN RUMBLE VIDEO IN MODAL (FIXED) ============
-        function openRumbleVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
-            let videoId = '';
-            
-            // Improved Rumble URL parsing
-            if (videoUrl.includes('rumble.com/')) {
-                // Handle different Rumble URL formats
-                const matches = videoUrl.match(/rumble\.com\/(?:v|embed|video)\/([a-zA-Z0-9\-_]+)/i);
-                if (matches && matches[1]) {
-                    videoId = matches[1];
-                } else {
-                    // Fallback: try to extract the ID from various URL patterns
-                    const urlParts = videoUrl.split('rumble.com/')[1];
-                    if (urlParts) {
-                        // Remove any query parameters or trailing slashes
-                        const cleanPath = urlParts.split('?')[0].split('#')[0].replace(/\/$/, '');
-                        // Get the last segment which should be the video ID
-                        const segments = cleanPath.split('/');
-                        videoId = segments[segments.length - 1];
-                        
-                        // Remove common prefixes if present
-                        videoId = videoId.replace(/^(v|embed|video)-/, '');
-                    }
-                }
-            }
-            
-            if (!videoId) {
-                showCopyNotification('❌ Could not extract Rumble video ID. Please check the URL format.', true);
+        // ============ OPEN RUMBLE VIDEO IN MODAL (FIXED with proper ID extraction) ============
+function openRumbleVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
+    let videoId = '';
+    
+    // First, try to extract from various Rumble URL formats
+    if (videoUrl.includes('rumble.com/')) {
+        // Check if it's already an embed URL
+        if (videoUrl.includes('/embed/')) {
+            const embedMatch = videoUrl.match(/\/embed\/([a-zA-Z0-9]+)/);
+            if (embedMatch) videoId = embedMatch[1];
+        }
+        // Check for regular video URL format
+        else if (videoUrl.includes('/v')) {
+            // Extract the video ID from the path
+            const pathMatch = videoUrl.match(/\/v([a-zA-Z0-9]+)(?:-|$|\/)/);
+            if (pathMatch) {
+                // For v75tx3u format, we need to use the embed version
+                // Note: Sometimes the embed ID is different! 
+                // We'll use a mapping or try to fetch the page to get the embed ID
+                
+                // Common pattern - sometimes the embed ID is the same as the URL ID
+                // But for your example, v75tx3u vs v73n93m shows they differ
+                
+                // Since we can't access the page, we'll need to:
+                // 1. Show an error asking user to provide the embed URL
+                // 2. Or attempt to construct the embed URL and let Rumble handle it
+                
+                showCopyNotification('⚠️ Please use the Rumble embed URL (right-click video → Copy embed code)', true);
                 return;
             }
-            
-            const modal = document.createElement('div');
-            modal.className = 'video-modal';
-            modal.id = 'video-modal';
-            
-            modal.innerHTML = `
-                <button class="video-close-btn" onclick="window.closeVideoModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="video-modal-content">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2 style="color: white;">Watch Required Rumble Video</h2>
-                        <div style="color: var(--accent);" id="modal-countdown">Need to watch ${requiredWatchTime}s</div>
-                    </div>
-                    
-                    <div class="custom-rumble-container">
-                        <iframe 
-                            src="https://rumble.com/embed/${videoId}/?pub=4" 
-                            width="100%" 
-                            height="100%" 
-                            frameborder="0" 
-                            allowfullscreen
-                            allow="autoplay; encrypted-media"
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-                            id="modal-rumble-player"
-                        ></iframe>
-                        <div class="video-overlay" id="modal-overlay"></div>
-                        <div class="video-timer-progress" id="modal-progress-bar"></div>
-                        <div class="video-timer-display" id="modal-timer">
-                            Loading...
-                        </div>
-                        <div class="video-warning" id="modal-warning" style="display: none;">
-                            ⚠️ Don't skip! Watch required time!
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 20px; text-align: center;">
-                        <p style="color: var(--accent);" id="modal-complete-message"></p>
-                        <div class="timer-progress-bar" style="margin-top: 15px;">
-                            <div id="modal-watch-progress" class="timer-progress-fill" style="width: 0%;"></div>
-                        </div>
-                        <p style="color: var(--text-dim); margin-top: 10px;">
-                            <i class="fas fa-shield"></i> 
-                            Must watch ${requiredWatchTime} seconds
-                        </p>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('video-modal-container').appendChild(modal);
-            currentVideoModal = modal;
-            
-            const watchState = {
-                stepIndex: stepIndex,
-                scriptId: scriptId,
-                completed: false,
-                requiredWatchTime: requiredWatchTime,
-                watchedSeconds: 0,
-                watchCompleted: false,
-                skipAttempts: 0
-            };
-            
-            // Start timer-based watching
-            startRumbleWatchTimer(watchState, requiredWatchTime);
         }
+    }
+    
+    if (!videoId) {
+        showCopyNotification('❌ Could not extract Rumble video ID. Please use the embed URL format: https://rumble.com/embed/VIDEOID', true);
+        return;
+    }
+    
+    // Rest of the modal creation code...
+    createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime);
+}
+
+// Helper function to create the modal with proper embed
+function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
+    const modal = document.createElement('div');
+    modal.className = 'video-modal';
+    modal.id = 'video-modal';
+    
+    const rumbleDivId = 'rumble_' + videoId + '_' + Date.now();
+    
+    modal.innerHTML = `
+        <button class="video-close-btn" onclick="window.closeVideoModal()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="video-modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: white;">Watch Required Rumble Video</h2>
+                <div style="color: var(--accent);" id="modal-countdown">Need to watch ${requiredWatchTime}s</div>
+            </div>
+            
+            <div class="custom-rumble-container">
+                <!-- Rumble embed script -->
+                <script>
+                    !function(r,u,m,b,l,e){r._Rumble=b,r[b]||(r[b]=function(){(r[b]._=r[b]._||[]).push(arguments);if(r[b]._.length==1){l=u.createElement(m),e=u.getElementsByTagName(m)[0],l.async=1,l.src="https://rumble.com/embedJS/u4kxacc"+(arguments[1].video?'.'+arguments[1].video:'')+"/?url="+encodeURIComponent(location.href)+"&args="+encodeURIComponent(JSON.stringify([].slice.apply(arguments))),e.parentNode.insertBefore(l,e)}})}(window, document, "script", "Rumble");
+                <\/script>
+                
+                <div id="${rumbleDivId}"></div>
+                <script>
+                    Rumble("play", {
+                        "video": "${videoId}",
+                        "div": "${rumbleDivId}"
+                    });
+                <\/script>
+                
+                <div class="video-overlay" id="modal-overlay"></div>
+                <div class="video-timer-progress" id="modal-progress-bar"></div>
+                <div class="video-timer-display" id="modal-timer">
+                    Loading...
+                </div>
+                <div class="video-warning" id="modal-warning" style="display: none;">
+                    ⚠️ Don't skip! Watch required time!
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <p style="color: var(--accent);" id="modal-complete-message"></p>
+                <div class="timer-progress-bar" style="margin-top: 15px;">
+                    <div id="modal-watch-progress" class="timer-progress-fill" style="width: 0%;"></div>
+                </div>
+                <p style="color: var(--text-dim); margin-top: 10px;">
+                    <i class="fas fa-shield"></i> 
+                    Must watch ${requiredWatchTime} seconds
+                </p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('video-modal-container').appendChild(modal);
+    currentVideoModal = modal;
+    
+    const watchState = {
+        stepIndex: stepIndex,
+        scriptId: scriptId,
+        completed: false,
+        requiredWatchTime: requiredWatchTime,
+        watchedSeconds: 0,
+        watchCompleted: false,
+        skipAttempts: 0
+    };
+    
+    startRumbleWatchTimer(watchState, requiredWatchTime);
+}
+
 
         // Improved timer function with better Rumble support
         function startRumbleWatchTimer(watchState, requiredWatchTime) {
