@@ -303,6 +303,18 @@
             animation: pulse 2s infinite;
         }
 
+        .badge-default {
+            background: var(--success);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .nav-item {
             display: flex;
             align-items: center;
@@ -1896,6 +1908,73 @@
             align-items: center;
             gap: 4px;
         }
+
+        /* Default steps banner */
+        .default-steps-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.05));
+            border: 1px solid var(--success);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .default-steps-banner i {
+            font-size: 32px;
+            color: #10b981;
+        }
+
+        .default-steps-banner h3 {
+            color: #10b981;
+            margin-bottom: 4px;
+        }
+
+        .default-steps-banner p {
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .btn-success-outline {
+            background: transparent;
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success-outline:hover {
+            background: rgba(16, 185, 129, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger-outline {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger-outline:hover {
+            background: rgba(239, 68, 68, 0.1);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -1943,6 +2022,10 @@
         let allScripts = [];
         let currentVideoModal = null;
         let deviceInteractions = {};
+        
+        // NEW: Default steps storage
+        let defaultSteps = null;
+        let useDefaultSteps = false;
         
         // NEW: Enhanced stats tracking
         let globalStats = {
@@ -2109,6 +2192,12 @@
             const storedRemovals = localStorage.getItem('vertexhub_script_removals');
             if (storedRemovals) {
                 scriptStepRemovals = JSON.parse(storedRemovals);
+            }
+
+            // Load default steps from localStorage
+            const storedDefaultSteps = localStorage.getItem('vertexhub_default_steps');
+            if (storedDefaultSteps) {
+                defaultSteps = JSON.parse(storedDefaultSteps);
             }
 
             // Check notification permission
@@ -3132,6 +3221,90 @@
             }
         };
 
+        // ============ DEFAULT STEPS FUNCTIONS ============
+        window.saveAsDefaultSteps = function() {
+            const stepsContainer = document.getElementById('steps-container');
+            if (!stepsContainer) return;
+            
+            const stepCards = stepsContainer.querySelectorAll('.step-card');
+            const steps = [];
+            
+            stepCards.forEach((card, index) => {
+                const nameInput = card.querySelector('.step-name-input');
+                const urlInput = card.querySelector('.step-url-input');
+                const typeSelect = card.querySelector('.step-select');
+                const typeInput = card.querySelector('.step-type');
+                const platformInput = card.querySelector('.step-platform');
+                const waitInput = card.querySelector('.wait-time-input');
+                const watchInput = card.querySelector('.watch-time-input');
+                
+                const stepType = typeSelect ? typeSelect.value : (typeInput ? typeInput.value : 'custom');
+                const platform = platformInput ? platformInput.value : 'custom';
+                
+                if (urlInput && urlInput.value) {
+                    const waitTime = waitInput ? parseInt(waitInput.value) || 20 : 20;
+                    const watchTime = watchInput ? parseInt(watchInput.value) || waitTime : waitTime;
+                    
+                    steps.push({
+                        order: index + 1,
+                        type: stepType,
+                        label: nameInput ? nameInput.value : `Step ${index + 1}`,
+                        url: urlInput.value,
+                        waitTime: waitTime,
+                        watchTime: watchTime,
+                        platform: platform,
+                        completed: false,
+                        locked: index > 0
+                    });
+                }
+            });
+            
+            if (steps.length === 0) {
+                showCopyNotification('⚠️ No steps to save as default', true);
+                return;
+            }
+            
+            defaultSteps = steps;
+            useDefaultSteps = true;
+            localStorage.setItem('vertexhub_default_steps', JSON.stringify(steps));
+            
+            showCopyNotification('✅ Steps saved as default for future scripts!');
+            
+            // Show confirmation in UI
+            const banner = document.getElementById('default-steps-banner');
+            if (banner) {
+                banner.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    <div>
+                        <h3 style="color: #10b981;">Default Steps Active</h3>
+                        <p>Your saved steps will be auto-loaded for future scripts</p>
+                    </div>
+                    <button class="btn-danger-outline" onclick="window.clearDefaultSteps()">
+                        <i class="fas fa-trash"></i> Clear Defaults
+                    </button>
+                `;
+            }
+        };
+
+        window.clearDefaultSteps = function() {
+            defaultSteps = null;
+            useDefaultSteps = false;
+            localStorage.removeItem('vertexhub_default_steps');
+            showCopyNotification('✅ Default steps cleared');
+            
+            const banner = document.getElementById('default-steps-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+        };
+
+        window.askToUseDefaultSteps = function() {
+            if (defaultSteps && defaultSteps.length > 0) {
+                return confirm('Do you want to use your saved default steps for this script? Click OK to load them, Cancel to start fresh.');
+            }
+            return false;
+        };
+
         // ============ CHECK IF DEVICE HAS UNLOCKED SCRIPT ============
         async function hasDeviceUnlocked(scriptId) {
             if (currentUser) {
@@ -4042,119 +4215,101 @@
             }, 100);
         }
 
-        // ============ OPEN RUMBLE VIDEO IN MODAL (FIXED with proper ID extraction) ============
-function openRumbleVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
-    let videoId = '';
-    
-    // First, try to extract from various Rumble URL formats
-    if (videoUrl.includes('rumble.com/')) {
-        // Check if it's already an embed URL
-        if (videoUrl.includes('/embed/')) {
-            const embedMatch = videoUrl.match(/\/embed\/([a-zA-Z0-9]+)/);
-            if (embedMatch) videoId = embedMatch[1];
-        }
-        // Check for regular video URL format
-        else if (videoUrl.includes('/v')) {
-            // Extract the video ID from the path
-            const pathMatch = videoUrl.match(/\/v([a-zA-Z0-9]+)(?:-|$|\/)/);
-            if (pathMatch) {
-                // For v75tx3u format, we need to use the embed version
-                // Note: Sometimes the embed ID is different! 
-                // We'll use a mapping or try to fetch the page to get the embed ID
-                
-                // Common pattern - sometimes the embed ID is the same as the URL ID
-                // But for your example, v75tx3u vs v73n93m shows they differ
-                
-                // Since we can't access the page, we'll need to:
-                // 1. Show an error asking user to provide the embed URL
-                // 2. Or attempt to construct the embed URL and let Rumble handle it
-                
-                showCopyNotification('⚠️ Please use the Rumble embed URL (right-click video → Copy embed code)', true);
+        // ============ OPEN RUMBLE VIDEO IN MODAL ============
+        function openRumbleVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
+            let videoId = '';
+            
+            // First, try to extract from various Rumble URL formats
+            if (videoUrl.includes('rumble.com/')) {
+                // Check if it's already an embed URL
+                if (videoUrl.includes('/embed/')) {
+                    const embedMatch = videoUrl.match(/\/embed\/([a-zA-Z0-9]+)/);
+                    if (embedMatch) videoId = embedMatch[1];
+                }
+                // Check for regular video URL format
+                else if (videoUrl.includes('/v')) {
+                    showCopyNotification('⚠️ Please use the Rumble embed URL (right-click video → Copy embed code)', true);
+                    return;
+                }
+            }
+            
+            if (!videoId) {
+                showCopyNotification('❌ Could not extract Rumble video ID. Please use the embed URL format: https://rumble.com/embed/VIDEOID', true);
                 return;
             }
+            
+            // Helper function to create the modal with proper embed
+            function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
+                const modal = document.createElement('div');
+                modal.className = 'video-modal';
+                modal.id = 'video-modal';
+                
+                const rumbleDivId = 'rumble_' + videoId + '_' + Date.now();
+                
+                modal.innerHTML = `
+                    <button class="video-close-btn" onclick="window.closeVideoModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="video-modal-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="color: white;">Watch Required Rumble Video</h2>
+                            <div style="color: var(--accent);" id="modal-countdown">Need to watch ${requiredWatchTime}s</div>
+                        </div>
+                        
+                        <div class="custom-rumble-container">
+                            <script>
+                                !function(r,u,m,b,l,e){r._Rumble=b,r[b]||(r[b]=function(){(r[b]._=r[b]._||[]).push(arguments);if(r[b]._.length==1){l=u.createElement(m),e=u.getElementsByTagName(m)[0],l.async=1,l.src="https://rumble.com/embedJS/u4kxacc"+(arguments[1].video?'.'+arguments[1].video:'')+"/?url="+encodeURIComponent(location.href)+"&args="+encodeURIComponent(JSON.stringify([].slice.apply(arguments))),e.parentNode.insertBefore(l,e)}})}(window, document, "script", "Rumble");
+                            <\/script>
+                            
+                            <div id="${rumbleDivId}"></div>
+                            <script>
+                                Rumble("play", {
+                                    "video": "${videoId}",
+                                    "div": "${rumbleDivId}"
+                                });
+                            <\/script>
+                            
+                            <div class="video-overlay" id="modal-overlay"></div>
+                            <div class="video-timer-progress" id="modal-progress-bar"></div>
+                            <div class="video-timer-display" id="modal-timer">
+                                Loading...
+                            </div>
+                            <div class="video-warning" id="modal-warning" style="display: none;">
+                                ⚠️ Don't skip! Watch required time!
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px; text-align: center;">
+                            <p style="color: var(--accent);" id="modal-complete-message"></p>
+                            <div class="timer-progress-bar" style="margin-top: 15px;">
+                                <div id="modal-watch-progress" class="timer-progress-fill" style="width: 0%;"></div>
+                            </div>
+                            <p style="color: var(--text-dim); margin-top: 10px;">
+                                <i class="fas fa-shield"></i> 
+                                Must watch ${requiredWatchTime} seconds
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('video-modal-container').appendChild(modal);
+                currentVideoModal = modal;
+                
+                const watchState = {
+                    stepIndex: stepIndex,
+                    scriptId: scriptId,
+                    completed: false,
+                    requiredWatchTime: requiredWatchTime,
+                    watchedSeconds: 0,
+                    watchCompleted: false,
+                    skipAttempts: 0
+                };
+                
+                startRumbleWatchTimer(watchState, requiredWatchTime);
+            }
+
+            createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime);
         }
-    }
-    
-    if (!videoId) {
-        showCopyNotification('❌ Could not extract Rumble video ID. Please use the embed URL format: https://rumble.com/embed/VIDEOID', true);
-        return;
-    }
-    
-    // Rest of the modal creation code...
-    createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime);
-}
-
-// Helper function to create the modal with proper embed
-function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
-    const modal = document.createElement('div');
-    modal.className = 'video-modal';
-    modal.id = 'video-modal';
-    
-    const rumbleDivId = 'rumble_' + videoId + '_' + Date.now();
-    
-    modal.innerHTML = `
-        <button class="video-close-btn" onclick="window.closeVideoModal()">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="video-modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="color: white;">Watch Required Rumble Video</h2>
-                <div style="color: var(--accent);" id="modal-countdown">Need to watch ${requiredWatchTime}s</div>
-            </div>
-            
-            <div class="custom-rumble-container">
-                <!-- Rumble embed script -->
-                <script>
-                    !function(r,u,m,b,l,e){r._Rumble=b,r[b]||(r[b]=function(){(r[b]._=r[b]._||[]).push(arguments);if(r[b]._.length==1){l=u.createElement(m),e=u.getElementsByTagName(m)[0],l.async=1,l.src="https://rumble.com/embedJS/u4kxacc"+(arguments[1].video?'.'+arguments[1].video:'')+"/?url="+encodeURIComponent(location.href)+"&args="+encodeURIComponent(JSON.stringify([].slice.apply(arguments))),e.parentNode.insertBefore(l,e)}})}(window, document, "script", "Rumble");
-                <\/script>
-                
-                <div id="${rumbleDivId}"></div>
-                <script>
-                    Rumble("play", {
-                        "video": "${videoId}",
-                        "div": "${rumbleDivId}"
-                    });
-                <\/script>
-                
-                <div class="video-overlay" id="modal-overlay"></div>
-                <div class="video-timer-progress" id="modal-progress-bar"></div>
-                <div class="video-timer-display" id="modal-timer">
-                    Loading...
-                </div>
-                <div class="video-warning" id="modal-warning" style="display: none;">
-                    ⚠️ Don't skip! Watch required time!
-                </div>
-            </div>
-            
-            <div style="margin-top: 20px; text-align: center;">
-                <p style="color: var(--accent);" id="modal-complete-message"></p>
-                <div class="timer-progress-bar" style="margin-top: 15px;">
-                    <div id="modal-watch-progress" class="timer-progress-fill" style="width: 0%;"></div>
-                </div>
-                <p style="color: var(--text-dim); margin-top: 10px;">
-                    <i class="fas fa-shield"></i> 
-                    Must watch ${requiredWatchTime} seconds
-                </p>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('video-modal-container').appendChild(modal);
-    currentVideoModal = modal;
-    
-    const watchState = {
-        stepIndex: stepIndex,
-        scriptId: scriptId,
-        completed: false,
-        requiredWatchTime: requiredWatchTime,
-        watchedSeconds: 0,
-        watchCompleted: false,
-        skipAttempts: 0
-    };
-    
-    startRumbleWatchTimer(watchState, requiredWatchTime);
-}
-
 
         // Improved timer function with better Rumble support
         function startRumbleWatchTimer(watchState, requiredWatchTime) {
@@ -5731,58 +5886,116 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
             const timeLimits = getTimeLimits();
             
             let stepsHTML = '';
-            template.steps.forEach((step, index) => {
-                const platform = step.platform || 'custom';
-                const platformColor = PLATFORM_TEMPLATES[platform]?.color || '#6366f1';
-                
-                stepsHTML += `
-                    <div class="step-card ${platform}" data-step-index="${index}">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                            <span class="step-badge">
-                                <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
-                                Step ${index + 1}
-                            </span>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="edit-step-btn" onclick="window.editStepName(this, ${index})">
-                                    <i class="fas fa-pencil-alt"></i> Edit
-                                </button>
-                                ${index > 0 ? `
-                                <button class="delete-step-btn" onclick="window.removeTemplateStep(this, ${index})">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                        
-                        <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
-                        
-                        <div class="step-url-container" style="margin-bottom: 8px;">
-                            <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                            <div class="wait-time-control" style="margin: 0;">
-                                <span class="wait-time-badge">
-                                    <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+            
+            // Check if user wants to use default steps
+            if (defaultSteps && defaultSteps.length > 0 && confirm('Do you want to use your saved default steps for this script? Click OK to load them, Cancel to use the template.')) {
+                defaultSteps.forEach((step, index) => {
+                    const platform = step.platform || 'custom';
+                    const platformColor = PLATFORM_TEMPLATES[platform]?.color || '#6366f1';
+                    
+                    stepsHTML += `
+                        <div class="step-card ${platform}" data-step-index="${index}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span class="step-badge">
+                                    <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
+                                    Step ${index + 1}
                                 </span>
-                                <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="edit-step-btn" onclick="window.editStepName(this, ${index})">
+                                        <i class="fas fa-pencil-alt"></i> Edit
+                                    </button>
+                                    ${index > 0 ? `
+                                    <button class="delete-step-btn" onclick="window.removeTemplateStep(this, ${index})">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                    ` : ''}
+                                </div>
                             </div>
                             
-                            ${step.type === 'watch' ? `
-                            <div class="wait-time-control" style="margin: 0;">
-                                <span class="wait-time-badge">
-                                    <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
-                                </span>
-                                <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                            <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
+                            
+                            <div class="step-url-container" style="margin-bottom: 8px;">
+                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
                             </div>
-                            ` : ''}
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="wait-time-control" style="margin: 0;">
+                                    <span class="wait-time-badge">
+                                        <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                                    </span>
+                                    <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                                </div>
+                                
+                                ${step.type === 'watch' ? `
+                                <div class="wait-time-control" style="margin: 0;">
+                                    <span class="wait-time-badge">
+                                        <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                                    </span>
+                                    <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <input type="hidden" class="step-type" value="${step.type}">
+                            <input type="hidden" class="step-platform" value="${platform}">
                         </div>
-                        
-                        <input type="hidden" class="step-type" value="${step.type}">
-                        <input type="hidden" class="step-platform" value="${platform}">
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } else {
+                // Use template steps
+                template.steps.forEach((step, index) => {
+                    const platform = step.platform || 'custom';
+                    const platformColor = PLATFORM_TEMPLATES[platform]?.color || '#6366f1';
+                    
+                    stepsHTML += `
+                        <div class="step-card ${platform}" data-step-index="${index}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span class="step-badge">
+                                    <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
+                                    Step ${index + 1}
+                                </span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="edit-step-btn" onclick="window.editStepName(this, ${index})">
+                                        <i class="fas fa-pencil-alt"></i> Edit
+                                    </button>
+                                    ${index > 0 ? `
+                                    <button class="delete-step-btn" onclick="window.removeTemplateStep(this, ${index})">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            
+                            <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
+                            
+                            <div class="step-url-container" style="margin-bottom: 8px;">
+                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="wait-time-control" style="margin: 0;">
+                                    <span class="wait-time-badge">
+                                        <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                                    </span>
+                                    <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                                </div>
+                                
+                                ${step.type === 'watch' ? `
+                                <div class="wait-time-control" style="margin: 0;">
+                                    <span class="wait-time-badge">
+                                        <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                                    </span>
+                                    <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <input type="hidden" class="step-type" value="${step.type}">
+                            <input type="hidden" class="step-platform" value="${platform}">
+                        </div>
+                    `;
+                });
+            }
             
             container.innerHTML = `
                 <div>
@@ -5798,6 +6011,19 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
                     <div class="owner-warning">
                         <i class="fas fa-crown"></i>
                         <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
+                    </div>
+                    ` : ''}
+                    
+                    ${defaultSteps && defaultSteps.length > 0 ? `
+                    <div class="default-steps-banner" id="default-steps-banner">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <div>
+                            <h3 style="color: #10b981;">Default Steps Saved</h3>
+                            <p>You have ${defaultSteps.length} default steps saved for future scripts</p>
+                        </div>
+                        <button class="btn-danger-outline" onclick="window.clearDefaultSteps()">
+                            <i class="fas fa-trash"></i> Clear Defaults
+                        </button>
                     </div>
                     ` : ''}
                     
@@ -5847,9 +6073,14 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
                         </div>
                     </div>
                     
-                    <button class="btn-primary" style="padding: 20px;" onclick="window.createScript()">
-                        <i class="fas fa-bolt"></i> Generate ${template.name} Unlocker
-                    </button>
+                    <div style="display: flex; gap: 16px; margin-top: 32px;">
+                        <button class="btn-primary" style="flex: 2; padding: 20px;" onclick="window.createScript()">
+                            <i class="fas fa-bolt"></i> Generate ${template.name} Unlocker
+                        </button>
+                        <button class="btn-success-outline" style="flex: 1;" onclick="window.saveAsDefaultSteps()">
+                            <i class="fas fa-save"></i> Save as Default
+                        </button>
+                    </div>
                 </div>
             `;
         };
@@ -5862,6 +6093,64 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
             const isOwner = currentUser?.email === "plastealme2@vertexhub.com";
             const timeLimits = getTimeLimits();
             
+            let stepsHTML = '';
+            
+            // Check if user wants to use default steps
+            if (defaultSteps && defaultSteps.length > 0 && confirm('Do you want to use your saved default steps for this script? Click OK to load them, Cancel to start fresh.')) {
+                defaultSteps.forEach((step, index) => {
+                    const platform = step.platform || 'custom';
+                    const platformColor = PLATFORM_TEMPLATES[platform]?.color || '#6366f1';
+                    
+                    stepsHTML += `
+                        <div class="step-card ${platform}" data-step-index="${index}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span class="step-badge">
+                                    <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
+                                    Step ${index + 1}
+                                </span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="edit-step-btn" onclick="window.editStepName(this, ${index})">
+                                        <i class="fas fa-pencil-alt"></i> Edit
+                                    </button>
+                                    ${index > 0 ? `
+                                    <button class="delete-step-btn" onclick="window.removeTemplateStep(this, ${index})">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            
+                            <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
+                            
+                            <div class="step-url-container" style="margin-bottom: 8px;">
+                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="wait-time-control" style="margin: 0;">
+                                    <span class="wait-time-badge">
+                                        <i class="fas fa-clock"></i> Wait (0-${timeLimits.max}s)
+                                    </span>
+                                    <input type="number" id="step-wait-${index}" class="wait-time-input" value="${step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                                </div>
+                                
+                                ${step.type === 'watch' ? `
+                                <div class="wait-time-control" style="margin: 0;">
+                                    <span class="wait-time-badge">
+                                        <i class="fas fa-eye"></i> Watch (0-${timeLimits.max}s)
+                                    </span>
+                                    <input type="number" id="step-watch-${index}" class="wait-time-input" value="${step.watchTime || step.waitTime}" min="0" max="${timeLimits.max}" step="1">
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <input type="hidden" class="step-type" value="${step.type}">
+                            <input type="hidden" class="step-platform" value="${platform}">
+                        </div>
+                    `;
+                });
+            }
+            
             container.innerHTML = `
                 <div>
                     <h1 class="section-title" style="margin-bottom: 32px;">
@@ -5873,6 +6162,19 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
                     <div class="owner-warning">
                         <i class="fas fa-crown"></i>
                         <div><strong>Owner Mode:</strong> You have unlimited time limits</div>
+                    </div>
+                    ` : ''}
+                    
+                    ${defaultSteps && defaultSteps.length > 0 ? `
+                    <div class="default-steps-banner" id="default-steps-banner">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <div>
+                            <h3 style="color: #10b981;">Default Steps Saved</h3>
+                            <p>You have ${defaultSteps.length} default steps saved for future scripts</p>
+                        </div>
+                        <button class="btn-danger-outline" onclick="window.clearDefaultSteps()">
+                            <i class="fas fa-trash"></i> Clear Defaults
+                        </button>
                     </div>
                     ` : ''}
                     
@@ -5895,7 +6197,7 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
                     <div style="margin-top: 32px;">
                         <h2>Manual Creation</h2>
                         
-                        <div id="steps-container"></div>
+                        <div id="steps-container">${stepsHTML}</div>
                         
                         <div class="add-step-btn" onclick="window.addManualStep()" style="background: rgba(99,102,241,0.1); border: 2px dashed var(--primary); border-radius: 24px; padding: 32px; text-align: center; cursor: pointer; margin: 32px 0;">
                             <i class="fas fa-plus-circle" style="font-size: 32px; margin-bottom: 12px; color: #6366f1;"></i>
@@ -5933,9 +6235,14 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
                             </div>
                         </div>
                         
-                        <button class="btn-primary" style="padding: 20px;" onclick="window.createScript()">
-                            <i class="fas fa-bolt"></i> Generate Unlocker
-                        </button>
+                        <div style="display: flex; gap: 16px; margin-top: 32px;">
+                            <button class="btn-primary" style="flex: 2; padding: 20px;" onclick="window.createScript()">
+                                <i class="fas fa-bolt"></i> Generate Unlocker
+                            </button>
+                            <button class="btn-success-outline" style="flex: 1;" onclick="window.saveAsDefaultSteps()">
+                                <i class="fas fa-save"></i> Save as Default
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -6423,6 +6730,20 @@ function createRumbleModal(videoId, stepIndex, scriptId, requiredWatchTime) {
                             <p><i class="fas fa-unlock"></i> Unique Unlocks: ${currentUser?.totalUniqueUnlocks || 0}</p>
                             <p><i class="fas fa-chart-line"></i> Conversion Rate: ${currentUser?.conversionRate || 0}%</p>
                             <p><i class="fas fa-chart-line"></i> Unique Conversion: ${currentUser?.uniqueConversionRate || 0}%</p>
+                        </div>
+                        
+                        <h3 style="margin: 32px 0 20px;">Default Steps</h3>
+                        <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px;">
+                            ${defaultSteps && defaultSteps.length > 0 ? `
+                                <p><i class="fas fa-check-circle" style="color: #10b981;"></i> You have ${defaultSteps.length} default steps saved</p>
+                                <p style="color: var(--text-dim); font-size: 12px; margin: 8px 0;">These will be auto-loaded when creating new scripts</p>
+                                <button class="btn-danger-outline" style="margin-top: 10px;" onclick="window.clearDefaultSteps()">
+                                    <i class="fas fa-trash"></i> Clear Default Steps
+                                </button>
+                            ` : `
+                                <p><i class="fas fa-info-circle"></i> No default steps saved</p>
+                                <p style="color: var(--text-dim); font-size: 12px;">Create a script and use "Save as Default" to set up auto-loading steps</p>
+                            `}
                         </div>
                         
                         <h3 style="margin: 32px 0 20px;">Device Info</h3>
