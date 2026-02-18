@@ -3947,167 +3947,210 @@
         }
 
         // ============ RENDER UNLOCK STEPS ============
-        function renderUnlockSteps(script) {
-            const container = document.getElementById('unlock-steps');
-            if (!container) return;
+function renderUnlockSteps(script) {
+    const container = document.getElementById('unlock-steps');
+    if (!container) return;
+    
+    let stepsHTML = '';
+    script.steps.forEach((step, index) => {
+        const state = activeStepStates[index];
+        const isLocked = script.sequentialRequired && index > 0 && !activeStepStates[index - 1]?.timerComplete;
+        const stepClass = `step-card ${state.timerComplete ? 'completed' : ''} ${!isLocked && !state.timerComplete ? 'active' : ''} ${isLocked ? 'locked' : ''}`;
+        
+        let statusIcon = 'fa-hourglass-half';
+        let statusText = 'Waiting for action';
+        let statusClass = 'waiting';
+        
+        if (state.timerComplete) {
+            statusIcon = 'fa-check-circle';
+            statusText = 'Completed';
+            statusClass = 'completed';
+        } else if (state.showingVideo) {
+            statusIcon = 'fa-eye';
+            statusText = `Watching video...`;
+            statusClass = 'watching';
+        } else if (state.videoCompleted && !state.linkClicked) {
+            statusIcon = 'fa-check-circle';
+            statusText = `Video completed! Starting timer...`;
+            statusClass = 'visited';
             
-            let stepsHTML = '';
-            script.steps.forEach((step, index) => {
-                const state = activeStepStates[index];
-                const isLocked = script.sequentialRequired && index > 0 && !activeStepStates[index - 1]?.timerComplete;
-                const stepClass = `step-card ${state.timerComplete ? 'completed' : ''} ${!isLocked && !state.timerComplete ? 'active' : ''} ${isLocked ? 'locked' : ''}`;
+            setTimeout(() => {
+                if (activeStepStates[index] && activeStepStates[index].videoCompleted && !activeStepStates[index].linkClicked) {
+                    startStepTimerAfterVideo(index);
+                }
+            }, 500);
+        } else if (state.linkClicked) {
+            statusIcon = 'fa-clock';
+            statusText = `Timer running (${state.timeLeft}s remaining)`;
+            statusClass = 'visited';
+        }
+        
+        const isMandatoryStep = step.isMandatory === true;
+        const platform = step.platform || detectPlatformFromUrl(step.url);
+        const platformData = PLATFORM_TEMPLATES[platform] || { color: '#6366f1', icon: 'fa-link' };
+        const platformColor = platformData.color;
+        
+        // Platform badge
+        let platformBadge = '';
+        if (platform !== 'custom') {
+            platformBadge = `<span class="auto-redirect-badge" style="margin-left: 8px; background: ${platformColor}; color: white;"><i class="${platformData.icon || 'fa-link'}"></i> ${platformData.name || platform}</span>`;
+        }
+        
+        stepsHTML += `
+            <div class="${stepClass}" data-step="${index}" style="border-left-color: ${platformColor};">
+                <div class="step-header">
+                    <span class="step-badge">
+                        <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
+                        Step ${index + 1}: ${step.label || `Step ${index + 1}`}
+                        ${step.type === 'watch' ? `<span class="auto-redirect-badge"><i class="fas fa-redo-alt"></i> Auto-embed</span>` : ''}
+                        ${platformBadge}
+                        ${isMandatoryStep ? `<span class="mandatory-step-badge" style="margin-left: 8px;"><i class="fas fa-star"></i> VERTEX REQUIRED</span>` : ''}
+                    </span>
+                    ${step.type === 'watch' && step.waitTime > 0 ? `
+                    <span class="step-timer">
+                        <i class="fas fa-hourglass-half"></i> 
+                        <span id="timer-display-${index}">${state.timerComplete ? 'Done' : (state.linkClicked ? `${state.timeLeft}s` : `${step.waitTime}s timer`)}</span>
+                    </span>
+                    ` : ''}
+                </div>
                 
-                let statusIcon = 'fa-hourglass-half';
-                let statusText = 'Waiting for action';
-                let statusClass = 'waiting';
-                
-                if (state.timerComplete) {
-                    statusIcon = 'fa-check-circle';
-                    statusText = 'Completed';
-                    statusClass = 'completed';
-                } else if (state.showingVideo) {
-                    statusIcon = 'fa-eye';
-                    statusText = `Watching video...`;
-                    statusClass = 'watching';
-                } else if (state.videoCompleted && !state.linkClicked) {
-                    statusIcon = 'fa-check-circle';
-                    statusText = `Video completed! Starting timer...`;
-                    statusClass = 'visited';
+                <div class="step-url-container">
+                    <!-- Hidden URL input - not visible to users -->
+                    <input type="hidden" id="step-url-${index}" value="${step.url}">
                     
-                    setTimeout(() => {
-                        if (activeStepStates[index] && activeStepStates[index].videoCompleted && !activeStepStates[index].linkClicked) {
-                            startStepTimerAfterVideo(index);
-                        }
-                    }, 500);
-                } else if (state.linkClicked) {
-                    statusIcon = 'fa-clock';
-                    statusText = `Timer running (${state.timeLeft}s remaining)`;
-                    statusClass = 'visited';
-                }
+                    <!-- Button that says what to do without showing URL -->
+                    <button class="visit-link-btn" id="visit-btn-${index}" onclick="window.handleStepClick(${index})" ${state.linkClicked || state.timerComplete ? 'disabled' : ''} style="flex: 1;">
+                        <i class="fas ${step.type === 'watch' ? 'fa-eye' : 'fa-external-link-alt'}"></i> 
+                        ${getStepActionText(step.type)}
+                    </button>
+                </div>
                 
-                const isMandatoryStep = step.isMandatory === true;
-                const platform = step.platform || 'custom';
-                const platformColor = PLATFORM_TEMPLATES[platform]?.color || '#6366f1';
-                
-                // Add platform-specific badge for video steps
-                let platformBadge = '';
-                if (step.type === 'watch' && step.url) {
-                    if (step.url.includes('youtube.com') || step.url.includes('youtu.be')) {
-                        platformBadge = '<span class="auto-redirect-badge" style="margin-left: 8px;"><i class="fab fa-youtube"></i> YouTube</span>';
-                    } else if (step.url.includes('rumble.com')) {
-                        platformBadge = '<span class="auto-redirect-badge rumble-badge" style="margin-left: 8px; background: #85c742; color: white;"><i class="fas fa-video"></i> Rumble</span>';
-                    } else if (step.url.includes('tiktok.com')) {
-                        platformBadge = '<span class="auto-redirect-badge tiktok-badge" style="margin-left: 8px; background: #000000; color: white;"><i class="fab fa-tiktok"></i> TikTok</span>';
-                    }
-                }
-                
-                stepsHTML += `
-                    <div class="${stepClass}" data-step="${index}">
-                        <div class="step-header">
-                            <span class="step-badge">
-                                <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
-                                Step ${index + 1}: ${step.label || `Step ${index + 1}`}
-                                ${step.type === 'watch' ? `<span class="auto-redirect-badge"><i class="fas fa-redo-alt"></i> Auto-embed</span>` : ''}
-                                ${platformBadge}
-                                ${isMandatoryStep ? `<span class="mandatory-step-badge" style="margin-left: 8px;"><i class="fas fa-star"></i> VERTEX REQUIRED</span>` : ''}
-                            </span>
-                            ${step.type === 'watch' && step.waitTime > 0 ? `
-                            <span class="step-timer">
-                                <i class="fas fa-hourglass-half"></i> 
-                                <span id="timer-display-${index}">${state.timerComplete ? 'Done' : (state.linkClicked ? `${state.timeLeft}s` : `${step.waitTime}s timer`)}</span>
-                            </span>
-                            ` : ''}
-                        </div>
-                        
-                        <div class="step-url-container">
-                            <input type="url" id="step-url-${index}" class="step-url-input" value="${step.url}" readonly>
-                            <button class="visit-link-btn" id="visit-btn-${index}" onclick="window.handleStepClick(${index})" ${state.linkClicked || state.timerComplete ? 'disabled' : ''}>
-                                <i class="fas ${step.type === 'watch' ? 'fa-eye' : 'fa-external-link-alt'}"></i> 
-                                ${step.type === 'watch' ? (state.videoCompleted ? 'Start Timer' : 'Watch Video') : 'Complete Step'}
-                            </button>
-                        </div>
-                        
-                        <div class="step-status">
-                            <div class="status-icon ${statusClass}">
-                                <i class="fas ${statusIcon}"></i>
+                <div class="step-status">
+                    <div class="status-icon ${statusClass}">
+                        <i class="fas ${statusIcon}"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Status: ${statusText}</div>
+                        ${step.type === 'watch' && state.linkClicked && !state.timerComplete && step.waitTime > 0 ? `
+                            <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
+                                <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
                             </div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; margin-bottom: 4px;">Status: ${statusText}</div>
-                                ${step.type === 'watch' && state.linkClicked && !state.timerComplete && step.waitTime > 0 ? `
-                                    <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
-                                        <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
-                                    </div>
-                                ` : ''}
-                                ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
-                                    <div style="color: #10b981; margin-top: 8px;">
-                                        <i class="fas fa-check-circle"></i> Video completed! Starting timer...
-                                    </div>
-                                ` : ''}
-                                ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
-                                    <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
-                                        <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
-                                    </div>
-                                ` : ''}
+                        ` : ''}
+                        ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
+                            <div style="color: #10b981; margin-top: 8px;">
+                                <i class="fas fa-check-circle"></i> Video completed! Starting timer...
                             </div>
-                        </div>
-                        
-                        ${state.timerComplete ? `
-                            <div style="color: #10b981; display: flex; align-items: center; gap: 8px; margin-top: 16px;">
-                                <i class="fas fa-check-circle"></i> Step completed
+                        ` : ''}
+                        ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
+                            <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
+                                <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
                             </div>
                         ` : ''}
                     </div>
-                `;
-            });
-            
-            container.innerHTML = stepsHTML;
-            updateOverallProgress(script);
-        }
+                </div>
+                
+                ${state.timerComplete ? `
+                    <div style="color: #10b981; display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+                        <i class="fas fa-check-circle"></i> Step completed
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = stepsHTML;
+    updateOverallProgress(script);
+}
 
-        // ============ HANDLE STEP CLICK ============
-        window.handleStepClick = function(stepIndex) {
-            const script = window.currentUnlockScript;
-            if (!script) return;
+// Helper function to get user-friendly action text based on step type
+function getStepActionText(type) {
+    const actions = {
+        follow: 'Follow',
+        like: 'Like',
+        comment: 'Comment',
+        watch: 'Watch Video',
+        subscribe: 'Subscribe',
+        retweet: 'Retweet',
+        reply: 'Reply',
+        join: 'Join',
+        verify: 'Verify',
+        react: 'React',
+        share: 'Share',
+        save: 'Save',
+        notification: 'Turn on Notifications',
+        quote: 'Quote',
+        bookmark: 'Bookmark',
+        message: 'Send Message',
+        role: 'Select Role',
+        boost: 'Boost',
+        host: 'Host',
+        raid: 'Raid',
+        cheer: 'Cheer',
+        custom: 'Complete Step',
+        upvote: 'Upvote',
+        award: 'Give Award',
+        star: 'Star',
+        fork: 'Fork',
+        pin: 'Pin',
+        favorite: 'Favorite',
+        visit: 'Visit',
+        pledge: 'Pledge',
+        support: 'Support',
+        purchase: 'Purchase',
+        add: 'Add',
+        wishlist: 'Add to Wishlist'
+    };
+    return actions[type] || 'Complete Step';
+}
+
+       // ============ HANDLE STEP CLICK ============
+window.handleStepClick = function(stepIndex) {
+    const script = window.currentUnlockScript;
+    if (!script) return;
+    
+    const state = activeStepStates[stepIndex];
+    const step = script.steps[stepIndex];
+    
+    if (script.sequentialRequired && stepIndex > 0) {
+        const prevStep = activeStepStates[stepIndex - 1];
+        if (!prevStep?.timerComplete) {
+            showCopyNotification('⚠️ Complete previous step first!', true);
+            return;
+        }
+    }
+    
+    if (state.linkClicked || state.timerComplete) return;
+    
+    // Get the hidden URL from the input
+    const hiddenUrlInput = document.getElementById(`step-url-${stepIndex}`);
+    const actualUrl = hiddenUrlInput ? hiddenUrlInput.value : step.url;
+    
+    if (step.type === 'watch') {
+        if (!state.videoCompleted) {
+            state.showingVideo = true;
+            renderUnlockSteps(script);
             
-            const state = activeStepStates[stepIndex];
-            const step = script.steps[stepIndex];
-            
-            if (script.sequentialRequired && stepIndex > 0) {
-                const prevStep = activeStepStates[stepIndex - 1];
-                if (!prevStep?.timerComplete) {
-                    showCopyNotification('⚠️ Complete previous step first!', true);
-                    return;
-                }
-            }
-            
-            if (state.linkClicked || state.timerComplete) return;
-            
-            if (step.type === 'watch') {
-                if (!state.videoCompleted) {
-                    state.showingVideo = true;
-                    renderUnlockSteps(script);
-                    
-                    // Detect platform and use appropriate embed
-                    if (step.url.includes('youtube.com') || step.url.includes('youtu.be')) {
-                        openYouTubeVideoInModal(step.url, stepIndex, script.id, step.watchTime || 20);
-                    } else if (step.url.includes('rumble.com')) {
-                        openRumbleVideoInModal(step.url, stepIndex, script.id, step.watchTime || 20);
-                    } else if (step.url.includes('tiktok.com')) {
-                        openTikTokVideoInModal(step.url, stepIndex, script.id, step.watchTime || 20);
-                    } else {
-                        // Fallback to generic method
-                        window.open(step.url, '_blank');
-                        startStepTimer(stepIndex);
-                    }
-                } else {
-                    startStepTimerAfterVideo(stepIndex);
-                }
+            // Detect platform and use appropriate embed with the actual URL
+            if (actualUrl.includes('youtube.com') || actualUrl.includes('youtu.be')) {
+                openYouTubeVideoInModal(actualUrl, stepIndex, script.id, step.watchTime || 20);
+            } else if (actualUrl.includes('rumble.com')) {
+                openRumbleVideoInModal(actualUrl, stepIndex, script.id, step.watchTime || 20);
+            } else if (actualUrl.includes('tiktok.com')) {
+                openTikTokVideoInModal(actualUrl, stepIndex, script.id, step.watchTime || 20);
             } else {
-                window.open(step.url, '_blank');
+                // Fallback to generic method
+                window.open(actualUrl, '_blank');
                 startStepTimer(stepIndex);
-                showCopyNotification(`✅ Timer started (${step.waitTime || 20}s)`, false);
             }
-        };
+        } else {
+            startStepTimerAfterVideo(stepIndex);
+        }
+    } else {
+        window.open(actualUrl, '_blank');
+        startStepTimer(stepIndex);
+        showCopyNotification(`✅ Timer started (${step.waitTime || 20}s)`, false);
+    }
+};
 
         // ============ OPEN YOUTUBE VIDEO IN MODAL ============
         function openYouTubeVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
