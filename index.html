@@ -60,6 +60,22 @@
             --twitter: #1da1f2;
             --discord: #5865f2;
             --twitch: #9146ff;
+            --roblox: #ff0000;
+            --facebook: #1877f2;
+            --snapchat: #fffc00;
+            --pinterest: #e60023;
+            --telegram: #0088cc;
+            --whatsapp: #25D366;
+            --reddit: #ff4500;
+            --spotify: #1DB954;
+            --github: #333333;
+            --amazon: #ff9900;
+            --netflix: #e50914;
+            --patreon: #f96854;
+            --kofi: #ff5e5b;
+            --etsy: #f56400;
+            --shopify: #7ab55c;
+            --wish: #2e6fd9;
         }
 
         body {
@@ -610,6 +626,22 @@
         .platform-block.twitter i { color: var(--twitter); }
         .platform-block.discord i { color: var(--discord); }
         .platform-block.twitch i { color: var(--twitch); }
+        .platform-block.roblox i { color: var(--roblox); }
+        .platform-block.facebook i { color: var(--facebook); }
+        .platform-block.snapchat i { color: var(--snapchat); }
+        .platform-block.pinterest i { color: var(--pinterest); }
+        .platform-block.telegram i { color: var(--telegram); }
+        .platform-block.whatsapp i { color: var(--whatsapp); }
+        .platform-block.reddit i { color: var(--reddit); }
+        .platform-block.spotify i { color: var(--spotify); }
+        .platform-block.github i { color: var(--github); }
+        .platform-block.amazon i { color: var(--amazon); }
+        .platform-block.netflix i { color: var(--netflix); }
+        .platform-block.patreon i { color: var(--patreon); }
+        .platform-block.kofi i { color: var(--kofi); }
+        .platform-block.etsy i { color: var(--etsy); }
+        .platform-block.shopify i { color: var(--shopify); }
+        .platform-block.wish i { color: var(--wish); }
 
         .action-blocks {
             display: grid;
@@ -666,6 +698,22 @@
         .step-card.twitter { border-left: 4px solid var(--twitter); }
         .step-card.discord { border-left: 4px solid var(--discord); }
         .step-card.twitch { border-left: 4px solid var(--twitch); }
+        .step-card.roblox { border-left: 4px solid var(--roblox); }
+        .step-card.facebook { border-left: 4px solid var(--facebook); }
+        .step-card.snapchat { border-left: 4px solid var(--snapchat); }
+        .step-card.pinterest { border-left: 4px solid var(--pinterest); }
+        .step-card.telegram { border-left: 4px solid var(--telegram); }
+        .step-card.whatsapp { border-left: 4px solid var(--whatsapp); }
+        .step-card.reddit { border-left: 4px solid var(--reddit); }
+        .step-card.spotify { border-left: 4px solid var(--spotify); }
+        .step-card.github { border-left: 4px solid var(--github); }
+        .step-card.amazon { border-left: 4px solid var(--amazon); }
+        .step-card.netflix { border-left: 4px solid var(--netflix); }
+        .step-card.patreon { border-left: 4px solid var(--patreon); }
+        .step-card.kofi { border-left: 4px solid var(--kofi); }
+        .step-card.etsy { border-left: 4px solid var(--etsy); }
+        .step-card.shopify { border-left: 4px solid var(--shopify); }
+        .step-card.wish { border-left: 4px solid var(--wish); }
 
         .step-card.completed {
             border-color: var(--success);
@@ -1975,6 +2023,47 @@
             background: rgba(239, 68, 68, 0.1);
             transform: translateY(-2px);
         }
+
+        /* Platform icon in step */
+        .step-platform-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            margin-right: 8px;
+        }
+        
+        /* Hidden unlock link */
+        .hidden-unlock-link {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        /* Share link button */
+        .share-link-btn {
+            background: rgba(99,102,241,0.2);
+            border: 1px solid var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .share-link-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -2073,7 +2162,7 @@
             owner: { min: 0, max: 9999 }
         };
 
-        // ============ PLATFORM TEMPLATES WITH RUMBLE ADDED ============
+        // ============ EXTENDED PLATFORM TEMPLATES WITH ALL PLATFORMS ============
         const PLATFORM_TEMPLATES = {
             tiktok: {
                 name: 'TikTok',
@@ -2165,8 +2254,216 @@
                     { type: 'raid', label: 'Raid Channel', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 10 },
                     { type: 'cheer', label: 'Cheer with Bits', url: 'https://twitch.tv/', platform: 'twitch', defaultWait: 5 }
                 ]
+            },
+            roblox: {
+                name: 'Roblox',
+                icon: 'fab fa-roblox',
+                color: '#ff0000',
+                steps: [
+                    { type: 'follow', label: 'Follow Roblox Profile', url: 'https://www.roblox.com/users/', platform: 'roblox', defaultWait: 10 },
+                    { type: 'join', label: 'Join Roblox Group', url: 'https://www.roblox.com/groups/', platform: 'roblox', defaultWait: 15 },
+                    { type: 'like', label: 'Like Roblox Game', url: 'https://www.roblox.com/games/', platform: 'roblox', defaultWait: 5 },
+                    { type: 'favorite', label: 'Favorite Game', url: 'https://www.roblox.com/games/', platform: 'roblox', defaultWait: 5 },
+                    { type: 'visit', label: 'Visit Roblox Place', url: 'https://www.roblox.com/games/', platform: 'roblox', defaultWait: 20, watchTime: 20 }
+                ]
+            },
+            facebook: {
+                name: 'Facebook',
+                icon: 'fab fa-facebook',
+                color: '#1877f2',
+                steps: [
+                    { type: 'like', label: 'Like Facebook Page', url: 'https://facebook.com/', platform: 'facebook', defaultWait: 10 },
+                    { type: 'follow', label: 'Follow Profile', url: 'https://facebook.com/', platform: 'facebook', defaultWait: 10 },
+                    { type: 'share', label: 'Share Post', url: 'https://facebook.com/', platform: 'facebook', defaultWait: 15 },
+                    { type: 'comment', label: 'Comment on Post', url: 'https://facebook.com/', platform: 'facebook', defaultWait: 15 },
+                    { type: 'watch', label: 'Watch Video', url: 'https://facebook.com/watch', platform: 'facebook', defaultWait: 20, watchTime: 20 },
+                    { type: 'join', label: 'Join Facebook Group', url: 'https://facebook.com/groups/', platform: 'facebook', defaultWait: 10 }
+                ]
+            },
+            snapchat: {
+                name: 'Snapchat',
+                icon: 'fab fa-snapchat',
+                color: '#fffc00',
+                steps: [
+                    { type: 'follow', label: 'Follow Snapchat', url: 'https://www.snapchat.com/add/', platform: 'snapchat', defaultWait: 10 },
+                    { type: 'watch', label: 'Watch Story', url: 'https://www.snapchat.com/', platform: 'snapchat', defaultWait: 20, watchTime: 20 },
+                    { type: 'subscribe', label: 'Subscribe to Spotlight', url: 'https://www.snapchat.com/', platform: 'snapchat', defaultWait: 10 }
+                ]
+            },
+            pinterest: {
+                name: 'Pinterest',
+                icon: 'fab fa-pinterest',
+                color: '#e60023',
+                steps: [
+                    { type: 'follow', label: 'Follow Pinterest Board', url: 'https://www.pinterest.com/', platform: 'pinterest', defaultWait: 10 },
+                    { type: 'pin', label: 'Pin Image', url: 'https://www.pinterest.com/pin/', platform: 'pinterest', defaultWait: 15 },
+                    { type: 'like', label: 'Like Pin', url: 'https://www.pinterest.com/pin/', platform: 'pinterest', defaultWait: 5 },
+                    { type: 'save', label: 'Save Pin', url: 'https://www.pinterest.com/pin/', platform: 'pinterest', defaultWait: 5 }
+                ]
+            },
+            telegram: {
+                name: 'Telegram',
+                icon: 'fab fa-telegram',
+                color: '#0088cc',
+                steps: [
+                    { type: 'join', label: 'Join Telegram Channel', url: 'https://t.me/', platform: 'telegram', defaultWait: 10 },
+                    { type: 'message', label: 'Send Message', url: 'https://t.me/', platform: 'telegram', defaultWait: 15 },
+                    { type: 'react', label: 'React to Message', url: 'https://t.me/', platform: 'telegram', defaultWait: 5 },
+                    { type: 'share', label: 'Share Telegram Link', url: 'https://t.me/', platform: 'telegram', defaultWait: 10 }
+                ]
+            },
+            whatsapp: {
+                name: 'WhatsApp',
+                icon: 'fab fa-whatsapp',
+                color: '#25D366',
+                steps: [
+                    { type: 'join', label: 'Join WhatsApp Group', url: 'https://chat.whatsapp.com/', platform: 'whatsapp', defaultWait: 10 },
+                    { type: 'message', label: 'Send Message', url: 'https://wa.me/', platform: 'whatsapp', defaultWait: 15 },
+                    { type: 'share', label: 'Share WhatsApp Status', url: 'https://whatsapp.com/', platform: 'whatsapp', defaultWait: 10 }
+                ]
+            },
+            reddit: {
+                name: 'Reddit',
+                icon: 'fab fa-reddit',
+                color: '#ff4500',
+                steps: [
+                    { type: 'join', label: 'Join Subreddit', url: 'https://www.reddit.com/r/', platform: 'reddit', defaultWait: 10 },
+                    { type: 'upvote', label: 'Upvote Post', url: 'https://www.reddit.com/', platform: 'reddit', defaultWait: 5 },
+                    { type: 'comment', label: 'Comment on Post', url: 'https://www.reddit.com/', platform: 'reddit', defaultWait: 15 },
+                    { type: 'award', label: 'Give Award', url: 'https://www.reddit.com/', platform: 'reddit', defaultWait: 10 }
+                ]
+            },
+            spotify: {
+                name: 'Spotify',
+                icon: 'fab fa-spotify',
+                color: '#1DB954',
+                steps: [
+                    { type: 'follow', label: 'Follow Playlist', url: 'https://open.spotify.com/playlist/', platform: 'spotify', defaultWait: 10 },
+                    { type: 'like', label: 'Like Song', url: 'https://open.spotify.com/track/', platform: 'spotify', defaultWait: 5 },
+                    { type: 'save', label: 'Save Album', url: 'https://open.spotify.com/album/', platform: 'spotify', defaultWait: 5 },
+                    { type: 'listen', label: 'Listen to Track', url: 'https://open.spotify.com/track/', platform: 'spotify', defaultWait: 20, watchTime: 20 }
+                ]
+            },
+            github: {
+                name: 'GitHub',
+                icon: 'fab fa-github',
+                color: '#333333',
+                steps: [
+                    { type: 'follow', label: 'Follow GitHub User', url: 'https://github.com/', platform: 'github', defaultWait: 10 },
+                    { type: 'star', label: 'Star Repository', url: 'https://github.com/', platform: 'github', defaultWait: 5 },
+                    { type: 'fork', label: 'Fork Repository', url: 'https://github.com/', platform: 'github', defaultWait: 15 },
+                    { type: 'watch', label: 'Watch Repository', url: 'https://github.com/', platform: 'github', defaultWait: 10 }
+                ]
+            },
+            amazon: {
+                name: 'Amazon',
+                icon: 'fab fa-amazon',
+                color: '#ff9900',
+                steps: [
+                    { type: 'visit', label: 'Visit Amazon Page', url: 'https://www.amazon.com/dp/', platform: 'amazon', defaultWait: 20, watchTime: 20 },
+                    { type: 'review', label: 'Write Review', url: 'https://www.amazon.com/review/', platform: 'amazon', defaultWait: 15 },
+                    { type: 'like', label: 'Like Product', url: 'https://www.amazon.com/', platform: 'amazon', defaultWait: 5 },
+                    { type: 'wishlist', label: 'Add to Wishlist', url: 'https://www.amazon.com/', platform: 'amazon', defaultWait: 10 }
+                ]
+            },
+            netflix: {
+                name: 'Netflix',
+                icon: 'fab fa-netflix',
+                color: '#e50914',
+                steps: [
+                    { type: 'watch', label: 'Watch Netflix Show', url: 'https://www.netflix.com/title/', platform: 'netflix', defaultWait: 20, watchTime: 20 },
+                    { type: 'like', label: 'Like Netflix Title', url: 'https://www.netflix.com/', platform: 'netflix', defaultWait: 5 },
+                    { type: 'add', label: 'Add to My List', url: 'https://www.netflix.com/', platform: 'netflix', defaultWait: 10 }
+                ]
+            },
+            patreon: {
+                name: 'Patreon',
+                icon: 'fab fa-patreon',
+                color: '#f96854',
+                steps: [
+                    { type: 'follow', label: 'Follow Patreon Creator', url: 'https://www.patreon.com/', platform: 'patreon', defaultWait: 10 },
+                    { type: 'pledge', label: 'Make Pledge', url: 'https://www.patreon.com/', platform: 'patreon', defaultWait: 15 },
+                    { type: 'like', label: 'Like Post', url: 'https://www.patreon.com/', platform: 'patreon', defaultWait: 5 },
+                    { type: 'comment', label: 'Comment on Post', url: 'https://www.patreon.com/', platform: 'patreon', defaultWait: 15 }
+                ]
+            },
+            kofi: {
+                name: 'Ko-fi',
+                icon: 'fas fa-mug-hot',
+                color: '#ff5e5b',
+                steps: [
+                    { type: 'support', label: 'Support on Ko-fi', url: 'https://ko-fi.com/', platform: 'kofi', defaultWait: 10 },
+                    { type: 'like', label: 'Like Ko-fi Page', url: 'https://ko-fi.com/', platform: 'kofi', defaultWait: 5 },
+                    { type: 'comment', label: 'Leave Comment', url: 'https://ko-fi.com/', platform: 'kofi', defaultWait: 15 }
+                ]
+            },
+            etsy: {
+                name: 'Etsy',
+                icon: 'fab fa-etsy',
+                color: '#f56400',
+                steps: [
+                    { type: 'favorite', label: 'Favorite Item', url: 'https://www.etsy.com/listing/', platform: 'etsy', defaultWait: 5 },
+                    { type: 'visit', label: 'Visit Shop', url: 'https://www.etsy.com/shop/', platform: 'etsy', defaultWait: 20, watchTime: 20 },
+                    { type: 'review', label: 'Leave Review', url: 'https://www.etsy.com/', platform: 'etsy', defaultWait: 15 },
+                    { type: 'purchase', label: 'Make Purchase', url: 'https://www.etsy.com/', platform: 'etsy', defaultWait: 10 }
+                ]
+            },
+            shopify: {
+                name: 'Shopify',
+                icon: 'fab fa-shopify',
+                color: '#7ab55c',
+                steps: [
+                    { type: 'visit', label: 'Visit Store', url: 'https://', platform: 'shopify', defaultWait: 20, watchTime: 20 },
+                    { type: 'subscribe', label: 'Subscribe to Newsletter', url: 'https://', platform: 'shopify', defaultWait: 10 },
+                    { type: 'add', label: 'Add to Cart', url: 'https://', platform: 'shopify', defaultWait: 5 },
+                    { type: 'purchase', label: 'Make Purchase', url: 'https://', platform: 'shopify', defaultWait: 15 }
+                ]
+            },
+            wish: {
+                name: 'Wish',
+                icon: 'fas fa-shopping-bag',
+                color: '#2e6fd9',
+                steps: [
+                    { type: 'like', label: 'Like Product', url: 'https://www.wish.com/', platform: 'wish', defaultWait: 5 },
+                    { type: 'visit', label: 'Visit Product', url: 'https://www.wish.com/', platform: 'wish', defaultWait: 20, watchTime: 20 },
+                    { type: 'save', label: 'Save Product', url: 'https://www.wish.com/', platform: 'wish', defaultWait: 5 },
+                    { type: 'purchase', label: 'Make Purchase', url: 'https://www.wish.com/', platform: 'wish', defaultWait: 15 }
+                ]
             }
         };
+
+        // ============ PLATFORM DETECTION FUNCTION ============
+        function detectPlatformFromUrl(url) {
+            if (!url) return 'custom';
+            
+            const urlLower = url.toLowerCase();
+            
+            if (urlLower.includes('tiktok.com')) return 'tiktok';
+            if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) return 'youtube';
+            if (urlLower.includes('rumble.com')) return 'rumble';
+            if (urlLower.includes('instagram.com')) return 'instagram';
+            if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) return 'twitter';
+            if (urlLower.includes('discord.com') || urlLower.includes('discord.gg')) return 'discord';
+            if (urlLower.includes('twitch.tv')) return 'twitch';
+            if (urlLower.includes('roblox.com')) return 'roblox';
+            if (urlLower.includes('facebook.com') || urlLower.includes('fb.com')) return 'facebook';
+            if (urlLower.includes('snapchat.com')) return 'snapchat';
+            if (urlLower.includes('pinterest.com')) return 'pinterest';
+            if (urlLower.includes('t.me') || urlLower.includes('telegram.org')) return 'telegram';
+            if (urlLower.includes('whatsapp.com') || urlLower.includes('wa.me')) return 'whatsapp';
+            if (urlLower.includes('reddit.com')) return 'reddit';
+            if (urlLower.includes('spotify.com')) return 'spotify';
+            if (urlLower.includes('github.com')) return 'github';
+            if (urlLower.includes('amazon.com') || urlLower.includes('amzn.to')) return 'amazon';
+            if (urlLower.includes('netflix.com')) return 'netflix';
+            if (urlLower.includes('patreon.com')) return 'patreon';
+            if (urlLower.includes('ko-fi.com')) return 'kofi';
+            if (urlLower.includes('etsy.com')) return 'etsy';
+            if (urlLower.includes('shopify.com') || urlLower.includes('myshopify.com')) return 'shopify';
+            if (urlLower.includes('wish.com')) return 'wish';
+            
+            return 'custom';
+        }
 
         // ============ INITIALIZE ============
         function init() {
@@ -2715,13 +3012,7 @@
                 if (script.steps && script.steps.length > 0) {
                     const firstStep = script.steps[0];
                     if (firstStep.url) {
-                        if (firstStep.url.includes('tiktok.com')) detectedPlatform = 'tiktok';
-                        else if (firstStep.url.includes('youtube.com')) detectedPlatform = 'youtube';
-                        else if (firstStep.url.includes('rumble.com')) detectedPlatform = 'rumble';
-                        else if (firstStep.url.includes('instagram.com')) detectedPlatform = 'instagram';
-                        else if (firstStep.url.includes('twitter.com') || firstStep.url.includes('x.com')) detectedPlatform = 'twitter';
-                        else if (firstStep.url.includes('discord.com') || firstStep.url.includes('discord.gg')) detectedPlatform = 'discord';
-                        else if (firstStep.url.includes('twitch.tv')) detectedPlatform = 'twitch';
+                        detectedPlatform = detectPlatformFromUrl(firstStep.url);
                     }
                 }
                 
@@ -2806,6 +3097,70 @@
                                 <i class="fab fa-twitch"></i>
                                 <div>Twitch</div>
                             </div>
+                            <div class="platform-block roblox" onclick="window.switchPlatform('roblox')">
+                                <i class="fab fa-roblox"></i>
+                                <div>Roblox</div>
+                            </div>
+                            <div class="platform-block facebook" onclick="window.switchPlatform('facebook')">
+                                <i class="fab fa-facebook"></i>
+                                <div>Facebook</div>
+                            </div>
+                            <div class="platform-block snapchat" onclick="window.switchPlatform('snapchat')">
+                                <i class="fab fa-snapchat"></i>
+                                <div>Snapchat</div>
+                            </div>
+                            <div class="platform-block pinterest" onclick="window.switchPlatform('pinterest')">
+                                <i class="fab fa-pinterest"></i>
+                                <div>Pinterest</div>
+                            </div>
+                            <div class="platform-block telegram" onclick="window.switchPlatform('telegram')">
+                                <i class="fab fa-telegram"></i>
+                                <div>Telegram</div>
+                            </div>
+                            <div class="platform-block whatsapp" onclick="window.switchPlatform('whatsapp')">
+                                <i class="fab fa-whatsapp"></i>
+                                <div>WhatsApp</div>
+                            </div>
+                            <div class="platform-block reddit" onclick="window.switchPlatform('reddit')">
+                                <i class="fab fa-reddit"></i>
+                                <div>Reddit</div>
+                            </div>
+                            <div class="platform-block spotify" onclick="window.switchPlatform('spotify')">
+                                <i class="fab fa-spotify"></i>
+                                <div>Spotify</div>
+                            </div>
+                            <div class="platform-block github" onclick="window.switchPlatform('github')">
+                                <i class="fab fa-github"></i>
+                                <div>GitHub</div>
+                            </div>
+                            <div class="platform-block amazon" onclick="window.switchPlatform('amazon')">
+                                <i class="fab fa-amazon"></i>
+                                <div>Amazon</div>
+                            </div>
+                            <div class="platform-block netflix" onclick="window.switchPlatform('netflix')">
+                                <i class="fab fa-netflix"></i>
+                                <div>Netflix</div>
+                            </div>
+                            <div class="platform-block patreon" onclick="window.switchPlatform('patreon')">
+                                <i class="fab fa-patreon"></i>
+                                <div>Patreon</div>
+                            </div>
+                            <div class="platform-block kofi" onclick="window.switchPlatform('kofi')">
+                                <i class="fas fa-mug-hot"></i>
+                                <div>Ko-fi</div>
+                            </div>
+                            <div class="platform-block etsy" onclick="window.switchPlatform('etsy')">
+                                <i class="fab fa-etsy"></i>
+                                <div>Etsy</div>
+                            </div>
+                            <div class="platform-block shopify" onclick="window.switchPlatform('shopify')">
+                                <i class="fab fa-shopify"></i>
+                                <div>Shopify</div>
+                            </div>
+                            <div class="platform-block wish" onclick="window.switchPlatform('wish')">
+                                <i class="fas fa-shopping-bag"></i>
+                                <div>Wish</div>
+                            </div>
                         </div>
                         
                         ${platformBlocksHTML}
@@ -2829,7 +3184,7 @@
                             <label style="display: block; margin-bottom: 8px;">Script Title</label>
                             <input type="text" id="edit-script-title" class="auth-input" value="${script.title || ''}" required>
                             
-                            <label style="display: block; margin-bottom: 8px; margin-top: 16px;">Unlock Destination</label>
+                            <label style="display: block; margin-bottom: 8px; margin-top: 16px;">Unlock Destination (Hidden)</label>
                             <input type="url" id="edit-unlock-url" class="auth-input" value="${script.unlockUrl || ''}" required>
                             
                             <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
@@ -2938,7 +3293,7 @@
                     </div>
                     
                     <div class="step-url-container" style="margin-bottom: 8px;">
-                        <input type="url" id="edit-step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url || ''}">
+                        <input type="url" id="edit-step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url || ''}" onchange="window.updateStepPlatform(this, ${index})">
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -2961,6 +3316,32 @@
                 </div>
             `;
         }
+
+        // ============ UPDATE STEP PLATFORM BASED ON URL ============
+        window.updateStepPlatform = function(input, index) {
+            const url = input.value;
+            const platform = detectPlatformFromUrl(url);
+            const platformInput = document.getElementById(`edit-step-platform-${index}`);
+            const stepCard = input.closest('.step-card');
+            
+            if (platformInput) {
+                platformInput.value = platform;
+            }
+            
+            if (stepCard) {
+                // Remove all platform classes
+                const classList = stepCard.classList;
+                const platformClasses = Array.from(classList).filter(cls => 
+                    Object.keys(PLATFORM_TEMPLATES).includes(cls)
+                );
+                platformClasses.forEach(cls => stepCard.classList.remove(cls));
+                
+                // Add new platform class if not custom
+                if (platform !== 'custom') {
+                    stepCard.classList.add(platform);
+                }
+            }
+        };
 
         // ============ SWITCH PLATFORM ============
         window.switchPlatform = function(platform) {
@@ -3826,6 +4207,9 @@
                 }
             }
             
+            // Create hidden unlock link
+            const hiddenUnlockLink = `<div class="hidden-unlock-link" id="hidden-unlock-link">${script.unlockUrl}</div>`;
+            
             app.innerHTML = `
                 <div class="unlocker-container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
                     ${script.isUnlisted ? `
@@ -3840,6 +4224,8 @@
                         </button>
                     </div>
                     ` : ''}
+                    
+                    ${hiddenUnlockLink}
                     
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -3884,6 +4270,9 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px;">
+                            <button class="share-link-btn" onclick="window.copyShareLink('${script.id}')">
+                                <i class="fas fa-share-alt"></i> Share
+                            </button>
                             ${isOwner ? `
                             <button class="copy-btn" onclick="window.location.hash='#edit-${script.id}'">
                                 <i class="fas fa-edit"></i> Edit
@@ -3946,211 +4335,170 @@
             renderUnlockSteps(script);
         }
 
+        // ============ COPY SHARE LINK FUNCTION ============
+        window.copyShareLink = function(scriptId) {
+            const shareLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
+            window.copyToClipboard(shareLink);
+            showCopyNotification('✅ Share link copied to clipboard!');
+        };
+
         // ============ RENDER UNLOCK STEPS ============
-function renderUnlockSteps(script) {
-    const container = document.getElementById('unlock-steps');
-    if (!container) return;
-    
-    let stepsHTML = '';
-    script.steps.forEach((step, index) => {
-        const state = activeStepStates[index];
-        const isLocked = script.sequentialRequired && index > 0 && !activeStepStates[index - 1]?.timerComplete;
-        const stepClass = `step-card ${state.timerComplete ? 'completed' : ''} ${!isLocked && !state.timerComplete ? 'active' : ''} ${isLocked ? 'locked' : ''}`;
-        
-        let statusIcon = 'fa-hourglass-half';
-        let statusText = 'Waiting for action';
-        let statusClass = 'waiting';
-        
-        if (state.timerComplete) {
-            statusIcon = 'fa-check-circle';
-            statusText = 'Completed';
-            statusClass = 'completed';
-        } else if (state.showingVideo) {
-            statusIcon = 'fa-eye';
-            statusText = `Watching video...`;
-            statusClass = 'watching';
-        } else if (state.videoCompleted && !state.linkClicked) {
-            statusIcon = 'fa-check-circle';
-            statusText = `Video completed! Starting timer...`;
-            statusClass = 'visited';
+        function renderUnlockSteps(script) {
+            const container = document.getElementById('unlock-steps');
+            if (!container) return;
             
-            setTimeout(() => {
-                if (activeStepStates[index] && activeStepStates[index].videoCompleted && !activeStepStates[index].linkClicked) {
-                    startStepTimerAfterVideo(index);
-                }
-            }, 500);
-        } else if (state.linkClicked) {
-            statusIcon = 'fa-clock';
-            statusText = `Timer running (${state.timeLeft}s remaining)`;
-            statusClass = 'visited';
-        }
-        
-        const isMandatoryStep = step.isMandatory === true;
-        const platform = step.platform || detectPlatformFromUrl(step.url);
-        const platformData = PLATFORM_TEMPLATES[platform] || { color: '#6366f1', icon: 'fa-link' };
-        const platformColor = platformData.color;
-        
-        // Platform badge
-        let platformBadge = '';
-        if (platform !== 'custom') {
-            platformBadge = `<span class="auto-redirect-badge" style="margin-left: 8px; background: ${platformColor}; color: white;"><i class="${platformData.icon || 'fa-link'}"></i> ${platformData.name || platform}</span>`;
-        }
-        
-        stepsHTML += `
-            <div class="${stepClass}" data-step="${index}" style="border-left-color: ${platformColor};">
-                <div class="step-header">
-                    <span class="step-badge">
-                        <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
-                        Step ${index + 1}: ${step.label || `Step ${index + 1}`}
-                        ${step.type === 'watch' ? `<span class="auto-redirect-badge"><i class="fas fa-redo-alt"></i> Auto-embed</span>` : ''}
-                        ${platformBadge}
-                        ${isMandatoryStep ? `<span class="mandatory-step-badge" style="margin-left: 8px;"><i class="fas fa-star"></i> VERTEX REQUIRED</span>` : ''}
-                    </span>
-                    ${step.type === 'watch' && step.waitTime > 0 ? `
-                    <span class="step-timer">
-                        <i class="fas fa-hourglass-half"></i> 
-                        <span id="timer-display-${index}">${state.timerComplete ? 'Done' : (state.linkClicked ? `${state.timeLeft}s` : `${step.waitTime}s timer`)}</span>
-                    </span>
-                    ` : ''}
-                </div>
+            let stepsHTML = '';
+            script.steps.forEach((step, index) => {
+                const state = activeStepStates[index];
+                const isLocked = script.sequentialRequired && index > 0 && !activeStepStates[index - 1]?.timerComplete;
+                const stepClass = `step-card ${state.timerComplete ? 'completed' : ''} ${!isLocked && !state.timerComplete ? 'active' : ''} ${isLocked ? 'locked' : ''}`;
                 
-                <div class="step-url-container">
-                    <!-- Hidden URL input - not visible to users -->
-                    <input type="hidden" id="step-url-${index}" value="${step.url}">
+                let statusIcon = 'fa-hourglass-half';
+                let statusText = 'Waiting for action';
+                let statusClass = 'waiting';
+                
+                if (state.timerComplete) {
+                    statusIcon = 'fa-check-circle';
+                    statusText = 'Completed';
+                    statusClass = 'completed';
+                } else if (state.showingVideo) {
+                    statusIcon = 'fa-eye';
+                    statusText = `Watching video...`;
+                    statusClass = 'watching';
+                } else if (state.videoCompleted && !state.linkClicked) {
+                    statusIcon = 'fa-check-circle';
+                    statusText = `Video completed! Starting timer...`;
+                    statusClass = 'visited';
                     
-                    <!-- Button that says what to do without showing URL -->
-                    <button class="visit-link-btn" id="visit-btn-${index}" onclick="window.handleStepClick(${index})" ${state.linkClicked || state.timerComplete ? 'disabled' : ''} style="flex: 1;">
-                        <i class="fas ${step.type === 'watch' ? 'fa-eye' : 'fa-external-link-alt'}"></i> 
-                        ${getStepActionText(step.type)}
-                    </button>
-                </div>
+                    setTimeout(() => {
+                        if (activeStepStates[index] && activeStepStates[index].videoCompleted && !activeStepStates[index].linkClicked) {
+                            startStepTimerAfterVideo(index);
+                        }
+                    }, 500);
+                } else if (state.linkClicked) {
+                    statusIcon = 'fa-clock';
+                    statusText = `Timer running (${state.timeLeft}s remaining)`;
+                    statusClass = 'visited';
+                }
                 
-                <div class="step-status">
-                    <div class="status-icon ${statusClass}">
-                        <i class="fas ${statusIcon}"></i>
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 600; margin-bottom: 4px;">Status: ${statusText}</div>
-                        ${step.type === 'watch' && state.linkClicked && !state.timerComplete && step.waitTime > 0 ? `
-                            <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
-                                <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
-                            </div>
-                        ` : ''}
-                        ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
-                            <div style="color: #10b981; margin-top: 8px;">
-                                <i class="fas fa-check-circle"></i> Video completed! Starting timer...
-                            </div>
-                        ` : ''}
-                        ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
-                            <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
-                                <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
+                const isMandatoryStep = step.isMandatory === true;
+                const platform = step.platform || detectPlatformFromUrl(step.url);
+                const platformData = PLATFORM_TEMPLATES[platform] || { color: '#6366f1', icon: 'fa-link' };
+                const platformColor = platformData.color;
                 
-                ${state.timerComplete ? `
-                    <div style="color: #10b981; display: flex; align-items: center; gap: 8px; margin-top: 16px;">
-                        <i class="fas fa-check-circle"></i> Step completed
+                // Add platform-specific badge for all steps
+                let platformBadge = '';
+                if (platform !== 'custom') {
+                    platformBadge = `<span class="auto-redirect-badge" style="margin-left: 8px; background: ${platformColor}; color: white;"><i class="${platformData.icon || 'fa-link'}"></i> ${platformData.name || platform}</span>`;
+                }
+                
+                stepsHTML += `
+                    <div class="${stepClass}" data-step="${index}" style="border-left-color: ${platformColor};">
+                        <div class="step-header">
+                            <span class="step-badge">
+                                <i class="fas ${getStepIcon(step.type)}" style="color: ${platformColor};"></i> 
+                                Step ${index + 1}: ${step.label || `Step ${index + 1}`}
+                                ${step.type === 'watch' ? `<span class="auto-redirect-badge"><i class="fas fa-redo-alt"></i> Auto-embed</span>` : ''}
+                                ${platformBadge}
+                                ${isMandatoryStep ? `<span class="mandatory-step-badge" style="margin-left: 8px;"><i class="fas fa-star"></i> VERTEX REQUIRED</span>` : ''}
+                            </span>
+                            ${step.type === 'watch' && step.waitTime > 0 ? `
+                            <span class="step-timer">
+                                <i class="fas fa-hourglass-half"></i> 
+                                <span id="timer-display-${index}">${state.timerComplete ? 'Done' : (state.linkClicked ? `${state.timeLeft}s` : `${step.waitTime}s timer`)}</span>
+                            </span>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="step-url-container">
+                            <input type="url" id="step-url-${index}" class="step-url-input" value="${step.url}" readonly>
+                            <button class="visit-link-btn" id="visit-btn-${index}" onclick="window.handleStepClick(${index})" ${state.linkClicked || state.timerComplete ? 'disabled' : ''}>
+                                <i class="fas ${step.type === 'watch' ? 'fa-eye' : 'fa-external-link-alt'}"></i> 
+                                ${step.type === 'watch' ? (state.videoCompleted ? 'Start Timer' : 'Watch Video') : 'Complete Step'}
+                            </button>
+                        </div>
+                        
+                        <div class="step-status">
+                            <div class="status-icon ${statusClass}">
+                                <i class="fas ${statusIcon}"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Status: ${statusText}</div>
+                                ${step.type === 'watch' && state.linkClicked && !state.timerComplete && step.waitTime > 0 ? `
+                                    <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
+                                        <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
+                                    </div>
+                                ` : ''}
+                                ${step.type === 'watch' && state.videoCompleted && !state.linkClicked ? `
+                                    <div style="color: #10b981; margin-top: 8px;">
+                                        <i class="fas fa-check-circle"></i> Video completed! Starting timer...
+                                    </div>
+                                ` : ''}
+                                ${step.type !== 'watch' && state.linkClicked && !state.timerComplete ? `
+                                    <div style="height: 6px; background: var(--dark-input); border-radius: 100px; margin-top: 8px;">
+                                        <div id="progress-${index}" style="height: 100%; width: ${((step.waitTime - state.timeLeft) / step.waitTime) * 100}%; background: var(--gradient-primary); border-radius: 100px;"></div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        ${state.timerComplete ? `
+                            <div style="color: #10b981; display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+                                <i class="fas fa-check-circle"></i> Step completed
+                            </div>
+                        ` : ''}
                     </div>
-                ` : ''}
-            </div>
-        `;
-    });
-    
-    container.innerHTML = stepsHTML;
-    updateOverallProgress(script);
-}
-
-// Helper function to get user-friendly action text based on step type
-function getStepActionText(type) {
-    const actions = {
-        follow: 'Follow',
-        like: 'Like',
-        comment: 'Comment',
-        watch: 'Watch Video',
-        subscribe: 'Subscribe',
-        retweet: 'Retweet',
-        reply: 'Reply',
-        join: 'Join',
-        verify: 'Verify',
-        react: 'React',
-        share: 'Share',
-        save: 'Save',
-        notification: 'Turn on Notifications',
-        quote: 'Quote',
-        bookmark: 'Bookmark',
-        message: 'Send Message',
-        role: 'Select Role',
-        boost: 'Boost',
-        host: 'Host',
-        raid: 'Raid',
-        cheer: 'Cheer',
-        custom: 'Complete Step',
-        upvote: 'Upvote',
-        award: 'Give Award',
-        star: 'Star',
-        fork: 'Fork',
-        pin: 'Pin',
-        favorite: 'Favorite',
-        visit: 'Visit',
-        pledge: 'Pledge',
-        support: 'Support',
-        purchase: 'Purchase',
-        add: 'Add',
-        wishlist: 'Add to Wishlist'
-    };
-    return actions[type] || 'Complete Step';
-}
-
-       // ============ HANDLE STEP CLICK ============
-window.handleStepClick = function(stepIndex) {
-    const script = window.currentUnlockScript;
-    if (!script) return;
-    
-    const state = activeStepStates[stepIndex];
-    const step = script.steps[stepIndex];
-    
-    if (script.sequentialRequired && stepIndex > 0) {
-        const prevStep = activeStepStates[stepIndex - 1];
-        if (!prevStep?.timerComplete) {
-            showCopyNotification('⚠️ Complete previous step first!', true);
-            return;
-        }
-    }
-    
-    if (state.linkClicked || state.timerComplete) return;
-    
-    // Get the hidden URL from the input
-    const hiddenUrlInput = document.getElementById(`step-url-${stepIndex}`);
-    const actualUrl = hiddenUrlInput ? hiddenUrlInput.value : step.url;
-    
-    if (step.type === 'watch') {
-        if (!state.videoCompleted) {
-            state.showingVideo = true;
-            renderUnlockSteps(script);
+                `;
+            });
             
-            // Detect platform and use appropriate embed with the actual URL
-            if (actualUrl.includes('youtube.com') || actualUrl.includes('youtu.be')) {
-                openYouTubeVideoInModal(actualUrl, stepIndex, script.id, step.watchTime || 20);
-            } else if (actualUrl.includes('rumble.com')) {
-                openRumbleVideoInModal(actualUrl, stepIndex, script.id, step.watchTime || 20);
-            } else if (actualUrl.includes('tiktok.com')) {
-                openTikTokVideoInModal(actualUrl, stepIndex, script.id, step.watchTime || 20);
-            } else {
-                // Fallback to generic method
-                window.open(actualUrl, '_blank');
-                startStepTimer(stepIndex);
-            }
-        } else {
-            startStepTimerAfterVideo(stepIndex);
+            container.innerHTML = stepsHTML;
+            updateOverallProgress(script);
         }
-    } else {
-        window.open(actualUrl, '_blank');
-        startStepTimer(stepIndex);
-        showCopyNotification(`✅ Timer started (${step.waitTime || 20}s)`, false);
-    }
-};
+
+        // ============ HANDLE STEP CLICK ============
+        window.handleStepClick = function(stepIndex) {
+            const script = window.currentUnlockScript;
+            if (!script) return;
+            
+            const state = activeStepStates[stepIndex];
+            const step = script.steps[stepIndex];
+            
+            if (script.sequentialRequired && stepIndex > 0) {
+                const prevStep = activeStepStates[stepIndex - 1];
+                if (!prevStep?.timerComplete) {
+                    showCopyNotification('⚠️ Complete previous step first!', true);
+                    return;
+                }
+            }
+            
+            if (state.linkClicked || state.timerComplete) return;
+            
+            if (step.type === 'watch') {
+                if (!state.videoCompleted) {
+                    state.showingVideo = true;
+                    renderUnlockSteps(script);
+                    
+                    // Detect platform and use appropriate embed
+                    if (step.url.includes('youtube.com') || step.url.includes('youtu.be')) {
+                        openYouTubeVideoInModal(step.url, stepIndex, script.id, step.watchTime || 20);
+                    } else if (step.url.includes('rumble.com')) {
+                        openRumbleVideoInModal(step.url, stepIndex, script.id, step.watchTime || 20);
+                    } else if (step.url.includes('tiktok.com')) {
+                        openTikTokVideoInModal(step.url, stepIndex, script.id, step.watchTime || 20);
+                    } else {
+                        // Fallback to generic method
+                        window.open(step.url, '_blank');
+                        startStepTimer(stepIndex);
+                    }
+                } else {
+                    startStepTimerAfterVideo(stepIndex);
+                }
+            } else {
+                window.open(step.url, '_blank');
+                startStepTimer(stepIndex);
+                showCopyNotification(`✅ Timer started (${step.waitTime || 20}s)`, false);
+            }
+        };
 
         // ============ OPEN YOUTUBE VIDEO IN MODAL ============
         function openYouTubeVideoInModal(videoUrl, stepIndex, scriptId, requiredWatchTime) {
@@ -4973,6 +5321,11 @@ window.handleStepClick = function(stepIndex) {
                                 <div><i class="fas fa-eye"></i> ${script.views?.total || 0}</div>
                                 <div><i class="fas fa-unlock"></i> ${script.unlocks?.total || 0}</div>
                             </div>
+                            <div style="padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px;">
+                                <button class="share-link-btn" style="flex: 1; padding: 8px;" onclick="event.stopPropagation(); window.copyShareLink('${script.id}')">
+                                    <i class="fas fa-share-alt"></i> Share
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -5031,7 +5384,7 @@ window.handleStepClick = function(stepIndex) {
                                 <button class="copy-btn" style="flex: 1; padding: 8px;" onclick="event.stopPropagation(); window.location.hash='#edit-${script.id}'">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
-                                <button class="copy-btn" style="flex: 1; padding: 8px;" onclick="event.stopPropagation(); window.copyToClipboard('${window.location.origin}${window.location.pathname}#script-${script.id}')">
+                                <button class="share-link-btn" style="flex: 1; padding: 8px;" onclick="event.stopPropagation(); window.copyShareLink('${script.id}')">
                                     <i class="fas fa-share-alt"></i> Share
                                 </button>
                             </div>
@@ -5802,7 +6155,7 @@ window.handleStepClick = function(stepIndex) {
                                 <button onclick="window.location.hash='#edit-${script.id}'" class="copy-btn" style="flex: 1;">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
-                                <button onclick="window.toggleShareLink('${script.id}')" class="copy-btn" style="flex: 1;">
+                                <button onclick="window.copyShareLink('${script.id}')" class="share-link-btn" style="flex: 1;">
                                     <i class="fas fa-share-alt"></i> Share
                                 </button>
                                 <button onclick="window.testScript('${script.id}')" class="copy-btn" style="flex: 1; background: var(--gradient-primary);">
@@ -5817,12 +6170,6 @@ window.handleStepClick = function(stepIndex) {
                                 ` : ''}
                                 <button onclick="window.deleteScript('${script.id}')" class="copy-btn" style="flex: 1; color: #ef4444;">
                                     <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </div>
-                            <div class="share-link" id="share-${script.id}" style="display: none;">
-                                <input type="text" class="share-input" value="${shareableLink}" readonly>
-                                <button onclick="window.copyToClipboard('${shareableLink}', this)" class="copy-btn">
-                                    <i class="fas fa-copy"></i> Copy
                                 </button>
                             </div>
                         </div>
@@ -5857,7 +6204,23 @@ window.handleStepClick = function(stepIndex) {
                 { id: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', desc: 'Follow, Like, Comment, Watch Story, Save, Share', color: '#E4405F', steps: 6 },
                 { id: 'twitter', name: 'X', icon: 'fab fa-twitter', desc: 'Follow, Like, Retweet, Reply, Quote, Bookmark', color: '#1DA1F2', steps: 6 },
                 { id: 'discord', name: 'Discord', icon: 'fab fa-discord', desc: 'Join, Verify, React, Message, Role, Boost', color: '#5865F2', steps: 6 },
-                { id: 'twitch', name: 'Twitch', icon: 'fab fa-twitch', desc: 'Follow, Subscribe, Watch, Host, Raid, Cheer', color: '#9146FF', steps: 6 }
+                { id: 'twitch', name: 'Twitch', icon: 'fab fa-twitch', desc: 'Follow, Subscribe, Watch, Host, Raid, Cheer', color: '#9146FF', steps: 6 },
+                { id: 'roblox', name: 'Roblox', icon: 'fab fa-roblox', desc: 'Follow, Join Group, Like Game, Favorite, Visit', color: '#FF0000', steps: 5 },
+                { id: 'facebook', name: 'Facebook', icon: 'fab fa-facebook', desc: 'Like Page, Follow, Share, Comment, Watch', color: '#1877F2', steps: 6 },
+                { id: 'snapchat', name: 'Snapchat', icon: 'fab fa-snapchat', desc: 'Follow, Watch Story, Subscribe', color: '#FFFC00', steps: 3 },
+                { id: 'pinterest', name: 'Pinterest', icon: 'fab fa-pinterest', desc: 'Follow Board, Pin, Like, Save', color: '#E60023', steps: 4 },
+                { id: 'telegram', name: 'Telegram', icon: 'fab fa-telegram', desc: 'Join Channel, Send Message, React, Share', color: '#0088CC', steps: 4 },
+                { id: 'whatsapp', name: 'WhatsApp', icon: 'fab fa-whatsapp', desc: 'Join Group, Send Message, Share', color: '#25D366', steps: 3 },
+                { id: 'reddit', name: 'Reddit', icon: 'fab fa-reddit', desc: 'Join Subreddit, Upvote, Comment, Award', color: '#FF4500', steps: 4 },
+                { id: 'spotify', name: 'Spotify', icon: 'fab fa-spotify', desc: 'Follow Playlist, Like Song, Save Album, Listen', color: '#1DB954', steps: 4 },
+                { id: 'github', name: 'GitHub', icon: 'fab fa-github', desc: 'Follow User, Star Repo, Fork, Watch', color: '#333333', steps: 4 },
+                { id: 'amazon', name: 'Amazon', icon: 'fab fa-amazon', desc: 'Visit Product, Write Review, Like, Wishlist', color: '#FF9900', steps: 4 },
+                { id: 'netflix', name: 'Netflix', icon: 'fab fa-netflix', desc: 'Watch Show, Like, Add to List', color: '#E50914', steps: 3 },
+                { id: 'patreon', name: 'Patreon', icon: 'fab fa-patreon', desc: 'Follow, Pledge, Like, Comment', color: '#F96854', steps: 4 },
+                { id: 'kofi', name: 'Ko-fi', icon: 'fas fa-mug-hot', desc: 'Support, Like, Comment', color: '#FF5E5B', steps: 3 },
+                { id: 'etsy', name: 'Etsy', icon: 'fab fa-etsy', desc: 'Favorite Item, Visit Shop, Review, Purchase', color: '#F56400', steps: 4 },
+                { id: 'shopify', name: 'Shopify', icon: 'fab fa-shopify', desc: 'Visit Store, Subscribe, Add to Cart, Purchase', color: '#7AB55C', steps: 4 },
+                { id: 'wish', name: 'Wish', icon: 'fas fa-shopping-bag', desc: 'Like Product, Visit, Save, Purchase', color: '#2E6FD9', steps: 4 }
             ];
             
             let templatesHTML = '';
@@ -5916,7 +6279,9 @@ window.handleStepClick = function(stepIndex) {
             
             window.showCreatorWithTemplate({
                 name: template.name,
-                steps: steps
+                steps: steps,
+                icon: template.icon,
+                color: template.color
             });
         };
 
@@ -5958,7 +6323,7 @@ window.handleStepClick = function(stepIndex) {
                             <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
                             
                             <div class="step-url-container" style="margin-bottom: 8px;">
-                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
+                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}" onchange="window.updateStepPlatformInput(this, ${index})">
                             </div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -5980,7 +6345,7 @@ window.handleStepClick = function(stepIndex) {
                             </div>
                             
                             <input type="hidden" class="step-type" value="${step.type}">
-                            <input type="hidden" class="step-platform" value="${platform}">
+                            <input type="hidden" class="step-platform" id="step-platform-${index}" value="${platform}">
                         </div>
                     `;
                 });
@@ -6012,7 +6377,7 @@ window.handleStepClick = function(stepIndex) {
                             <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
                             
                             <div class="step-url-container" style="margin-bottom: 8px;">
-                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
+                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}" onchange="window.updateStepPlatformInput(this, ${index})">
                             </div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -6034,7 +6399,7 @@ window.handleStepClick = function(stepIndex) {
                             </div>
                             
                             <input type="hidden" class="step-type" value="${step.type}">
-                            <input type="hidden" class="step-platform" value="${platform}">
+                            <input type="hidden" class="step-platform" id="step-platform-${index}" value="${platform}">
                         </div>
                     `;
                 });
@@ -6044,7 +6409,7 @@ window.handleStepClick = function(stepIndex) {
                 <div>
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
                         <h1 class="section-title">
-                            <i class="${template.icon}" style="color: ${getTemplateColor(template.name)}; margin-right: 12px;"></i>
+                            <i class="${template.icon}" style="color: ${template.color}; margin-right: 12px;"></i>
                             Create ${template.name} Unlocker
                         </h1>
                         <span class="badge-premium">${template.steps.length} Steps</span>
@@ -6090,7 +6455,7 @@ window.handleStepClick = function(stepIndex) {
                         <h2>Script Title</h2>
                         <input type="text" id="script-title" class="auth-input" placeholder="Enter a title for your unlocker" value="${template.name} Unlocker" required>
                         
-                        <h2 style="margin-top: 24px;">Unlock Destination</h2>
+                        <h2 style="margin-top: 24px;">Unlock Destination (Hidden)</h2>
                         <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-download-link.com" required>
                         
                         <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
@@ -6126,6 +6491,32 @@ window.handleStepClick = function(stepIndex) {
                     </div>
                 </div>
             `;
+        };
+
+        // ============ UPDATE STEP PLATFORM INPUT ============
+        window.updateStepPlatformInput = function(input, index) {
+            const url = input.value;
+            const platform = detectPlatformFromUrl(url);
+            const platformInput = document.getElementById(`step-platform-${index}`);
+            const stepCard = input.closest('.step-card');
+            
+            if (platformInput) {
+                platformInput.value = platform;
+            }
+            
+            if (stepCard) {
+                // Remove all platform classes
+                const classList = stepCard.classList;
+                const platformClasses = Array.from(classList).filter(cls => 
+                    Object.keys(PLATFORM_TEMPLATES).includes(cls)
+                );
+                platformClasses.forEach(cls => stepCard.classList.remove(cls));
+                
+                // Add new platform class if not custom
+                if (platform !== 'custom') {
+                    stepCard.classList.add(platform);
+                }
+            }
         };
 
         // ============ SHOW CREATOR ============
@@ -6166,7 +6557,7 @@ window.handleStepClick = function(stepIndex) {
                             <input type="text" class="step-name-input" id="step-name-${index}" placeholder="Step Name" value="${step.label}" style="margin-bottom: 12px;">
                             
                             <div class="step-url-container" style="margin-bottom: 8px;">
-                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}">
+                                <input type="url" id="step-url-${index}" class="step-url-input" placeholder="Enter URL" value="${step.url}" onchange="window.updateStepPlatformInput(this, ${index})">
                             </div>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -6188,7 +6579,7 @@ window.handleStepClick = function(stepIndex) {
                             </div>
                             
                             <input type="hidden" class="step-type" value="${step.type}">
-                            <input type="hidden" class="step-platform" value="${platform}">
+                            <input type="hidden" class="step-platform" id="step-platform-${index}" value="${platform}">
                         </div>
                     `;
                 });
@@ -6231,7 +6622,7 @@ window.handleStepClick = function(stepIndex) {
                     <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 24px; padding: 40px; margin-bottom: 32px; text-align: center;">
                         <i class="fas fa-layer-group" style="font-size: 64px; color: #6366f1; margin-bottom: 16px;"></i>
                         <h2 style="margin-bottom: 16px;">Start with a Template</h2>
-                        <p style="color: var(--text-dim); margin-bottom: 24px;">Choose from templates for TikTok, YouTube, Rumble, and more with all available actions</p>
+                        <p style="color: var(--text-dim); margin-bottom: 24px;">Choose from templates for TikTok, YouTube, Rumble, Roblox, and more with all available actions</p>
                         <button class="btn-primary" style="width: auto; padding: 16px 40px;" onclick="window.showTemplates()">
                             <i class="fas fa-layer-group"></i> Browse Templates
                         </button>
@@ -6252,7 +6643,7 @@ window.handleStepClick = function(stepIndex) {
                             <h2>Script Title</h2>
                             <input type="text" id="script-title" class="auth-input" placeholder="Enter a title for your unlocker" required>
                             
-                            <h2 style="margin-top: 24px;">Unlock Destination</h2>
+                            <h2 style="margin-top: 24px;">Unlock Destination (Hidden)</h2>
                             <input type="url" id="unlock-url" class="auth-input" placeholder="https://your-link.com">
                             
                             <div style="display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap;">
@@ -6323,7 +6714,7 @@ window.handleStepClick = function(stepIndex) {
                     
                     <input type="text" class="step-name-input" placeholder="Step Name" value="Step ${stepCount + 1}" style="margin-bottom: 12px;">
                     
-                    <select class="step-select" onchange="window.updateStepType(this, ${stepCount})" style="margin-bottom: 12px;">
+                    <select class="step-select" onchange="window.updateStepType(this, ${stepIndex})" style="margin-bottom: 12px;">
                         <option value="like">👍 Like & Subscribe</option>
                         <option value="follow">👥 Follow Channel</option>
                         <option value="comment">💬 Comment</option>
@@ -6337,7 +6728,7 @@ window.handleStepClick = function(stepIndex) {
                     </select>
                     
                     <div class="step-url-container" style="margin-bottom: 8px;">
-                        <input type="url" class="step-url-input" placeholder="Enter URL" required>
+                        <input type="url" class="step-url-input" placeholder="Enter URL" onchange="window.updateStepPlatformInput(this, ${stepIndex})" required>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -6357,7 +6748,7 @@ window.handleStepClick = function(stepIndex) {
                     </div>
                     
                     <input type="hidden" class="step-type" value="watch">
-                    <input type="hidden" class="step-platform" value="custom">
+                    <input type="hidden" class="step-platform" id="step-platform-${stepIndex}" value="custom">
                 </div>
             `;
             
@@ -6451,6 +6842,8 @@ window.handleStepClick = function(stepIndex) {
                 }
                 
                 if (urlInput && urlInput.value) {
+                    const platform = platformInput ? platformInput.value : detectPlatformFromUrl(urlInput.value);
+                    
                     steps.push({
                         order: index + 1,
                         type: typeInput ? typeInput.value : 'watch',
@@ -6458,7 +6851,7 @@ window.handleStepClick = function(stepIndex) {
                         url: urlInput.value,
                         waitTime: validWaitTime,
                         watchTime: validWatchTime,
-                        platform: platformInput ? platformInput.value : 'custom',
+                        platform: platform,
                         completed: false,
                         locked: index > 0
                     });
@@ -6521,7 +6914,7 @@ window.handleStepClick = function(stepIndex) {
                     totalScripts: firebase.firestore.FieldValue.increment(1)
                 });
                 
-                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${scriptId}`;
+                const shareableLink = `${window.location.origin}${window.location.pathname}#script-${docRef.id}`;
                 
                 let visibilityMessage = '✅ Script created! ';
                 if (isPrivate) visibilityMessage += '(Private - only you can view)';
@@ -6859,13 +7252,6 @@ window.handleStepClick = function(stepIndex) {
             loadScriptView(scriptId);
         };
 
-        window.toggleShareLink = function(scriptId) {
-            const shareDiv = document.getElementById(`share-${scriptId}`);
-            if (shareDiv) {
-                shareDiv.style.display = shareDiv.style.display === 'none' ? 'flex' : 'none';
-            }
-        };
-
         window.duplicateScript = async function(scriptId) {
             const scriptDoc = await db.collection('scripts').doc(scriptId).get();
             const original = scriptDoc.data();
@@ -6941,7 +7327,19 @@ window.handleStepClick = function(stepIndex) {
                 host: 'fa-tv',
                 raid: 'fa-users',
                 cheer: 'fa-smile-wink',
-                custom: 'fa-link'
+                custom: 'fa-link',
+                upvote: 'fa-arrow-up',
+                award: 'fa-award',
+                star: 'fa-star',
+                fork: 'fa-code-branch',
+                pin: 'fa-thumbtack',
+                favorite: 'fa-star',
+                visit: 'fa-eye',
+                pledge: 'fa-hand-holding-heart',
+                support: 'fa-hand-holding-heart',
+                purchase: 'fa-shopping-cart',
+                add: 'fa-plus-circle',
+                wishlist: 'fa-heart'
             };
             return icons[type] || 'fa-link';
         }
@@ -6954,7 +7352,23 @@ window.handleStepClick = function(stepIndex) {
                 Instagram: '#E4405F',
                 'X': '#1DA1F2',
                 Discord: '#5865F2',
-                Twitch: '#9146FF'
+                Twitch: '#9146FF',
+                Roblox: '#FF0000',
+                Facebook: '#1877F2',
+                Snapchat: '#FFFC00',
+                Pinterest: '#E60023',
+                Telegram: '#0088CC',
+                WhatsApp: '#25D366',
+                Reddit: '#FF4500',
+                Spotify: '#1DB954',
+                GitHub: '#333333',
+                Amazon: '#FF9900',
+                Netflix: '#E50914',
+                Patreon: '#F96854',
+                'Ko-fi': '#FF5E5B',
+                Etsy: '#F56400',
+                Shopify: '#7AB55C',
+                Wish: '#2E6FD9'
             };
             return colors[name] || '#6366f1';
         }
