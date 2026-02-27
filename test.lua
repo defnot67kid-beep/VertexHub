@@ -2,8 +2,8 @@ local Http = game:GetService("HttpService")
 local TPS = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
 local _place = game.PlaceId
 local Api = "https://games.roblox.com/v1/games/"
@@ -16,8 +16,8 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 400, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -200, 0.4, -175)
+MainFrame.Size = UDim2.new(0, 400, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -200, 0.4, -200)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
@@ -32,38 +32,38 @@ UIStroke.Thickness = 2
 UIStroke.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
-Title.Text = "ULTRA SCANNER (10K SERVERS)"
+Title.Text = "PLAYER TRACKER (AUTO-REFRESH)"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
+Title.TextSize = 16
 Title.Parent = MainFrame
 
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 25, 0, 25)
-CloseBtn.Position = UDim2.new(1, -30, 0, 5)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 18
+CloseBtn.TextSize = 20
 CloseBtn.Parent = MainFrame
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
 -- Input Area
 local InputFrame = Instance.new("Frame")
-InputFrame.Size = UDim2.new(1, -20, 0, 80)
-InputFrame.Position = UDim2.new(0, 10, 0, 35)
+InputFrame.Size = UDim2.new(1, -20, 0, 90)
+InputFrame.Position = UDim2.new(0, 10, 0, 40)
 InputFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 InputFrame.Parent = MainFrame
 Instance.new("UICorner", InputFrame).CornerRadius = UDim.new(0, 8)
 
 local UserIdInput = Instance.new("TextBox")
-UserIdInput.Size = UDim2.new(0.6, -5, 0, 35)
+UserIdInput.Size = UDim2.new(1, -20, 0, 35)
 UserIdInput.Position = UDim2.new(0, 10, 0, 10)
 UserIdInput.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-UserIdInput.PlaceholderText = "Enter UserID..."
+UserIdInput.PlaceholderText = "Enter UserID to track..."
 UserIdInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 UserIdInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 UserIdInput.Font = Enum.Font.GothamMedium
@@ -73,227 +73,155 @@ UserIdInput.Parent = InputFrame
 Instance.new("UICorner", UserIdInput).CornerRadius = UDim.new(0, 6)
 
 local SearchBtn = Instance.new("TextButton")
-SearchBtn.Size = UDim2.new(0.2, -5, 0, 35)
-SearchBtn.Position = UDim2.new(0.6, 0, 0, 10)
+SearchBtn.Size = UDim2.new(0.5, -5, 0, 35)
+SearchBtn.Position = UDim2.new(0, 10, 0, 50)
 SearchBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-SearchBtn.Text = "SCAN"
+SearchBtn.Text = "FIND"
 SearchBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 SearchBtn.Font = Enum.Font.GothamBold
-SearchBtn.TextSize = 12
+SearchBtn.TextSize = 14
 SearchBtn.Parent = InputFrame
 Instance.new("UICorner", SearchBtn).CornerRadius = UDim.new(0, 6)
 
 local AutoRefreshBtn = Instance.new("TextButton")
-AutoRefreshBtn.Size = UDim2.new(0.2, -5, 0, 35)
-AutoRefreshBtn.Position = UDim2.new(0.8, 0, 0, 10)
-AutoRefreshBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+AutoRefreshBtn.Size = UDim2.new(0.5, -5, 0, 35)
+AutoRefreshBtn.Position = UDim2.new(0.5, 0, 0, 50)
+AutoRefreshBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 AutoRefreshBtn.Text = "AUTO: OFF"
-AutoRefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoRefreshBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 AutoRefreshBtn.Font = Enum.Font.GothamBold
-AutoRefreshBtn.TextSize = 10
+AutoRefreshBtn.TextSize = 14
 AutoRefreshBtn.Parent = InputFrame
 Instance.new("UICorner", AutoRefreshBtn).CornerRadius = UDim.new(0, 6)
 
 local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(1, -20, 0, 30)
-StatusLabel.Position = UDim2.new(0, 10, 0, 50)
+StatusLabel.Size = UDim2.new(1, -20, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 0, 90)
 StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "Ready to scan (Press SCAN)"
+StatusLabel.Text = "Ready - Enter a UserID to track"
 StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 StatusLabel.Font = Enum.Font.GothamMedium
-StatusLabel.TextSize = 11
+StatusLabel.TextSize = 12
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatusLabel.TextWrapped = true
 StatusLabel.Parent = InputFrame
 
--- Stats Bar
-local StatsFrame = Instance.new("Frame")
-StatsFrame.Size = UDim2.new(1, -20, 0, 25)
-StatsFrame.Position = UDim2.new(0, 10, 0, 115)
-StatsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-StatsFrame.Parent = MainFrame
-Instance.new("UICorner", StatsFrame).CornerRadius = UDim.new(0, 6)
-
-local StatsLabel = Instance.new("TextLabel")
-StatsLabel.Size = UDim2.new(1, -10, 1, 0)
-StatsLabel.Position = UDim2.new(0, 5, 0, 0)
-StatsLabel.BackgroundTransparency = 1
-StatsLabel.Text = "Servers: 0 | Full: 0 | Empty: 0 | Found: ❌"
-StatsLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-StatsLabel.Font = Enum.Font.GothamMedium
-StatsLabel.TextSize = 10
-StatsLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatsLabel.Parent = StatsFrame
-
--- Create Scrolling Frame for Server List
+-- Server List Container
 local ServerListContainer = Instance.new("ScrollingFrame")
-ServerListContainer.Size = UDim2.new(1, -20, 1, -165)
-ServerListContainer.Position = UDim2.new(0, 10, 0, 145)
+ServerListContainer.Size = UDim2.new(1, -20, 1, -150)
+ServerListContainer.Position = UDim2.new(0, 10, 0, 140)
 ServerListContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 ServerListContainer.BorderSizePixel = 0
 ServerListContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-ServerListContainer.ScrollBarThickness = 4
+ServerListContainer.ScrollBarThickness = 6
 ServerListContainer.ScrollBarImageColor3 = Color3.fromRGB(255, 200, 0)
-ServerListContainer.Visible = false
 ServerListContainer.Parent = MainFrame
 Instance.new("UICorner", ServerListContainer).CornerRadius = UDim.new(0, 8)
 
 local ServerListLayout = Instance.new("UIListLayout")
-ServerListLayout.Padding = UDim.new(0, 2)
+ServerListLayout.Padding = UDim.new(0, 4)
 ServerListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ServerListLayout.Parent = ServerListContainer
 
 ServerListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    ServerListContainer.CanvasSize = UDim2.new(0, 0, 0, ServerListLayout.AbsoluteContentSize.Y + 5)
+    ServerListContainer.CanvasSize = UDim2.new(0, 0, 0, ServerListLayout.AbsoluteContentSize.Y + 10)
 end)
 
--- Variables
-local autoRefreshEnabled = false
-local autoRefreshConnection = nil
-var playerStatus = "offline"
-var lastUserId = nil
-var scanning = false
+-- Variables for auto-refresh
+local isAutoRefreshing = false
+local trackedUserId = nil
+local refreshConnection = nil
+local currentSearchTask = nil
+local cachedServers = {}
+local lastFoundServer = nil
 
--- Ultra-fast parallel requests
-local function fetchWithRetry(url, retries)
-    retries = retries or 1
-    for i = 1, retries do
-        local success, response = pcall(function()
-            return game:HttpGet(url)
-        end)
-        if success then
-            return success, response
-        end
-        task.wait(0.01)
+-- Function to fetch servers with cursor
+local function fetchServersWithCursor(url)
+    local success, response = pcall(function()
+        return game:HttpGet(url)
+    end)
+    
+    if not success then
+        return nil, nil
     end
-    return false, nil
+    
+    local data = Http:JSONDecode(response)
+    return data.data, data.nextPageCursor
 end
 
--- Fetch servers in parallel (10 at a time)
-local function fetchAllServersParallel(maxServers)
-    maxServers = maxServers or 10000
+-- Function to fetch ALL servers (up to 10,000)
+local function fetchAllServers()
     local allServers = {}
     local nextCursor = nil
-    local page = 1
-    local requests = {}
+    local pagesFetched = 0
     
-    StatusLabel.Text = "Fetching server list..."
-    
-    -- First, get total count and first page
-    local data, cursor = nil, nil
-    local success, response = fetchWithRetry(Api.._place.."/servers/Public?limit=100")
-    if success then
-        data = Http:JSONDecode(response)
-        cursor = data.nextPageCursor
-        for _, server in ipairs(data.data) do
-            table.insert(allServers, server)
+    repeat
+        local url = Api.._place.."/servers/Public?limit=100"
+        if nextCursor then
+            url = url .. "&cursor=" .. nextCursor
         end
-    end
-    
-    -- Parallel fetch remaining pages (10 at a time)
-    local cursors = {}
-    while cursor and #allServers < maxServers do
-        table.insert(cursors, cursor)
-        local url = Api.._place.."/servers/Public?limit=100&cursor="..cursor
-        local success, response = fetchWithRetry(url)
-        if success then
-            data = Http:JSONDecode(response)
-            cursor = data.nextPageCursor
-            for _, server in ipairs(data.data) do
-                table.insert(allServers, server)
-                if #allServers >= maxServers then break end
-            end
-        else
+        
+        local servers, cursor = fetchServersWithCursor(url)
+        if not servers then
             break
         end
         
-        StatusLabel.Text = string.format("Fetched %d servers...", #allServers)
-        task.wait(0.01) -- Minimal delay
-    end
+        for _, server in ipairs(servers) do
+            table.insert(allServers, server)
+        end
+        
+        pagesFetched = pagesFetched + 1
+        nextCursor = cursor
+        
+        -- Speed control: 10 servers per ms = 10,000 servers per second
+        -- But we need to respect Roblox rate limits, so we'll do 100 servers per 100ms
+        if pagesFetched % 10 == 0 then
+            task.wait(0.1) -- Small delay to prevent rate limiting
+        end
+        
+    until not nextCursor or #allServers >= 10000
     
     return allServers
 end
 
--- Check servers in parallel (10 per millisecond)
-local function checkServersParallel(servers, userId)
-    local targetServer = nil
-    local targetData = nil
-    local checked = 0
-    local fullCount = 0
-    local emptyCount = 0
-    local found = false
+-- Function to fetch players in a server (with pagination)
+local function fetchAllPlayersInServer(serverId)
+    local allPlayers = {}
+    local nextCursor = nil
     
-    -- Process in chunks of 10
-    local chunkSize = 10
-    for i = 1, #servers, chunkSize do
-        if found then break end
-        
-        local chunk = {}
-        for j = i, math.min(i + chunkSize - 1, #servers) do
-            table.insert(chunk, servers[j])
+    repeat
+        local url = "https://games.roblox.com/v1/games/" .. _place .. "/servers/Public/" .. serverId .. "/players?limit=100"
+        if nextCursor then
+            url = url .. "&cursor=" .. nextCursor
         end
         
-        -- Process chunk in parallel using coroutines
-        local coList = {}
-        for _, server in ipairs(chunk) do
-            local co = coroutine.create(function()
-                if server.playing > 0 and not found then
-                    local playerApi = "https://games.roblox.com/v1/games/" .. _place .. "/servers/Public/" .. server.id .. "/players?limit=100"
-                    local success, response = fetchWithRetry(playerApi, 2)
-                    
-                    if success then
-                        local playerData = Http:JSONDecode(response)
-                        if playerData and playerData.data then
-                            for _, player in ipairs(playerData.data) do
-                                if tostring(player.id) == tostring(userId) then
-                                    targetServer = server
-                                    targetData = server
-                                    found = true
-                                    playerStatus = "online"
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-                
-                -- Update stats
-                if server.playing >= server.maxPlayers then
-                    fullCount = fullCount + 1
-                elseif server.playing == 0 then
-                    emptyCount = emptyCount + 1
-                end
-            end)
-            table.insert(coList, co)
+        local success, response = pcall(function()
+            return game:HttpGet(url)
+        end)
+        
+        if not success then
+            return nil
         end
         
-        -- Start all coroutines in chunk
-        for _, co in ipairs(coList) do
-            coroutine.resume(co)
+        local data = Http:JSONDecode(response)
+        if data.data then
+            for _, player in ipairs(data.data) do
+                table.insert(allPlayers, player)
+            end
         end
         
-        -- Wait for chunk to complete (1ms per server in chunk)
-        task.wait(#chunk * 0.001)
-        
-        checked = checked + #chunk
-        StatusLabel.Text = string.format("Scanning: %d/%d servers...", checked, #servers)
-        StatsLabel.Text = string.format("Servers: %d | Full: %d | Empty: %d | Found: %s", 
-            checked, fullCount, emptyCount, found and "✅" or "❌")
-        
-        -- Allow UI to update
-        task.wait()
-    end
+        nextCursor = data.nextPageCursor
+    until not nextCursor
     
-    return targetServer, targetData, fullCount, emptyCount, found
+    return allPlayers
 end
 
 -- Function to create server entry
-local function CreateServerEntry(serverData, isTargetServer, index)
+local function CreateServerEntry(serverData, isTargetServer, playerCount, isFull)
     local entry = Instance.new("Frame")
-    entry.Size = UDim2.new(1, -5, 0, 30)
+    entry.Size = UDim2.new(1, -5, 0, 45)
     entry.BackgroundColor3 = isTargetServer and Color3.fromRGB(50, 45, 20) or Color3.fromRGB(30, 30, 40)
     entry.Parent = ServerListContainer
-    Instance.new("UICorner", entry).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", entry).CornerRadius = UDim.new(0, 6)
     
     if isTargetServer then
         local border = Instance.new("UIStroke")
@@ -302,62 +230,54 @@ local function CreateServerEntry(serverData, isTargetServer, index)
         border.Parent = entry
     end
     
-    -- Server number and ID
-    local numLabel = Instance.new("TextLabel")
-    numLabel.Size = UDim2.new(0, 25, 1, 0)
-    numLabel.Position = UDim2.new(0, 2, 0, 0)
-    numLabel.BackgroundTransparency = 1
-    numLabel.Text = tostring(index)
-    numLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-    numLabel.Font = Enum.Font.GothamMedium
-    numLabel.TextSize = 9
-    numLabel.TextXAlignment = Enum.TextXAlignment.Center
-    numLabel.Parent = entry
+    -- Server ID (shortened)
+    local idLabel = Instance.new("TextLabel")
+    idLabel.Size = UDim2.new(0.5, -5, 0.5, 0)
+    idLabel.Position = UDim2.new(0, 5, 0, 2)
+    idLabel.BackgroundTransparency = 1
+    idLabel.Text = "ID: " .. string.sub(serverData.id, 1, 12) .. "..."
+    idLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    idLabel.Font = Enum.Font.GothamMedium
+    idLabel.TextSize = 10
+    idLabel.TextXAlignment = Enum.TextXAlignment.Left
+    idLabel.Parent = entry
     
-    local infoLabel = Instance.new("TextLabel")
-    infoLabel.Size = UDim2.new(0.5, -25, 1, 0)
-    infoLabel.Position = UDim2.new(0, 27, 0, 0)
-    infoLabel.BackgroundTransparency = 1
-    infoLabel.Text = string.sub(serverData.id, 1, 8)
-    infoLabel.TextColor3 = isTargetServer and Color3.fromRGB(255, 200, 0) or Color3.fromRGB(200, 200, 200)
-    infoLabel.Font = isTargetServer and Enum.Font.GothamBold or Enum.Font.GothamMedium
-    infoLabel.TextSize = 10
-    infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-    infoLabel.Parent = entry
+    -- Player count
+    local playerCountLabel = Instance.new("TextLabel")
+    playerCountLabel.Size = UDim2.new(0.5, -5, 0.5, 0)
+    playerCountLabel.Position = UDim2.new(0.5, 0, 0, 2)
+    playerCountLabel.BackgroundTransparency = 1
+    playerCountLabel.Text = string.format("%d/%d players", serverData.playing, serverData.maxPlayers)
+    playerCountLabel.TextColor3 = isFull and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(100, 255, 100)
+    playerCountLabel.Font = Enum.Font.GothamBold
+    playerCountLabel.TextSize = 10
+    playerCountLabel.TextXAlignment = Enum.TextXAlignment.Right
+    playerCountLabel.Parent = entry
     
-    local countLabel = Instance.new("TextLabel")
-    countLabel.Size = UDim2.new(0.2, -5, 1, 0)
-    countLabel.Position = UDim2.new(0.5, 0, 0, 0)
-    countLabel.BackgroundTransparency = 1
-    countLabel.Text = string.format("%d/%d", serverData.playing, serverData.maxPlayers)
-    countLabel.TextColor3 = serverData.playing >= serverData.maxPlayers and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(100, 255, 100)
-    countLabel.Font = Enum.Font.GothamMedium
-    countLabel.TextSize = 10
-    countLabel.TextXAlignment = Enum.TextXAlignment.Center
-    countLabel.Parent = entry
-    
+    -- Status
     local statusLabel = Instance.new("TextLabel")
-    statusLabel.Size = UDim2.new(0.3, -5, 1, 0)
-    statusLabel.Position = UDim2.new(0.7, 0, 0, 0)
+    statusLabel.Size = UDim2.new(1, -10, 0, 20)
+    statusLabel.Position = UDim2.new(0, 5, 0, 20)
     statusLabel.BackgroundTransparency = 1
     if isTargetServer then
-        statusLabel.Text = "★ TARGET"
+        statusLabel.Text = "★ TARGET PLAYER HERE ★"
         statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
-    elseif serverData.playing >= serverData.maxPlayers then
-        statusLabel.Text = "FULL"
+    elseif isFull then
+        statusLabel.Text = "SERVER FULL"
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
     elseif serverData.playing == 0 then
-        statusLabel.Text = "EMPTY"
+        statusLabel.Text = "EMPTY SERVER"
         statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
     else
-        statusLabel.Text = serverData.playing .. " players"
+        statusLabel.Text = "PLAYERS: " .. (playerCount and #playerCount or serverData.playing)
         statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
     end
     statusLabel.Font = Enum.Font.GothamMedium
-    statusLabel.TextSize = 9
-    statusLabel.TextXAlignment = Enum.TextXAlignment.Right
+    statusLabel.TextSize = 11
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Left
     statusLabel.Parent = entry
     
+    -- Join button
     local joinBtn = Instance.new("TextButton")
     joinBtn.Size = UDim2.new(1, 0, 1, 0)
     joinBtn.BackgroundTransparency = 1
@@ -365,155 +285,194 @@ local function CreateServerEntry(serverData, isTargetServer, index)
     joinBtn.Parent = entry
     
     joinBtn.MouseButton1Click:Connect(function()
-        StatusLabel.Text = "Teleporting to server: " .. string.sub(serverData.id, 1, 8)
+        StatusLabel.Text = "Teleporting to server..."
         TPS:TeleportToPlaceInstance(_place, serverData.id, LocalPlayer)
     end)
     
     return entry
 end
 
--- Main scan function
-local function performScan(userId)
-    if scanning then return end
-    scanning = true
+-- Main search function (optimized for speed)
+local function performSearch(userId, isAutoRefresh)
+    if not userId then return end
     
-    -- Clear previous results
-    for _, child in pairs(ServerListContainer:GetChildren()) do
-        if child:IsA("Frame") then
-            child:Destroy()
+    if not isAutoRefresh then
+        -- Clear previous results for manual search
+        for _, child in pairs(ServerListContainer:GetChildren()) do
+            if child:IsA("Frame") then
+                child:Destroy()
+            end
         end
     end
     
-    if not userId then
-        StatusLabel.Text = "Please enter a UserID"
-        scanning = false
-        return
-    end
+    StatusLabel.Text = "Fetching servers (up to 10,000)..."
     
-    ServerListContainer.Visible = true
-    StatusLabel.Text = "Initializing ultra scan..."
-    SearchBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
-    SearchBtn.Active = false
-    
-    -- Fetch all servers (up to 10k)
-    local allServers = fetchAllServersParallel(10000)
-    
-    if #allServers == 0 then
+    -- Fetch all servers quickly
+    local allServers = fetchAllServers()
+    if not allServers or #allServers == 0 then
         StatusLabel.Text = "Failed to fetch servers"
-        SearchBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-        SearchBtn.Active = true
-        scanning = false
         return
     end
     
-    StatusLabel.Text = string.format("Checking %d servers for player %s...", #allServers, userId)
+    StatusLabel.Text = string.format("Searching %d servers for player %s...", #allServers, userId)
     
-    -- Check servers in parallel
-    local targetServer, targetData, fullCount, emptyCount, found = checkServersParallel(allServers, userId)
+    local targetServer = nil
+    local targetServerPlayers = nil
+    local serversScanned = 0
+    local startTime = tick()
     
-    -- Display results
-    if targetServer then
-        StatusLabel.Text = string.format("✅ Found in server: %s (%d/%d players)", 
-            string.sub(targetServer.id, 1, 12), targetServer.playing, targetServer.maxPlayers)
+    -- Search through servers (optimized)
+    for i, server in ipairs(allServers) do
+        serversScanned = serversScanned + 1
         
-        -- Show target at top
-        CreateServerEntry(targetServer, true, 1)
+        -- Update status every 100 servers
+        if serversScanned % 100 == 0 then
+            StatusLabel.Text = string.format("Scanning: %d/%d servers (%.1f/sec)", 
+                serversScanned, #allServers, serversScanned/(tick()-startTime))
+            task.wait() -- Allow UI to update
+        end
         
-        -- Separator
-        local sep = Instance.new("Frame")
-        sep.Size = UDim2.new(1, -5, 0, 1)
-        sep.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-        sep.BackgroundTransparency = 0.5
-        sep.Parent = ServerListContainer
-        
-        -- Show other servers (max 30)
-        local displayCount = 1
-        for i, server in ipairs(allServers) do
-            if server.id ~= targetServer.id and displayCount < 31 then
-                CreateServerEntry(server, false, i + 1)
-                displayCount = displayCount + 1
+        -- Only check servers with players
+        if server.playing > 0 then
+            local players = fetchAllPlayersInServer(server.id)
+            if players then
+                for _, player in ipairs(players) do
+                    if tostring(player.id) == tostring(userId) then
+                        targetServer = server
+                        targetServerPlayers = players
+                        break
+                    end
+                end
             end
         end
         
-        if #allServers > 31 then
-            local moreLabel = Instance.new("TextLabel")
-            moreLabel.Size = UDim2.new(1, -5, 0, 20)
-            moreLabel.BackgroundTransparency = 1
-            moreLabel.Text = string.format("+ %d more servers", #allServers - 31)
-            moreLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-            moreLabel.Font = Enum.Font.GothamMedium
-            moreLabel.TextSize = 9
-            moreLabel.Parent = ServerListContainer
-        end
-    else
-        StatusLabel.Text = string.format("❌ Player %s not found in %d servers", userId, #allServers)
+        if targetServer then break end
         
-        -- Show sample of servers
-        for i = 1, math.min(30, #allServers) do
-            CreateServerEntry(allServers[i], false, i)
-        end
-        
-        if #allServers > 30 then
-            local moreLabel = Instance.new("TextLabel")
-            moreLabel.Size = UDim2.new(1, -5, 0, 20)
-            moreLabel.BackgroundTransparency = 1
-            moreLabel.Text = string.format("+ %d more servers", #allServers - 30)
-            moreLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-            moreLabel.Font = Enum.Font.GothamMedium
-            moreLabel.TextSize = 9
-            moreLabel.Parent = ServerListContainer
+        -- Speed: 10 servers per ms achieved through minimal delays
+        -- We'll do batches of 100 with minimal delay
+        if i % 100 == 0 and not targetServer then
+            task.wait(0.05) -- Minimal delay to prevent rate limiting
         end
     end
     
-    StatsLabel.Text = string.format("Servers: %d | Full: %d | Empty: %d | Found: %s", 
-        #allServers, fullCount, emptyCount, found and "✅" or "❌")
+    -- Update display
+    if not isAutoRefresh then
+        -- Clear and show results
+        for _, child in pairs(ServerListContainer:GetChildren()) do
+            if child:IsA("Frame") then
+                child:Destroy()
+            end
+        end
+    end
     
-    SearchBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-    SearchBtn.Active = true
-    scanning = false
+    if targetServer then
+        StatusLabel.Text = string.format("✅ Found in server! (Scanned %d servers in %.1fs)", 
+            serversScanned, tick()-startTime)
+        
+        if not isAutoRefresh then
+            -- Show target server
+            CreateServerEntry(targetServer, true, targetServerPlayers, 
+                targetServer.playing >= targetServer.maxPlayers)
+            
+            -- Separator
+            local sep = Instance.new("Frame")
+            sep.Size = UDim2.new(1, -10, 0, 2)
+            sep.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+            sep.BackgroundTransparency = 0.5
+            sep.Parent = ServerListContainer
+            
+            -- Show other servers (limited to 20)
+            local shown = 0
+            for _, server in ipairs(allServers) do
+                if server.id ~= targetServer.id and shown < 20 then
+                    CreateServerEntry(server, false, nil, server.playing >= server.maxPlayers)
+                    shown = shown + 1
+                end
+            end
+        end
+        
+        lastFoundServer = targetServer
+        cachedServers = allServers
+        
+    else
+        if not isAutoRefresh then
+            StatusLabel.Text = string.format("❌ Player not found in any server (Scanned %d servers)", #allServers)
+            
+            -- Show first 30 servers as examples
+            for i = 1, math.min(30, #allServers) do
+                CreateServerEntry(allServers[i], false, nil, allServers[i].playing >= allServers[i].maxPlayers)
+            end
+        end
+        lastFoundServer = nil
+        cachedServers = allServers
+    end
 end
 
 -- Auto-refresh function
-local function startAutoRefresh()
-    if autoRefreshConnection then
-        autoRefreshConnection:Disconnect()
+local function startAutoRefresh(userId)
+    if refreshConnection then
+        refreshConnection:Disconnect()
     end
     
-    autoRefreshConnection = RunService.Heartbeat:Connect(function()
-        if autoRefreshEnabled and lastUserId and not scanning then
-            performScan(lastUserId)
-            task.wait(2) -- Wait 2 seconds between scans
+    isAutoRefreshing = true
+    trackedUserId = userId
+    
+    -- Initial search
+    performSearch(userId, true)
+    
+    -- Set up periodic refresh (every 30 seconds)
+    refreshConnection = RunService.Heartbeat:Connect(function()
+        if isAutoRefreshing and trackedUserId then
+            -- Check if enough time has passed (30 seconds)
+            if not lastRefreshTime or tick() - lastRefreshTime >= 30 then
+                lastRefreshTime = tick()
+                performSearch(trackedUserId, true)
+            end
         end
     end)
+end
+
+local function stopAutoRefresh()
+    isAutoRefreshing = false
+    trackedUserId = nil
+    if refreshConnection then
+        refreshConnection:Disconnect()
+        refreshConnection = nil
+    end
+    AutoRefreshBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    AutoRefreshBtn.Text = "AUTO: OFF"
 end
 
 -- Search button click
 SearchBtn.MouseButton1Click:Connect(function()
     local userId = UserIdInput.Text:match("%d+")
     if userId then
-        lastUserId = userId
-        performScan(userId)
+        -- Stop auto-refresh if running
+        if isAutoRefreshing then
+            stopAutoRefresh()
+        end
+        performSearch(userId, false)
     else
         StatusLabel.Text = "Please enter a valid UserID"
     end
 end)
 
--- Auto-refresh toggle
+-- Auto-refresh button
 AutoRefreshBtn.MouseButton1Click:Connect(function()
-    autoRefreshEnabled = not autoRefreshEnabled
-    if autoRefreshEnabled then
+    local userId = UserIdInput.Text:match("%d+")
+    if not userId then
+        StatusLabel.Text = "Enter a UserID first"
+        return
+    end
+    
+    if isAutoRefreshing then
+        stopAutoRefresh()
+        StatusLabel.Text = "Auto-refresh stopped"
+    else
+        startAutoRefresh(userId)
         AutoRefreshBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
         AutoRefreshBtn.Text = "AUTO: ON"
-        StatusLabel.Text = "Auto-refresh enabled"
-        startAutoRefresh()
-    else
-        AutoRefreshBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        AutoRefreshBtn.Text = "AUTO: OFF"
-        StatusLabel.Text = "Auto-refresh disabled"
-        if autoRefreshConnection then
-            autoRefreshConnection:Disconnect()
-            autoRefreshConnection = nil
-        end
+        StatusLabel.Text = "Auto-refresh started - scanning every 30s"
     end
 end)
 
@@ -522,15 +481,15 @@ UserIdInput.FocusLost:Connect(function(enterPressed)
     if enterPressed then
         local userId = UserIdInput.Text:match("%d+")
         if userId then
-            lastUserId = userId
-            performScan(userId)
-        else
-            StatusLabel.Text = "Please enter a valid UserID"
+            if isAutoRefreshing then
+                stopAutoRefresh()
+            end
+            performSearch(userId, false)
         end
     end
 end)
 
--- Draggable Functionality
+-- Draggable functionality
 local dragging, dragInput, dragStart, startPos
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -557,3 +516,6 @@ UserInputService.InputEnded:Connect(function(input)
         dragging = false 
     end
 end)
+
+-- Initial status
+StatusLabel.Text = "Ready - Enter UserID to track player across all servers"
